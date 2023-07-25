@@ -86,6 +86,11 @@ namespace BondProject
 
 		}
 
+		public static void DrawTextureCentered(Texture2D texture, float x, float y, float rot, float scale, Color color)
+		{
+			DrawTextureEx(texture, Vector2(x - texture.width/2.0f, y - texture.height/2.0f), rot, scale, color);
+		}
+
 		public static int Main()
 		{
 			int32 screenWidth = 1280;
@@ -116,19 +121,30 @@ namespace BondProject
 
 			GameState gGameState = GameState.GUNBARREL_SCREEN;
 			Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
+			Texture2D rogerTexture = LoadTexture("roger1.png");
 
 			Shader gbShader = LoadShader("base.vs", "gunbarrel.fs");
+			Shader slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
 			int32 gbTexLoc = GetShaderLocation(gbShader, "tex");
+			int32 slTexLoc = GetShaderLocation(slShader, "tex");
 			SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
+			SetShaderValueTexture(slShader, slTexLoc, rogerTexture);
 
 			int32 gbTimerLoc = GetShaderLocation(gbShader, "timer");
 			int32 gbCircLoc = GetShaderLocation(gbShader, "circCent");
 
+			int32 slTimerLoc = GetShaderLocation(slShader, "timer");
+			int32 slCircLoc = GetShaderLocation(slShader, "circCent");
+
+
 			float circTimer = 0.0f;
+
+			float spotlightTimer = 100.0f;
 
 			Vector2 circLoc = *dots[maxDots - 1].Position;
 			SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+			SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 
 			while (!WindowShouldClose())
 			{
@@ -181,8 +197,18 @@ namespace BondProject
 								SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 								DrawTextureEx(gunbarrelTexture, Vector2(-1800.0f + dotStart.Position.x, 0.0f), 0.0f, 10.0f, Color.WHITE);
 								EndShaderMode();
-
+								// rather than a straight circle, what we actually want here is to draw
+								// the Roger/Sean/Daniel/Tim/George/Pierce sprite with a circle shader on it. 
 								DrawCircle((int32)dotStart.Position.x, (int32)dotStart.Position.y, dotRad + dotGrowthTimer*200.0f, Color.WHITE);
+								
+								
+								BeginShaderMode(slShader);
+								//float spotlightRad = dotRad + dotGrowthTimer*200.0f;
+								float spotlightRad = (dotRad + dotGrowthTimer*200.0f)/140.0f;
+								SetShaderValue(slShader, slTimerLoc, (void*)&spotlightRad, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+								//DrawTextureEx(rogerTexture, Vector2(50.0f, 50.0f), 0.0f, 10.0f, Color.WHITE);
+								DrawTextureCentered(rogerTexture, dotStart.Position.x - 10.0f, dotStart.Position.y - 50.0f, 0.0f, 2.0f, Color.WHITE);
+								EndShaderMode();
 							}
 							else
 							{
