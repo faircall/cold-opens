@@ -3,6 +3,8 @@ using static raylib_beef.Raylib;
 using raylib_beef.Types;
 using raylib_beef.Enums;
 
+// dots should only disappear when new one is spawning
+
 namespace BondProject
 {
 	class Program
@@ -10,7 +12,8 @@ namespace BondProject
 		public enum GameState
 		{
 			MGM_SCREEN,
-			GUNBARREL_SCREEN
+			GUNBARREL_SCREEN,
+			SKYDIVING_SCREEN,
 		}
 
 		class GunbarrelDot
@@ -25,6 +28,30 @@ namespace BondProject
 				Timer = timer;
 				Active = active;
 			}
+		}
+
+		class SpriteSheet
+		{
+			public int32 CurrentFrame;
+			public int32 TotalFrames;
+			public float Timer;
+			public float FrameTime;
+			public float FrameWidth;
+			public float FrameHeight;
+			public Rectangle CurrentRect;
+			
+
+			public this(int32 currentFrame, int32 totalFrames, float timer, float frameTime, float frameWidth, float frameHeight)
+			{
+				CurrentFrame = currentFrame;
+				TotalFrames = totalFrames;
+				Timer = timer;
+				FrameTime = frameTime;
+				FrameWidth = frameWidth;
+				FrameHeight = frameHeight;
+				CurrentRect = Rectangle(0.0f, 0.0f, FrameWidth, FrameHeight);
+			}
+
 		}
 
 		static float Vector2Distance(Vector2 a, Vector2 b)
@@ -91,11 +118,38 @@ namespace BondProject
 			DrawTextureEx(texture, Vector2(x - texture.width/2.0f, y - texture.height/2.0f), rot, scale, color);
 		}
 
+		public static void DrawPartialTexture(Texture2D texture, Rectangle src, float x, float y, float width, float height, float rot, float scale, Color color)
+		{
+			Rectangle dest = Rectangle(x, y, width, height);
+			// this will need some work to make useable with rotations (consider the origin should be the center?)
+			DrawTexturePro(texture, src, dest, Vector2(0.0f, 0.0f), 0.0f, color);
+		}
+
+		public static void DrawPartialTextureCentered(Texture2D texture, Rectangle src, float x, float y, float width, float height, float rot, float scale, Color color)
+		{
+			Rectangle dest = Rectangle(x - width/2.0f, y - height/2.0f, width, height);
+			// this will need some work to make useable with rotations (consider the origin should be the center?)
+			DrawTexturePro(texture, src, dest, Vector2(0.0f, 0.0f), 0.0f, color);
+		}
+
+
+		public static void UpdateSpriteSheet(ref SpriteSheet spriteSheet, float dt)
+		{
+			spriteSheet.Timer += dt;
+			if (spriteSheet.Timer >= spriteSheet.FrameTime)
+			{
+				spriteSheet.Timer = 0.0f;
+				spriteSheet.CurrentFrame = (spriteSheet.CurrentFrame + 1) % spriteSheet.TotalFrames;
+				spriteSheet.CurrentRect = Rectangle(spriteSheet.CurrentFrame * spriteSheet.FrameWidth, 0.0f, spriteSheet.FrameWidth, spriteSheet.FrameHeight);
+			}
+		}
+
 		public static int Main()
 		{
 			int32 screenWidth = 1280;
 			int32 screenHeight = 720;
 			float gameTimer = 0.0f;
+			//SetTraceLogLevel();
 			InitWindow(screenWidth, screenHeight, "Moonraker");
 			SetTargetFPS(60);
 
@@ -109,7 +163,7 @@ namespace BondProject
 			int dotCounter = 0;
 			GunbarrelDot dotStart = dots[dotCounter];
 			GunbarrelDot nextDot = dots[dotCounter];
-			float dotTimeout = 0.4f;
+			float dotTimeout = 0.7f;
 			float dotSpeed = 350.0f;
 			float dotRad = 40.0f;
 
@@ -119,9 +173,11 @@ namespace BondProject
 			float dotGrowthTimer = 0.0f;
 
 
-			GameState gGameState = GameState.GUNBARREL_SCREEN;
+			//GameState gGameState = GameState.GUNBARREL_SCREEN;
+			GameState gGameState = GameState.SKYDIVING_SCREEN;
 			Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
-			Texture2D rogerTexture = LoadTexture("roger1.png");
+			Texture2D rogerTexture = LoadTexture("adjusted_roger_resized.png");
+			Texture2D cloudTexture = LoadTexture("cloud.png");
 
 			Shader gbShader = LoadShader("base.vs", "gunbarrel.fs");
 			Shader slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
@@ -142,9 +198,18 @@ namespace BondProject
 			float spotlightTimer = 100.0f;
 
 			Vector2 circLoc = *dots[maxDots - 1].Position;
+			Vector2 rogerPosition = Vector2(circLoc.x, circLoc.y);
+
+			Vector2 cloudPosition = Vector2(40.0f, 40.0f);
 			SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 			SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+			float cloudSpeed = -500.0f;
+			float cloudEnd = (float)screenHeight + 10.0f;
+			float cloudStart = -150.0f;
+
+			Vector2 rogerDirection = Vector2(0.0f, 0.0f);
+			SpriteSheet rogerSpriteSheet = new SpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
 
 			while (!WindowShouldClose())
 			{
@@ -161,6 +226,36 @@ namespace BondProject
 						break;
 					case (GameState.GUNBARREL_SCREEN):
 						UpdateGunbarrel(ref dotStart, ref nextDot, dots, ref dotCounter, ref circTimer, ref dotGrowthTimer, dotGrowthTimerMax, dotSpeed, ref dotStopped, dotTimeout, maxDots, dt);
+						// also update the control
+						if (dotStopped)
+						{
+							rogerDirection.x = 0.0f;
+							rogerDirection.y = 0.0f;
+							if (IsKeyDown(KeyboardKey.KEY_A))
+							{
+								rogerDirection.x = -1.0f;
+							}
+							if (IsKeyDown(KeyboardKey.KEY_D))
+							{
+								rogerDirection.x = 1.0f;
+							}
+							float rogerSpeed = 200.0f;
+							rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
+
+							if (rogerDirection.x != 0.0f)
+							{
+								UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
+							}
+						}
+
+						break;
+					case (GameState.SKYDIVING_SCREEN):
+						// set blue sky background
+						cloudPosition.y += dt * cloudSpeed;
+						if (cloudPosition.y <= cloudStart)
+						{
+							cloudPosition.y = cloudEnd;
+						}
 						break;
 					default:
 						UpdateMGMScreen();
@@ -195,11 +290,12 @@ namespace BondProject
 							{
 								BeginShaderMode(gbShader);
 								SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
-								DrawTextureEx(gunbarrelTexture, Vector2(-1800.0f + dotStart.Position.x, 0.0f), 0.0f, 10.0f, Color.WHITE);
+								DrawTextureEx(gunbarrelTexture, Vector2(-1800.0f + rogerPosition.x, 0.0f), 0.0f, 10.0f, Color.WHITE);
 								EndShaderMode();
 								// rather than a straight circle, what we actually want here is to draw
 								// the Roger/Sean/Daniel/Tim/George/Pierce sprite with a circle shader on it. 
-								DrawCircle((int32)dotStart.Position.x, (int32)dotStart.Position.y, dotRad + dotGrowthTimer*200.0f, Color.WHITE);
+								//DrawCircle((int32)dotStart.Position.x, (int32)dotStart.Position.y, dotRad + dotGrowthTimer*200.0f, Color.WHITE);
+								DrawCircle((int32)rogerPosition.x, (int32)rogerPosition.y, dotRad + dotGrowthTimer*200.0f, Color.WHITE);
 								
 								
 								BeginShaderMode(slShader);
@@ -207,14 +303,21 @@ namespace BondProject
 								float spotlightRad = (dotRad + dotGrowthTimer*200.0f)/140.0f;
 								SetShaderValue(slShader, slTimerLoc, (void*)&spotlightRad, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 								//DrawTextureEx(rogerTexture, Vector2(50.0f, 50.0f), 0.0f, 10.0f, Color.WHITE);
-								DrawTextureCentered(rogerTexture, dotStart.Position.x - 10.0f, dotStart.Position.y - 50.0f, 0.0f, 2.0f, Color.WHITE);
+								// DrawTextureCentered(rogerTexture, rogerPosition.x - 10.0f, rogerPosition.y - 50.0f, 0.0f, 2.0f, Color.WHITE);
+								
 								EndShaderMode();
+								DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 10.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 							}
 							else
 							{
 								DrawCircle((int32)dotStart.Position.x, (int32)dotStart.Position.y, dotRad, Color.WHITE);
 							}
 						}
+						break;
+					case (GameState.SKYDIVING_SCREEN):
+						// set blue sky background
+						ClearBackground(.(50, 120, 250, 255));
+						DrawTextureEx(cloudTexture, cloudPosition, 0.0f, 5.0f, Color.WHITE);
 						break;
 					default:
 						UpdateMGMScreen();
@@ -232,6 +335,7 @@ namespace BondProject
 				delete thing;
 			}
 			delete dots;
+			delete rogerSpriteSheet;
 			return 0;
 		}
 	}
