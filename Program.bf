@@ -154,10 +154,19 @@ namespace BondProject
 			SetTargetFPS(60);
 
 			int maxDots = 6;
+			int maxClouds = 12;
 			GunbarrelDot[] dots = new GunbarrelDot[maxDots];
 			for (int i = 0; i < maxDots; i++)
 			{
 				dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 300.0f), 0.0f, false);
+			}
+
+			Vector2[] clouds = new Vector2[maxClouds];
+			
+			for (int i = 0; i < maxClouds; i++)
+			{
+				int32 randPos = GetRandomValue(0, screenWidth);
+				clouds[i] = Vector2(randPos, screenHeight * (i ) / ( maxClouds));
 			}
 
 			int dotCounter = 0;
@@ -178,6 +187,7 @@ namespace BondProject
 			Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
 			Texture2D rogerTexture = LoadTexture("adjusted_roger_resized.png");
 			Texture2D cloudTexture = LoadTexture("cloud.png");
+			Texture2D rogerSkyDiveTexture = LoadTexture("rogerskydive.png");
 
 			Shader gbShader = LoadShader("base.vs", "gunbarrel.fs");
 			Shader slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
@@ -210,6 +220,8 @@ namespace BondProject
 
 			Vector2 rogerDirection = Vector2(0.0f, 0.0f);
 			SpriteSheet rogerSpriteSheet = new SpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
+
+			SpriteSheet rogerSpriteSheetSkyDive = new SpriteSheet(0, 1, 0.0f, 0.125f, 128.0f, 128.0f);
 
 			while (!WindowShouldClose())
 			{
@@ -251,11 +263,46 @@ namespace BondProject
 						break;
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
-						cloudPosition.y += dt * cloudSpeed;
-						if (cloudPosition.y <= cloudStart)
+						for (int i = 0; i < clouds.Count; i++)
 						{
-							cloudPosition.y = cloudEnd;
+							Vector2 cloudPos = clouds[i];
+							cloudPos.y += dt * cloudSpeed;
+							if (cloudPos.y <= cloudStart)
+							{
+								cloudPos.y = cloudEnd;
+								cloudPos.x = (float)GetRandomValue(0, screenHeight);
+							}
+							clouds[i] = cloudPos;
+
+							rogerDirection.x = 0.0f;
+							rogerDirection.y = 0.0f;
+							if (IsKeyDown(KeyboardKey.KEY_A))
+							{
+								rogerDirection.x = -1.0f;
+							}
+							if (IsKeyDown(KeyboardKey.KEY_D))
+							{
+								rogerDirection.x = 1.0f;
+							}
+
+							if (IsKeyDown(KeyboardKey.KEY_W))
+							{
+								rogerDirection.y = -1.0f;
+							}
+							if (IsKeyDown(KeyboardKey.KEY_S))
+							{
+								rogerDirection.y = 1.0f;
+							}
+
+							
+							float rogerSpeedAir = 50.0f;
+							rogerPosition.x += rogerDirection.x * dt * rogerSpeedAir;
+							rogerPosition.y += rogerDirection.y * dt * rogerSpeedAir;
+
+							
+
 						}
+						
 						break;
 					default:
 						UpdateMGMScreen();
@@ -317,7 +364,11 @@ namespace BondProject
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
 						ClearBackground(.(50, 120, 250, 255));
-						DrawTextureEx(cloudTexture, cloudPosition, 0.0f, 5.0f, Color.WHITE);
+						for (Vector2 cloud in clouds)
+						{
+							DrawTextureEx(cloudTexture, cloud, 0.0f, 5.0f, Color.WHITE);
+						}
+						DrawTextureEx(rogerSkyDiveTexture, rogerPosition, 0.0f, 5.0f, Color.WHITE);
 						break;
 					default:
 						UpdateMGMScreen();
@@ -336,6 +387,9 @@ namespace BondProject
 			}
 			delete dots;
 			delete rogerSpriteSheet;
+
+			delete clouds;
+			delete rogerSpriteSheetSkyDive;
 			return 0;
 		}
 	}
