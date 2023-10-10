@@ -54,6 +54,23 @@ namespace BondProject
 
 		}
 
+		static float Vector2Length(Vector2 a)
+		{
+			return Math.Sqrt(a.x*a.x + a.y*a.y);
+		}
+
+		static void Vector2Normalize(ref Vector2 a, float tolerance)
+		{
+			if (Vector2Length(a) <= tolerance)
+			{
+				return;
+			}
+
+			float len = Vector2Length(a);
+			a.x /= len;
+			a.y /= len;
+		}
+
 		static float Vector2Distance(Vector2 a, Vector2 b)
 		{
 			return Math.Sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
@@ -223,6 +240,8 @@ namespace BondProject
 
 			SpriteSheet rogerSpriteSheetSkyDive = new SpriteSheet(0, 1, 0.0f, 0.125f, 128.0f, 128.0f);
 
+			float rogerAirRotation = 0.0f;
+
 			while (!WindowShouldClose())
 			{
 				Update:
@@ -251,7 +270,7 @@ namespace BondProject
 							{
 								rogerDirection.x = 1.0f;
 							}
-							float rogerSpeed = 200.0f;
+							float rogerSpeed = 120.0f;
 							rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
 
 							if (rogerDirection.x != 0.0f)
@@ -276,17 +295,22 @@ namespace BondProject
 
 							rogerDirection.x = 0.0f;
 							rogerDirection.y = 0.0f;
+							float rogerSpeedAir = 50.0f;
+							rogerAirRotation = 0.0f;
 							if (IsKeyDown(KeyboardKey.KEY_A))
 							{
 								rogerDirection.x = -1.0f;
+								rogerAirRotation = -45.0f;
 							}
 							if (IsKeyDown(KeyboardKey.KEY_D))
 							{
 								rogerDirection.x = 1.0f;
+								rogerAirRotation = 45.0f;
 							}
 
 							if (IsKeyDown(KeyboardKey.KEY_W))
 							{
+								rogerSpeedAir = 100.0f;
 								rogerDirection.y = -1.0f;
 							}
 							if (IsKeyDown(KeyboardKey.KEY_S))
@@ -294,8 +318,9 @@ namespace BondProject
 								rogerDirection.y = 1.0f;
 							}
 
+							Vector2Normalize(ref rogerDirection, 0.001f);
+
 							
-							float rogerSpeedAir = 50.0f;
 							rogerPosition.x += rogerDirection.x * dt * rogerSpeedAir;
 							rogerPosition.y += rogerDirection.y * dt * rogerSpeedAir;
 
@@ -368,7 +393,8 @@ namespace BondProject
 						{
 							DrawTextureEx(cloudTexture, cloud, 0.0f, 5.0f, Color.WHITE);
 						}
-						DrawTextureEx(rogerSkyDiveTexture, rogerPosition, 0.0f, 5.0f, Color.WHITE);
+						//DrawTextureEx(rogerSkyDiveTexture, rogerPosition, rogerAirRotation, 3.0f, Color.WHITE);
+						DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerPosition.x, rogerPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						break;
 					default:
 						UpdateMGMScreen();
