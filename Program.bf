@@ -236,6 +236,8 @@ namespace BondProject
 			float cloudStart = -150.0f;
 
 			Vector2 rogerDirection = Vector2(0.0f, 0.0f);
+			Vector2 cameraPosition = Vector2(0.0f, 0.0f); // this will act as our offset
+
 			SpriteSheet rogerSpriteSheet = new SpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
 
 			SpriteSheet rogerSpriteSheetSkyDive = new SpriteSheet(0, 1, 0.0f, 0.125f, 128.0f, 128.0f);
@@ -320,11 +322,22 @@ namespace BondProject
 
 							Vector2Normalize(ref rogerDirection, 0.001f);
 
-							
+							float cameraSpeed = Math.Abs(rogerPosition.x - cameraPosition.x + 100.0f);
 							rogerPosition.x += rogerDirection.x * dt * rogerSpeedAir;
 							rogerPosition.y += rogerDirection.y * dt * rogerSpeedAir;
+							if (rogerPosition.x < (cameraPosition.x + 100.0f))
+							{
+								
+								cameraPosition.x -= cameraSpeed * dt;
+							} 
+							else if (rogerPosition.x >= (cameraPosition.x + screenWidth - 100.0f))
+							{
+								cameraSpeed = Math.Abs(rogerPosition.x - (cameraPosition.x + screenWidth - 100.0f));
+								cameraPosition.x += cameraSpeed * dt;
+							}
 
-							
+							rogerPosition.y = Math.Min(screenHeight, rogerPosition.y);
+							rogerPosition.y = Math.Max(10.0f, rogerPosition.y);
 
 						}
 						
@@ -378,7 +391,7 @@ namespace BondProject
 								// DrawTextureCentered(rogerTexture, rogerPosition.x - 10.0f, rogerPosition.y - 50.0f, 0.0f, 2.0f, Color.WHITE);
 								
 								EndShaderMode();
-								DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 10.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
+								DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 50.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 							}
 							else
 							{
@@ -391,10 +404,11 @@ namespace BondProject
 						ClearBackground(.(50, 120, 250, 255));
 						for (Vector2 cloud in clouds)
 						{
+							cloud.x = cloud.x - cameraPosition.x;
 							DrawTextureEx(cloudTexture, cloud, 0.0f, 5.0f, Color.WHITE);
 						}
 						//DrawTextureEx(rogerSkyDiveTexture, rogerPosition, rogerAirRotation, 3.0f, Color.WHITE);
-						DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerPosition.x, rogerPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerPosition.x - cameraPosition.x, rogerPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						break;
 					default:
 						UpdateMGMScreen();
