@@ -291,7 +291,7 @@ namespace BondProject
 							if (cloudPos.y <= cloudStart)
 							{
 								cloudPos.y = cloudEnd;
-								cloudPos.x = (float)GetRandomValue(0, screenHeight);
+								cloudPos.x = (float)GetRandomValue(int32(rogerPosition.x - screenWidth), int32(rogerPosition.x + screenWidth));
 							}
 							clouds[i] = cloudPos;
 
