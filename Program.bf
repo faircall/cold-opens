@@ -4,6 +4,9 @@ using raylib_beef.Types;
 using raylib_beef.Enums;
 
 // dots should only disappear when new one is spawning
+// check this on other handware to make sure
+// grapple/punch system, make fun combat
+// make the speed more physics-y
 
 namespace BondProject
 {
@@ -74,6 +77,13 @@ namespace BondProject
 		static float Vector2Distance(Vector2 a, Vector2 b)
 		{
 			return Math.Sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
+		}
+
+		static Vector2 Vector2Scale(Vector2 a, float s)
+		{
+
+			Vector2 result = Vector2(a.x * s, a.y * s);
+			return result;
 		}
 
 		public static void UpdateGunbarrel(ref GunbarrelDot dotStart, ref GunbarrelDot nextDot, GunbarrelDot[] dots,
@@ -237,6 +247,7 @@ namespace BondProject
 
 			Vector2 rogerDirection = Vector2(0.0f, 0.0f);
 			Vector2 cameraPosition = Vector2(0.0f, 0.0f); // this will act as our offset
+			Vector2 rogerVelocity = Vector2(0.0f, 0.0f);
 
 			SpriteSheet rogerSpriteSheet = new SpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
 
@@ -321,10 +332,20 @@ namespace BondProject
 							}
 
 							Vector2Normalize(ref rogerDirection, 0.001f);
+							
+							rogerVelocity.x += rogerDirection.x * dt * rogerSpeedAir;
+							rogerVelocity.y += rogerDirection.y * dt * rogerSpeedAir;
 
-							float cameraSpeed = Math.Abs(rogerPosition.x - cameraPosition.x + 100.0f);
-							rogerPosition.x += rogerDirection.x * dt * rogerSpeedAir;
-							rogerPosition.y += rogerDirection.y * dt * rogerSpeedAir;
+							
+							
+							// need to apply some friction
+							Vector2 rogerFriction = Vector2Scale(rogerVelocity, -0.8f);
+							rogerVelocity.x += rogerFriction.x*dt;
+							rogerVelocity.y += rogerFriction.y*dt;
+							rogerPosition.x += (rogerVelocity.x) * dt;
+							rogerPosition.y += (rogerVelocity.y) * dt;
+
+							float cameraSpeed = Math.Abs(rogerPosition.x - cameraPosition.x);
 							if (rogerPosition.x < (cameraPosition.x + 100.0f))
 							{
 								
@@ -335,6 +356,8 @@ namespace BondProject
 								cameraSpeed = Math.Abs(rogerPosition.x - (cameraPosition.x + screenWidth - 100.0f));
 								cameraPosition.x += cameraSpeed * dt;
 							}
+
+							
 
 							rogerPosition.y = Math.Min(screenHeight, rogerPosition.y);
 							rogerPosition.y = Math.Max(10.0f, rogerPosition.y);
