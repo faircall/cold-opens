@@ -309,16 +309,16 @@ namespace BondProject
 							rogerDirection.x = 0.0f;
 							rogerDirection.y = 0.0f;
 							float rogerSpeedAir = 50.0f;
-							rogerAirRotation = 0.0f;
+							//rogerAirRotation = 0.0f;
 							if (IsKeyDown(KeyboardKey.KEY_A))
 							{
 								rogerDirection.x = -1.0f;
-								rogerAirRotation = -45.0f;
+								//rogerAirRotation = -45.0f;
 							}
 							if (IsKeyDown(KeyboardKey.KEY_D))
 							{
 								rogerDirection.x = 1.0f;
-								rogerAirRotation = 45.0f;
+								//rogerAirRotation = 45.0f;
 							}
 
 							if (IsKeyDown(KeyboardKey.KEY_W))
@@ -332,9 +332,15 @@ namespace BondProject
 							}
 
 							Vector2Normalize(ref rogerDirection, 0.001f);
+							float rotationSpeed = 5.0f;
+							rogerAirRotation += rogerDirection.x * dt * rotationSpeed;
 							
 							rogerVelocity.x += rogerDirection.x * dt * rogerSpeedAir;
 							rogerVelocity.y += rogerDirection.y * dt * rogerSpeedAir;
+
+							// todo : Make sidways motion a function of the angle you're facing
+							// think about the force diagram,
+
 
 							
 							
