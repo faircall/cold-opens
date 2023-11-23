@@ -7,6 +7,8 @@ using raylib_beef.Enums;
 // check this on other handware to make sure
 // grapple/punch system, make fun combat
 // make the speed more physics-y
+// make the animation more code driven
+
 
 namespace BondProject
 {
@@ -17,6 +19,20 @@ namespace BondProject
 			MGM_SCREEN,
 			GUNBARREL_SCREEN,
 			SKYDIVING_SCREEN,
+			SKELETAL_EDITOR,
+			NUM_STATES
+		}
+
+		public enum SkeletalEditorState
+		{
+			WHOLE_BODY,
+			TORSO,
+			UPPER_LEG,
+			LOWER_LEG,
+			UPPER_ARM,
+			LOWER_ARM,
+			HEAD,
+			NUM_STATES,
 		}
 
 		class GunbarrelDot
@@ -31,6 +47,18 @@ namespace BondProject
 				Timer = timer;
 				Active = active;
 			}
+		}
+
+		
+		class Skeleton
+		{
+
+			public Vector2 Torso {get;set;}
+			public Vector2 Head {get;set;}
+			public Vector2 UpperArm {get;set;}
+			public Vector2 LowerArm {get;set;}
+			public Vector2 UpperLeg {get;set;}
+			public Vector2 LowerLeg {get;set;}
 		}
 
 		class SpriteSheet
@@ -86,6 +114,24 @@ namespace BondProject
 			return result;
 		}
 
+		static Vector2 Vector2Subtract(Vector2 a, Vector2 b)
+		{
+			// a - b
+			Vector2 result = Vector2(a.x - b.x, a.y - b.y);
+			return result;
+		}
+
+		static Vector2 Vector2Add(Vector2 a, Vector2 b)
+		{
+			// a - b
+			Vector2 result = Vector2(a.x + b.x, a.y + b.y);
+			return result;
+		}
+
+		static float DegToRad(float deg)
+		{
+			return Math.PI_f * deg / 180.0f;
+		}
 		public static void UpdateGunbarrel(ref GunbarrelDot dotStart, ref GunbarrelDot nextDot, GunbarrelDot[] dots,
 			ref int dotCounter, ref float circTimer, ref float dotGrowthTimer, float dotGrowthTimerMax, float dotSpeed, ref bool dotStopped,
 			float dotTimeout, int maxDots, float dt)
@@ -210,11 +256,19 @@ namespace BondProject
 
 
 			//GameState gGameState = GameState.GUNBARREL_SCREEN;
-			GameState gGameState = GameState.SKYDIVING_SCREEN;
+			GameState gGameState = GameState.SKELETAL_EDITOR;
 			Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
 			Texture2D rogerTexture = LoadTexture("adjusted_roger_resized.png");
 			Texture2D cloudTexture = LoadTexture("cloud.png");
 			Texture2D rogerSkyDiveTexture = LoadTexture("rogerskydive.png");
+
+			Texture2D rogerHeadTexture = LoadTexture("head.png");
+			Texture2D rogerTorsoTexture = LoadTexture("torso.png");
+			Texture2D rogerUpperArmTexture = LoadTexture("upperarm.png");
+			Texture2D rogerLowerArmTexture = LoadTexture("lowerarm.png");
+			Texture2D rogerUpperLegTexture = LoadTexture("upperleg.png");
+			Texture2D rogerLowerLegTexture = LoadTexture("lowerleg.png");
+
 
 			Shader gbShader = LoadShader("base.vs", "gunbarrel.fs");
 			Shader slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
@@ -254,6 +308,25 @@ namespace BondProject
 			SpriteSheet rogerSpriteSheetSkyDive = new SpriteSheet(0, 1, 0.0f, 0.125f, 128.0f, 128.0f);
 
 			float rogerAirRotation = 0.0f;
+
+			float headOffsetToSave = -50.0f;
+			float torsoOffsetToSave = 0.0f;
+			float upperArmOffsetToSave = -100.0f;
+			float lowerArmOffsetToSave = -150.0f;
+			float upperLegOffsetToSave = 80.0f;
+			float lowerLegOffsetToSave = 150.0f;
+
+			Vector2 rogerTorsoPosition = Vector2(rogerPosition.x, rogerPosition.y);
+			Vector2 rogerHeadPosition = Vector2(rogerPosition.x, rogerPosition.y);
+			Vector2 rogerUpperArmPosition = Vector2(rogerPosition.x, rogerPosition.y);
+			Vector2 rogerLowerArmPosition = Vector2(rogerPosition.x, rogerPosition.y);
+			Vector2 rogerUpperLegPosition = Vector2(rogerPosition.x, rogerPosition.y);
+			Vector2 rogerLowerLegPosition = Vector2(rogerPosition.x, rogerPosition.y);
+
+			SkeletalEditorState skeletalEditorState = SkeletalEditorState.TORSO;
+
+			bool needSave = false;
+
 
 			while (!WindowShouldClose())
 			{
@@ -298,7 +371,7 @@ namespace BondProject
 						for (int i = 0; i < clouds.Count; i++)
 						{
 							Vector2 cloudPos = clouds[i];
-							cloudPos.y += dt * cloudSpeed;
+							
 							if (cloudPos.y <= cloudStart)
 							{
 								cloudPos.y = cloudEnd;
@@ -334,12 +407,18 @@ namespace BondProject
 							Vector2Normalize(ref rogerDirection, 0.001f);
 							float rotationSpeed = 5.0f;
 							rogerAirRotation += rogerDirection.x * dt * rotationSpeed;
+							float rogerAirMotion = Math.Sin(DegToRad(rogerAirRotation % 180));
+							float rogerAirMotionUp = Math.Cos(DegToRad(rogerAirRotation % 180));
 							
-							rogerVelocity.x += rogerDirection.x * dt * rogerSpeedAir;
+							rogerVelocity.x += rogerAirMotion * dt * rogerSpeedAir;
 							rogerVelocity.y += rogerDirection.y * dt * rogerSpeedAir;
+
+							rogerVelocity.y += (10.0f * dt * rogerAirMotionUp);
 
 							// todo : Make sidways motion a function of the angle you're facing
 							// think about the force diagram,
+
+							// also let's make the camera motion actually interesting, possibly even with cuts
 
 
 							
@@ -350,6 +429,9 @@ namespace BondProject
 							rogerVelocity.y += rogerFriction.y*dt;
 							rogerPosition.x += (rogerVelocity.x) * dt;
 							rogerPosition.y += (rogerVelocity.y) * dt;
+
+							float terminalVelocity = 0.0f;
+							rogerPosition.y += terminalVelocity * dt;
 
 							float cameraSpeed = Math.Abs(rogerPosition.x - cameraPosition.x);
 							if (rogerPosition.x < (cameraPosition.x + 100.0f))
@@ -362,15 +444,106 @@ namespace BondProject
 								cameraSpeed = Math.Abs(rogerPosition.x - (cameraPosition.x + screenWidth - 100.0f));
 								cameraPosition.x += cameraSpeed * dt;
 							}
+							cameraSpeed = Math.Abs(rogerPosition.y - (cameraPosition.y + 100.0f));
+							if (rogerPosition.y < (cameraPosition.y + 100.0f))
+							{
+								
+								cameraPosition.y -= cameraSpeed * dt;
+							} 
+							else if (rogerPosition.y >= (cameraPosition.y + screenHeight - 100.0f))
+							{
+								cameraSpeed = Math.Abs(rogerPosition.y - (cameraPosition.y + screenHeight - 100.0f));
+								cameraPosition.y += cameraSpeed * dt;
+							}
 
 							
 
-							rogerPosition.y = Math.Min(screenHeight, rogerPosition.y);
-							rogerPosition.y = Math.Max(10.0f, rogerPosition.y);
+							// rogerPosition.y = Math.Min(screenHeight-50.0f, rogerPosition.y);
+							// rogerPosition.y = Math.Max(50.0f, rogerPosition.y);
 
 						}
 						
 						break;
+					case GameState.SKELETAL_EDITOR:
+						Vector2 toAdd = Vector2(0.0f, 0.0f);
+						if (IsKeyPressed(KeyboardKey.KEY_F1))
+						{
+							skeletalEditorState--;
+							skeletalEditorState = Math.Max(0, skeletalEditorState);
+						}
+						if (IsKeyPressed(KeyboardKey.KEY_F2))
+						{
+							skeletalEditorState++;
+							skeletalEditorState = Math.Min(skeletalEditorState, SkeletalEditorState.NUM_STATES-1);
+						}
+						if (IsKeyPressed(KeyboardKey.KEY_F5))
+						{
+							needSave = true;
+						}
+						if (IsKeyDown(KeyboardKey.KEY_LEFT))
+						{
+							toAdd.x = -1.0f;
+						}
+						if (IsKeyDown(KeyboardKey.KEY_RIGHT))
+						{
+							toAdd.x = 1.0f;
+						}
+						if (IsKeyDown(KeyboardKey.KEY_UP))
+						{
+							toAdd.y = -1.0f;
+						}
+						if (IsKeyDown(KeyboardKey.KEY_DOWN))
+						{
+							toAdd.y = 1.0f;
+						}
+						toAdd = Vector2Scale(toAdd, dt * 40.0f);
+						switch (skeletalEditorState)
+						{
+						case SkeletalEditorState.WHOLE_BODY:
+							rogerPosition = Vector2Add(rogerPosition, toAdd);
+							break;
+						case SkeletalEditorState.HEAD:
+							rogerHeadPosition = Vector2Add(rogerHeadPosition, toAdd);
+							break;
+						case SkeletalEditorState.TORSO:
+							rogerTorsoPosition = Vector2Add(rogerTorsoPosition, toAdd);
+							break;
+						case SkeletalEditorState.UPPER_ARM:
+							rogerUpperArmPosition = Vector2Add(rogerUpperArmPosition, toAdd);
+							break;
+						case SkeletalEditorState.LOWER_ARM:
+							rogerLowerArmPosition = Vector2Add(rogerLowerArmPosition, toAdd);
+							break;
+						case SkeletalEditorState.UPPER_LEG:
+							rogerUpperLegPosition = Vector2Add(rogerUpperLegPosition, toAdd);
+							break;
+						case SkeletalEditorState.LOWER_LEG:
+							rogerLowerLegPosition = Vector2Add(rogerLowerLegPosition, toAdd);
+							break;
+						default:
+							break;
+						}
+						if (needSave)
+						{
+							System.IO.BufferedFileStream bufferedStream = new System.IO.BufferedFileStream();
+							bufferedStream.Create("skeleton.bin");
+							Skeleton skeleton = new Skeleton();
+							skeleton.Head = rogerHeadPosition;
+							skeleton.Torso = rogerTorsoPosition;
+							skeleton.UpperArm = rogerUpperArmPosition;
+							skeleton.LowerArm = rogerLowerArmPosition;
+							skeleton.UpperLeg = rogerUpperLegPosition;
+							skeleton.LowerLeg = rogerLowerLegPosition;
+							
+							bufferedStream.Write(skeleton.Head);
+							bufferedStream.Write(skeleton.Torso);
+							bufferedStream.Write(skeleton.UpperArm);
+							bufferedStream.Write(skeleton.LowerArm);
+							bufferedStream.Write(skeleton.UpperLeg);
+							bufferedStream.Write(skeleton.LowerLeg);
+							bufferedStream.Close();
+							needSave = false;
+						}
 					default:
 						UpdateMGMScreen();
 						break;
@@ -433,11 +606,71 @@ namespace BondProject
 						ClearBackground(.(50, 120, 250, 255));
 						for (Vector2 cloud in clouds)
 						{
-							cloud.x = cloud.x - cameraPosition.x;
-							DrawTextureEx(cloudTexture, cloud, 0.0f, 5.0f, Color.WHITE);
+							//cloud.x = cloud.x - cameraPosition.x;
+							DrawTextureEx(cloudTexture, Vector2Subtract(cloud, cameraPosition), 0.0f, 5.0f, Color.WHITE);
 						}
 						//DrawTextureEx(rogerSkyDiveTexture, rogerPosition, rogerAirRotation, 3.0f, Color.WHITE);
-						DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerPosition.x - cameraPosition.x, rogerPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						//DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerPosition.x - cameraPosition.x, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+
+						// debug draw the skeletal parts
+						float headOffset = -50.0f;
+						float torsoOffset = 0.0f;
+						float upperArmOffset = -100.0f;
+						float lowerArmOffset = -150.0f;
+						float upperLegOffset = 80.0f;
+						float lowerLegOffset = 150.0f;
+
+						// think about the rotation point
+						// but also think like, actual skeletal system
+
+						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + headOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + torsoOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperArmOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerArmOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperLegOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerLegOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+
+						break;
+					case GameState.SKELETAL_EDITOR:
+						ClearBackground(.(50, 120, 250, 255));
+						switch (skeletalEditorState)
+						{
+						case SkeletalEditorState.WHOLE_BODY:
+							DrawText("whole body", 10, 10, 12, Color.WHITE);
+							break;
+						case SkeletalEditorState.HEAD:
+							DrawText("head", 10, 10, 12, Color.WHITE);
+							break;
+						case SkeletalEditorState.TORSO:
+							DrawText("torso", 10, 10, 12, Color.WHITE);
+							break;
+						case SkeletalEditorState.UPPER_ARM:
+							DrawText("upper arm", 10, 10, 12, Color.WHITE);
+							break;
+						case SkeletalEditorState.LOWER_ARM:
+							DrawText("lower arm", 10, 10, 12, Color.WHITE);
+							break;
+						case SkeletalEditorState.UPPER_LEG:
+							DrawText("upper leg", 10, 10, 12, Color.WHITE);
+							break;
+						case SkeletalEditorState.LOWER_LEG:
+							DrawText("lower leg", 10, 10, 12, Color.WHITE);
+							break;
+						default:
+						}
+						
+						DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + torsoOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperArmOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerArmOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperLegOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerLegOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + headOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawCircle((int32)rogerTorsoPosition.x, (int32)rogerTorsoPosition.y, 5.0f, Color.RED);
+						DrawCircle((int32)rogerHeadPosition.x, (int32)rogerHeadPosition.y, 5.0f, Color.RED);
+						DrawCircle((int32)rogerUpperArmPosition.x, (int32)rogerUpperArmPosition.y, 5.0f, Color.RED);
+						DrawCircle((int32)rogerLowerArmPosition.x, (int32)rogerLowerArmPosition.y, 5.0f, Color.RED);
+						DrawCircle((int32)rogerUpperLegPosition.x, (int32)rogerUpperLegPosition.y, 5.0f, Color.RED);
+						DrawCircle((int32)rogerLowerLegPosition.x, (int32)rogerLowerLegPosition.y, 5.0f, Color.RED);
 						break;
 					default:
 						UpdateMGMScreen();
