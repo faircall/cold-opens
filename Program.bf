@@ -326,7 +326,7 @@ namespace BondProject
 			SkeletalEditorState skeletalEditorState = SkeletalEditorState.TORSO;
 
 			bool needSave = false;
-
+			bool needLoad = false;
 
 			while (!WindowShouldClose())
 			{
@@ -480,6 +480,10 @@ namespace BondProject
 						{
 							needSave = true;
 						}
+						if (IsKeyPressed(KeyboardKey.KEY_F6))
+						{
+							needLoad = true;
+						}
 						if (IsKeyDown(KeyboardKey.KEY_LEFT))
 						{
 							toAdd.x = -1.0f;
@@ -542,7 +546,37 @@ namespace BondProject
 							bufferedStream.Write(skeleton.UpperLeg);
 							bufferedStream.Write(skeleton.LowerLeg);
 							bufferedStream.Close();
+							delete skeleton;
+							delete bufferedStream;
 							needSave = false;
+						}
+
+						if (needLoad)
+						{
+							System.IO.BufferedFileStream bufferedStream = new System.IO.BufferedFileStream();
+							bufferedStream.Open("skeleton.bin");
+							Skeleton skeleton = new Skeleton();
+							
+
+							skeleton.Head = bufferedStream.Read<Vector2>();
+							skeleton.Torso = bufferedStream.Read<Vector2>();
+							skeleton.UpperArm = bufferedStream.Read<Vector2>();
+							
+							skeleton.LowerArm = bufferedStream.Read<Vector2>();
+							skeleton.UpperLeg = bufferedStream.Read<Vector2>();
+							skeleton.LowerLeg = bufferedStream.Read<Vector2>();
+							
+							bufferedStream.Close();
+
+							rogerHeadPosition = skeleton.Head ;
+							rogerTorsoPosition = skeleton.Torso;
+							rogerUpperArmPosition = skeleton.UpperArm;
+							rogerLowerArmPosition = skeleton.LowerArm;
+							rogerUpperLegPosition = skeleton.UpperLeg;
+							rogerLowerLegPosition = skeleton.LowerLeg;
+							delete skeleton;
+							delete bufferedStream;
+							needLoad = false;
 						}
 					default:
 						UpdateMGMScreen();
