@@ -85,6 +85,30 @@ namespace BondProject
 
 		}
 
+		static void TranslateSkeleton(Vector2 trans, Skeleton *skeleton)
+		{
+
+			(*skeleton).Torso = Vector2Add(trans, (*skeleton).Torso);
+			(*skeleton).UpperArm = Vector2Add(trans, (*skeleton).UpperArm);
+			(*skeleton).LowerArm = Vector2Add(trans, (*skeleton).LowerArm);
+			(*skeleton).UpperLeg = Vector2Add(trans, (*skeleton).UpperLeg);
+			(*skeleton).LowerLeg = Vector2Add(trans, (*skeleton).LowerLeg);
+			(*skeleton).Head = Vector2Add(trans, (*skeleton).Head);
+
+		}
+
+		static void CenterSkeleton(Skeleton *skeleton, Skeleton offsetSkeleton)
+		{
+			// assume that the 
+			//(*skeleton).Torso = Vector2Add(trans, (*skeleton).Torso);
+			(*skeleton).UpperArm = Vector2Add(offsetSkeleton.UpperArm, (*skeleton).Torso);
+			(*skeleton).LowerArm = Vector2Add(offsetSkeleton.LowerArm, (*skeleton).Torso);
+			(*skeleton).UpperLeg = Vector2Add(offsetSkeleton.UpperLeg, (*skeleton).Torso);
+			(*skeleton).LowerLeg = Vector2Add(offsetSkeleton.LowerLeg, (*skeleton).Torso);
+			(*skeleton).Head = Vector2Add(offsetSkeleton.Head, (*skeleton).Head);
+
+		}
+
 		static float Vector2Length(Vector2 a)
 		{
 			return Math.Sqrt(a.x*a.x + a.y*a.y);
@@ -256,7 +280,8 @@ namespace BondProject
 
 
 			//GameState gGameState = GameState.GUNBARREL_SCREEN;
-			GameState gGameState = GameState.SKELETAL_EDITOR;
+			// GameState gGameState = GameState.SKELETAL_EDITOR;
+			GameState gGameState = GameState.SKYDIVING_SCREEN;
 			Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
 			Texture2D rogerTexture = LoadTexture("adjusted_roger_resized.png");
 			Texture2D cloudTexture = LoadTexture("cloud.png");
@@ -322,6 +347,37 @@ namespace BondProject
 			Vector2 rogerLowerArmPosition = Vector2(rogerPosition.x, rogerPosition.y);
 			Vector2 rogerUpperLegPosition = Vector2(rogerPosition.x, rogerPosition.y);
 			Vector2 rogerLowerLegPosition = Vector2(rogerPosition.x, rogerPosition.y);
+
+			// load the new skeleton and set, if it exists
+			System.IO.BufferedFileStream vbufferedStream = new System.IO.BufferedFileStream();
+			vbufferedStream.Open("skeleton.bin");
+			Skeleton baseSkeleton = new Skeleton();
+			Skeleton offsetSkeleton = new Skeleton();
+
+
+			baseSkeleton.Head = vbufferedStream.Read<Vector2>();
+			baseSkeleton.Torso = vbufferedStream.Read<Vector2>();
+			baseSkeleton.UpperArm = vbufferedStream.Read<Vector2>();
+
+			baseSkeleton.LowerArm = vbufferedStream.Read<Vector2>();
+			baseSkeleton.UpperLeg = vbufferedStream.Read<Vector2>();
+			baseSkeleton.LowerLeg = vbufferedStream.Read<Vector2>();
+
+			// check ordering on that subtract
+			offsetSkeleton.Head = Vector2Subtract(baseSkeleton.Head, baseSkeleton.Torso);
+			offsetSkeleton.UpperArm = Vector2Subtract(baseSkeleton.UpperArm, baseSkeleton.Torso);
+			offsetSkeleton.LowerArm = Vector2Subtract(baseSkeleton.LowerArm, baseSkeleton.Torso);
+			offsetSkeleton.UpperLeg = Vector2Subtract(baseSkeleton.UpperLeg, baseSkeleton.Torso);
+			offsetSkeleton.LowerLeg = Vector2Subtract(baseSkeleton.LowerLeg, baseSkeleton.Torso);
+
+			vbufferedStream.Close();
+
+			// move the torso to be at roger position
+			// and then move everything else by that amount?
+			
+			// just use these actually
+			//delete baseSkeleton;
+			// then also write an update position function for each thing in it
 
 			SkeletalEditorState skeletalEditorState = SkeletalEditorState.TORSO;
 
@@ -425,10 +481,15 @@ namespace BondProject
 							
 							// need to apply some friction
 							Vector2 rogerFriction = Vector2Scale(rogerVelocity, -0.8f);
+							
 							rogerVelocity.x += rogerFriction.x*dt;
 							rogerVelocity.y += rogerFriction.y*dt;
 							rogerPosition.x += (rogerVelocity.x) * dt;
 							rogerPosition.y += (rogerVelocity.y) * dt;
+
+							baseSkeleton.Torso = rogerPosition;
+							CenterSkeleton(&baseSkeleton, offsetSkeleton);
+
 
 							float terminalVelocity = 0.0f;
 							rogerPosition.y += terminalVelocity * dt;
@@ -647,7 +708,7 @@ namespace BondProject
 						//DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerPosition.x - cameraPosition.x, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 
 						// debug draw the skeletal parts
-						float headOffset = -50.0f;
+						float headOffset = -50.0f; // why not calculate the offset?
 						float torsoOffset = 0.0f;
 						float upperArmOffset = -100.0f;
 						float lowerArmOffset = -150.0f;
@@ -657,12 +718,19 @@ namespace BondProject
 						// think about the rotation point
 						// but also think like, actual skeletal system
 
-						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + headOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + torsoOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperArmOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerArmOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperLegOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerLegOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						
+						DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Torso.x - cameraPosition.x, baseSkeleton.Torso.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperArm.x - cameraPosition.x, baseSkeleton.UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerArm.x - cameraPosition.x, baseSkeleton.LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperLeg.x - cameraPosition.x, baseSkeleton.UpperLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerLeg.x - cameraPosition.x , baseSkeleton.LowerLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Head.x- cameraPosition.x , baseSkeleton.Head.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						//DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + headOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						//DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + torsoOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						//DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperArmOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						//DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerArmOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						//DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperLegOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						//DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerLegOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 
 						break;
 					case GameState.SKELETAL_EDITOR:
@@ -693,12 +761,14 @@ namespace BondProject
 						default:
 						}
 						
-						DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + torsoOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperArmOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerArmOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperLegOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerLegOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + headOffsetToSave, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						
+
+						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerHeadPosition.x- cameraPosition.x , rogerHeadPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerTorsoPosition.x - cameraPosition.x, rogerTorsoPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerUpperArmPosition.x - cameraPosition.x, rogerUpperArmPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerLowerArmPosition.x - cameraPosition.x, rogerLowerArmPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerUpperLegPosition.x - cameraPosition.x, rogerUpperLegPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerLowerLegPosition.x - cameraPosition.x , rogerLowerLegPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						DrawCircle((int32)rogerTorsoPosition.x, (int32)rogerTorsoPosition.y, 5.0f, Color.RED);
 						DrawCircle((int32)rogerHeadPosition.x, (int32)rogerHeadPosition.y, 5.0f, Color.RED);
 						DrawCircle((int32)rogerUpperArmPosition.x, (int32)rogerUpperArmPosition.y, 5.0f, Color.RED);
