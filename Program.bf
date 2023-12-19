@@ -35,6 +35,23 @@ namespace BondProject
 			NUM_STATES,
 		}
 
+		public class Matrix2
+		{
+			// this is row major
+			public float X1;
+			public float Y1;
+			public float X2;
+			public float Y2;
+
+			public this(float x1, float y1, float x2, float y2)
+			{
+				X1 = x1;
+				Y1 = y1;
+				X2 = x2;
+				Y2 = y2;
+			}
+		}
+
 		class GunbarrelDot
 		{
 			public Vector2 *Position { get; set;}
@@ -85,6 +102,14 @@ namespace BondProject
 
 		}
 
+		static Matrix2 Allocate2DRotationMatrix(float angle)
+		{
+			Matrix2 result = new Matrix2(Math.Cos(DegToRad(angle)), -1.0f*Math.Sin(DegToRad(angle)), Math.Sin(DegToRad(angle)), Math.Cos(DegToRad(angle)));
+			return result;
+		}
+
+
+
 		static void TranslateSkeleton(Vector2 trans, Skeleton *skeleton)
 		{
 
@@ -97,15 +122,38 @@ namespace BondProject
 
 		}
 
-		static void CenterSkeleton(Skeleton *skeleton, Skeleton offsetSkeleton)
+		static Vector2 Matrix2MultVec2(Matrix2 m, Vector2 v)
+		{
+			float x = m.X1 * v.x + m.Y1*v.y;
+			float y = m.X2 * v.x + m.Y2*v.y;
+			Vector2 result = Vector2(x, y);
+			return result;
+		}
+
+		static Vector2 RotateVector2(Vector2 v, float angle)
+		{
+			Matrix2 rotMatrix = Allocate2DRotationMatrix(angle);
+			Vector2 result = Matrix2MultVec2(rotMatrix, v);
+			delete rotMatrix;
+			return result;
+		}
+
+		static void CenterSkeleton(Skeleton *skeleton, Skeleton offsetSkeleton, float angle)
 		{
 			// assume that the 
 			//(*skeleton).Torso = Vector2Add(trans, (*skeleton).Torso);
-			(*skeleton).UpperArm = Vector2Add(offsetSkeleton.UpperArm, (*skeleton).Torso);
-			(*skeleton).LowerArm = Vector2Add(offsetSkeleton.LowerArm, (*skeleton).Torso);
-			(*skeleton).UpperLeg = Vector2Add(offsetSkeleton.UpperLeg, (*skeleton).Torso);
-			(*skeleton).LowerLeg = Vector2Add(offsetSkeleton.LowerLeg, (*skeleton).Torso);
-			(*skeleton).Head = Vector2Add(offsetSkeleton.Head, (*skeleton).Head);
+			// a first step would be to add the rotated vector...?
+			Vector2 upperArmRot = RotateVector2(offsetSkeleton.UpperArm, angle);
+			Vector2 lowerArmRot = RotateVector2(offsetSkeleton.LowerArm, angle);
+			Vector2 upperLegRot = RotateVector2(offsetSkeleton.UpperLeg, angle);
+			Vector2 lowerLegRot = RotateVector2(offsetSkeleton.LowerLeg, angle);
+			Vector2 headRot = RotateVector2(offsetSkeleton.Head, angle);
+
+			(*skeleton).UpperArm = Vector2Add(upperArmRot, (*skeleton).Torso);
+			(*skeleton).LowerArm = Vector2Add(lowerArmRot, (*skeleton).Torso);
+			(*skeleton).UpperLeg = Vector2Add(upperLegRot, (*skeleton).Torso);
+			(*skeleton).LowerLeg = Vector2Add(lowerLegRot, (*skeleton).Torso);
+			(*skeleton).Head = Vector2Add(headRot, (*skeleton).Torso);
 
 		}
 
@@ -280,7 +328,7 @@ namespace BondProject
 
 
 			//GameState gGameState = GameState.GUNBARREL_SCREEN;
-			// GameState gGameState = GameState.SKELETAL_EDITOR;
+			//GameState gGameState = GameState.SKELETAL_EDITOR;
 			GameState gGameState = GameState.SKYDIVING_SCREEN;
 			Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
 			Texture2D rogerTexture = LoadTexture("adjusted_roger_resized.png");
@@ -371,6 +419,7 @@ namespace BondProject
 			offsetSkeleton.LowerLeg = Vector2Subtract(baseSkeleton.LowerLeg, baseSkeleton.Torso);
 
 			vbufferedStream.Close();
+			delete vbufferedStream;
 
 			// move the torso to be at roger position
 			// and then move everything else by that amount?
@@ -488,7 +537,8 @@ namespace BondProject
 							rogerPosition.y += (rogerVelocity.y) * dt;
 
 							baseSkeleton.Torso = rogerPosition;
-							CenterSkeleton(&baseSkeleton, offsetSkeleton);
+							// this will need work to take into account the rotation
+							CenterSkeleton(&baseSkeleton, offsetSkeleton, rogerAirRotation);
 
 
 							float terminalVelocity = 0.0f;
@@ -718,7 +768,8 @@ namespace BondProject
 						// think about the rotation point
 						// but also think like, actual skeletal system
 
-						
+
+						// TODO: make these centered 
 						DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Torso.x - cameraPosition.x, baseSkeleton.Torso.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperArm.x - cameraPosition.x, baseSkeleton.UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerArm.x - cameraPosition.x, baseSkeleton.LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
@@ -796,6 +847,8 @@ namespace BondProject
 
 			delete clouds;
 			delete rogerSpriteSheetSkyDive;
+			delete baseSkeleton;
+			delete offsetSkeleton;
 			return 0;
 		}
 	}
