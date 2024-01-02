@@ -2,6 +2,10 @@ using System;
 using static raylib_beef.Raylib;
 using raylib_beef.Types;
 using raylib_beef.Enums;
+using Entities;
+using BondMath;
+
+
 
 // dots should only disappear when new one is spawning
 // check this on other handware to make sure
@@ -14,14 +18,6 @@ namespace BondProject
 {
 	class Program
 	{
-		public enum GameState
-		{
-			MGM_SCREEN,
-			GUNBARREL_SCREEN,
-			SKYDIVING_SCREEN,
-			SKELETAL_EDITOR,
-			NUM_STATES
-		}
 
 		public enum SkeletalEditorState
 		{
@@ -35,48 +31,7 @@ namespace BondProject
 			NUM_STATES,
 		}
 
-		public class Matrix2
-		{
-			// this is row major
-			public float X1;
-			public float Y1;
-			public float X2;
-			public float Y2;
-
-			public this(float x1, float y1, float x2, float y2)
-			{
-				X1 = x1;
-				Y1 = y1;
-				X2 = x2;
-				Y2 = y2;
-			}
-		}
-
-		class GunbarrelDot
-		{
-			public Vector2 *Position { get; set;}
-			public float Timer { get; set; }
-			public bool Active { get; set; }
-			
-			public this(Vector2 position, float timer, bool active)
-			{
-				Position = new Vector2(position.x, position.y);
-				Timer = timer;
-				Active = active;
-			}
-		}
-
 		
-		class Skeleton
-		{
-
-			public Vector2 Torso {get;set;}
-			public Vector2 Head {get;set;}
-			public Vector2 UpperArm {get;set;}
-			public Vector2 LowerArm {get;set;}
-			public Vector2 UpperLeg {get;set;}
-			public Vector2 LowerLeg {get;set;}
-		}
 
 		class SpriteSheet
 		{
@@ -102,108 +57,78 @@ namespace BondProject
 
 		}
 
-		static Matrix2 Allocate2DRotationMatrix(float angle)
-		{
-			Matrix2 result = new Matrix2(Math.Cos(DegToRad(angle)), -1.0f*Math.Sin(DegToRad(angle)), Math.Sin(DegToRad(angle)), Math.Cos(DegToRad(angle)));
-			return result;
-		}
-
 
 
 		static void TranslateSkeleton(Vector2 trans, Skeleton *skeleton)
 		{
 
-			(*skeleton).Torso = Vector2Add(trans, (*skeleton).Torso);
-			(*skeleton).UpperArm = Vector2Add(trans, (*skeleton).UpperArm);
-			(*skeleton).LowerArm = Vector2Add(trans, (*skeleton).LowerArm);
-			(*skeleton).UpperLeg = Vector2Add(trans, (*skeleton).UpperLeg);
-			(*skeleton).LowerLeg = Vector2Add(trans, (*skeleton).LowerLeg);
-			(*skeleton).Head = Vector2Add(trans, (*skeleton).Head);
+			(*skeleton).Torso = Matrix2.Vector2Add(trans, (*skeleton).Torso);
+			(*skeleton).UpperArm = Matrix2.Vector2Add(trans, (*skeleton).UpperArm);
+			(*skeleton).LowerArm = Matrix2.Vector2Add(trans, (*skeleton).LowerArm);
+			(*skeleton).UpperLeg = Matrix2.Vector2Add(trans, (*skeleton).UpperLeg);
+			(*skeleton).LowerLeg = Matrix2.Vector2Add(trans, (*skeleton).LowerLeg);
+			(*skeleton).Head = Matrix2.Vector2Add(trans, (*skeleton).Head);
 
 		}
 
-		static Vector2 Matrix2MultVec2(Matrix2 m, Vector2 v)
-		{
-			float x = m.X1 * v.x + m.Y1*v.y;
-			float y = m.X2 * v.x + m.Y2*v.y;
-			Vector2 result = Vector2(x, y);
-			return result;
-		}
 
-		static Vector2 RotateVector2(Vector2 v, float angle)
-		{
-			Matrix2 rotMatrix = Allocate2DRotationMatrix(angle);
-			Vector2 result = Matrix2MultVec2(rotMatrix, v);
-			delete rotMatrix;
-			return result;
-		}
 
 		static void CenterSkeleton(Skeleton *skeleton, Skeleton offsetSkeleton, float angle)
 		{
 			// assume that the 
-			//(*skeleton).Torso = Vector2Add(trans, (*skeleton).Torso);
+			//(*skeleton).Torso = Matrix2.Vector2Add(trans, (*skeleton).Torso);
 			// a first step would be to add the rotated vector...?
-			Vector2 upperArmRot = RotateVector2(offsetSkeleton.UpperArm, angle);
-			Vector2 lowerArmRot = RotateVector2(offsetSkeleton.LowerArm, angle);
-			Vector2 upperLegRot = RotateVector2(offsetSkeleton.UpperLeg, angle);
-			Vector2 lowerLegRot = RotateVector2(offsetSkeleton.LowerLeg, angle);
-			Vector2 headRot = RotateVector2(offsetSkeleton.Head, angle);
+			Vector2 upperArmRot = Matrix2.RotateVector2(offsetSkeleton.UpperArm, angle);
+			Vector2 lowerArmRot = Matrix2.RotateVector2(offsetSkeleton.LowerArm, angle);
+			Vector2 upperLegRot = Matrix2.RotateVector2(offsetSkeleton.UpperLeg, angle);
+			Vector2 lowerLegRot = Matrix2.RotateVector2(offsetSkeleton.LowerLeg, angle);
+			Vector2 headRot = Matrix2.RotateVector2(offsetSkeleton.Head, angle);
 
-			(*skeleton).UpperArm = Vector2Add(upperArmRot, (*skeleton).Torso);
-			(*skeleton).LowerArm = Vector2Add(lowerArmRot, (*skeleton).Torso);
-			(*skeleton).UpperLeg = Vector2Add(upperLegRot, (*skeleton).Torso);
-			(*skeleton).LowerLeg = Vector2Add(lowerLegRot, (*skeleton).Torso);
-			(*skeleton).Head = Vector2Add(headRot, (*skeleton).Torso);
+			(*skeleton).UpperArm = Matrix2.Vector2Add(upperArmRot, (*skeleton).Torso);
+			(*skeleton).LowerArm = Matrix2.Vector2Add(lowerArmRot, (*skeleton).Torso);
+			(*skeleton).UpperLeg = Matrix2.Vector2Add(upperLegRot, (*skeleton).Torso);
+			(*skeleton).LowerLeg = Matrix2.Vector2Add(lowerLegRot, (*skeleton).Torso);
+			(*skeleton).Head = Matrix2.Vector2Add(headRot, (*skeleton).Torso);
 
 		}
 
-		static float Vector2Length(Vector2 a)
+		static void CenterSkeletonAdditional(Skeleton *skeleton, Skeleton offsetSkeleton, float angle, float additionalLowerArm)
 		{
-			return Math.Sqrt(a.x*a.x + a.y*a.y);
+			// assume that the 
+			//(*skeleton).Torso = Matrix2.Vector2Add(trans, (*skeleton).Torso);
+			// a first step would be to add the rotated vector...?
+			Vector2 upperArmRot = Matrix2.RotateVector2(offsetSkeleton.UpperArm, angle);
+			Vector2 lowerArmRot = Matrix2.RotateVector2(offsetSkeleton.LowerArm, angle + additionalLowerArm);
+			Vector2 upperLegRot = Matrix2.RotateVector2(offsetSkeleton.UpperLeg, angle);
+			Vector2 lowerLegRot = Matrix2.RotateVector2(offsetSkeleton.LowerLeg, angle);
+			Vector2 headRot = Matrix2.RotateVector2(offsetSkeleton.Head, angle);
+
+			(*skeleton).UpperArm = Matrix2.Vector2Add(upperArmRot, (*skeleton).Torso);
+			(*skeleton).LowerArm = Matrix2.Vector2Add(lowerArmRot, (*skeleton).Torso);
+			(*skeleton).UpperLeg = Matrix2.Vector2Add(upperLegRot, (*skeleton).Torso);
+			(*skeleton).LowerLeg = Matrix2.Vector2Add(lowerLegRot, (*skeleton).Torso);
+			(*skeleton).Head = Matrix2.Vector2Add(headRot, (*skeleton).Torso);
+
 		}
 
-		static void Vector2Normalize(ref Vector2 a, float tolerance)
+		static void RotateLowerArm(Skeleton *skeleton, float baseRotation, float additionalRotation)
 		{
-			if (Vector2Length(a) <= tolerance)
-			{
-				return;
-			}
+			// do everything in a basis space
+			float armLength = 32.0f;
+			Vector2 result = Vector2(1.0f, 0.0f);
+			result = Matrix2.Vector2Scale(result, armLength);
 
-			float len = Vector2Length(a);
-			a.x /= len;
-			a.y /= len;
+			Vector2 originalRotated = Matrix2.RotateVector2(result, baseRotation);
+			Vector2 additionalRotated = Matrix2.RotateVector2(originalRotated, additionalRotation);
+			Vector2 difference = Matrix2.Vector2Subtract(additionalRotated, originalRotated);
+			(*skeleton).LowerArm = Matrix2.Vector2Subtract((*skeleton).LowerArm, difference);
 		}
 
-		static float Vector2Distance(Vector2 a, Vector2 b)
-		{
-			return Math.Sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
-		}
+		
 
-		static Vector2 Vector2Scale(Vector2 a, float s)
-		{
+		
 
-			Vector2 result = Vector2(a.x * s, a.y * s);
-			return result;
-		}
-
-		static Vector2 Vector2Subtract(Vector2 a, Vector2 b)
-		{
-			// a - b
-			Vector2 result = Vector2(a.x - b.x, a.y - b.y);
-			return result;
-		}
-
-		static Vector2 Vector2Add(Vector2 a, Vector2 b)
-		{
-			// a - b
-			Vector2 result = Vector2(a.x + b.x, a.y + b.y);
-			return result;
-		}
-
-		static float DegToRad(float deg)
-		{
-			return Math.PI_f * deg / 180.0f;
-		}
+		
 		public static void UpdateGunbarrel(ref GunbarrelDot dotStart, ref GunbarrelDot nextDot, GunbarrelDot[] dots,
 			ref int dotCounter, ref float circTimer, ref float dotGrowthTimer, float dotGrowthTimerMax, float dotSpeed, ref bool dotStopped,
 			float dotTimeout, int maxDots, float dt)
@@ -211,7 +136,7 @@ namespace BondProject
 			if (dotStart.Position.x < dots[maxDots - 1].Position.x && !dotStopped)
 			{
 				dotStart.Position.x += dt * dotSpeed;
-				if (Vector2Distance(*nextDot.Position, *dotStart.Position) < 3.0f && !nextDot.Active)
+				if (Matrix2.Vector2Distance(*nextDot.Position, *dotStart.Position) < 3.0f && !nextDot.Active)
 				{
 					dots[dotCounter].Active = true;
 					if (dotCounter < maxDots - 1)
@@ -288,6 +213,9 @@ namespace BondProject
 				spriteSheet.CurrentRect = Rectangle(spriteSheet.CurrentFrame * spriteSheet.FrameWidth, 0.0f, spriteSheet.FrameWidth, spriteSheet.FrameHeight);
 			}
 		}
+
+
+		
 
 		public static int Main()
 		{
@@ -389,6 +317,9 @@ namespace BondProject
 			float upperLegOffsetToSave = 80.0f;
 			float lowerLegOffsetToSave = 150.0f;
 
+			float armOscilator = 0.0f;
+			float armAngleToOscilate = Math.Sin(armOscilator*2*Math.PI_f / 2.0f) * 10.0f;
+
 			Vector2 rogerTorsoPosition = Vector2(rogerPosition.x, rogerPosition.y);
 			Vector2 rogerHeadPosition = Vector2(rogerPosition.x, rogerPosition.y);
 			Vector2 rogerUpperArmPosition = Vector2(rogerPosition.x, rogerPosition.y);
@@ -412,11 +343,11 @@ namespace BondProject
 			baseSkeleton.LowerLeg = vbufferedStream.Read<Vector2>();
 
 			// check ordering on that subtract
-			offsetSkeleton.Head = Vector2Subtract(baseSkeleton.Head, baseSkeleton.Torso);
-			offsetSkeleton.UpperArm = Vector2Subtract(baseSkeleton.UpperArm, baseSkeleton.Torso);
-			offsetSkeleton.LowerArm = Vector2Subtract(baseSkeleton.LowerArm, baseSkeleton.Torso);
-			offsetSkeleton.UpperLeg = Vector2Subtract(baseSkeleton.UpperLeg, baseSkeleton.Torso);
-			offsetSkeleton.LowerLeg = Vector2Subtract(baseSkeleton.LowerLeg, baseSkeleton.Torso);
+			offsetSkeleton.Head = Matrix2.Vector2Subtract(baseSkeleton.Head, baseSkeleton.Torso);
+			offsetSkeleton.UpperArm = Matrix2.Vector2Subtract(baseSkeleton.UpperArm, baseSkeleton.Torso);
+			offsetSkeleton.LowerArm = Matrix2.Vector2Subtract(baseSkeleton.LowerArm, baseSkeleton.Torso);
+			offsetSkeleton.UpperLeg = Matrix2.Vector2Subtract(baseSkeleton.UpperLeg, baseSkeleton.Torso);
+			offsetSkeleton.LowerLeg = Matrix2.Vector2Subtract(baseSkeleton.LowerLeg, baseSkeleton.Torso);
 
 			vbufferedStream.Close();
 			delete vbufferedStream;
@@ -509,11 +440,11 @@ namespace BondProject
 								rogerDirection.y = 1.0f;
 							}
 
-							Vector2Normalize(ref rogerDirection, 0.001f);
+							Matrix2.Vector2Normalize(ref rogerDirection, 0.001f);
 							float rotationSpeed = 5.0f;
 							rogerAirRotation += rogerDirection.x * dt * rotationSpeed;
-							float rogerAirMotion = Math.Sin(DegToRad(rogerAirRotation % 180));
-							float rogerAirMotionUp = Math.Cos(DegToRad(rogerAirRotation % 180));
+							float rogerAirMotion = Math.Sin(Trig.DegToRad(rogerAirRotation % 180));
+							float rogerAirMotionUp = Math.Cos(Trig.DegToRad(rogerAirRotation % 180));
 							
 							rogerVelocity.x += rogerAirMotion * dt * rogerSpeedAir;
 							rogerVelocity.y += rogerDirection.y * dt * rogerSpeedAir;
@@ -529,7 +460,10 @@ namespace BondProject
 							
 							
 							// need to apply some friction
-							Vector2 rogerFriction = Vector2Scale(rogerVelocity, -0.8f);
+							Vector2 rogerFriction = Matrix2.Vector2Scale(rogerVelocity, -0.8f);
+							float armPerSecond = 10.0f;
+							armOscilator += dt;
+							armAngleToOscilate = Math.Sin(armOscilator*2*Math.PI_f / armPerSecond) * 10.0f;
 							
 							rogerVelocity.x += rogerFriction.x*dt;
 							rogerVelocity.y += rogerFriction.y*dt;
@@ -539,6 +473,8 @@ namespace BondProject
 							baseSkeleton.Torso = rogerPosition;
 							// this will need work to take into account the rotation
 							CenterSkeleton(&baseSkeleton, offsetSkeleton, rogerAirRotation);
+							RotateLowerArm(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
+							//CenterSkeletonAdditional(&baseSkeleton, offsetSkeleton, rogerAirRotation, armAngleToOscilate);
 
 
 							float terminalVelocity = 0.0f;
@@ -611,29 +547,29 @@ namespace BondProject
 						{
 							toAdd.y = 1.0f;
 						}
-						toAdd = Vector2Scale(toAdd, dt * 40.0f);
+						toAdd = Matrix2.Vector2Scale(toAdd, dt * 40.0f);
 						switch (skeletalEditorState)
 						{
 						case SkeletalEditorState.WHOLE_BODY:
-							rogerPosition = Vector2Add(rogerPosition, toAdd);
+							rogerPosition = Matrix2.Vector2Add(rogerPosition, toAdd);
 							break;
 						case SkeletalEditorState.HEAD:
-							rogerHeadPosition = Vector2Add(rogerHeadPosition, toAdd);
+							rogerHeadPosition = Matrix2.Vector2Add(rogerHeadPosition, toAdd);
 							break;
 						case SkeletalEditorState.TORSO:
-							rogerTorsoPosition = Vector2Add(rogerTorsoPosition, toAdd);
+							rogerTorsoPosition = Matrix2.Vector2Add(rogerTorsoPosition, toAdd);
 							break;
 						case SkeletalEditorState.UPPER_ARM:
-							rogerUpperArmPosition = Vector2Add(rogerUpperArmPosition, toAdd);
+							rogerUpperArmPosition = Matrix2.Vector2Add(rogerUpperArmPosition, toAdd);
 							break;
 						case SkeletalEditorState.LOWER_ARM:
-							rogerLowerArmPosition = Vector2Add(rogerLowerArmPosition, toAdd);
+							rogerLowerArmPosition = Matrix2.Vector2Add(rogerLowerArmPosition, toAdd);
 							break;
 						case SkeletalEditorState.UPPER_LEG:
-							rogerUpperLegPosition = Vector2Add(rogerUpperLegPosition, toAdd);
+							rogerUpperLegPosition = Matrix2.Vector2Add(rogerUpperLegPosition, toAdd);
 							break;
 						case SkeletalEditorState.LOWER_LEG:
-							rogerLowerLegPosition = Vector2Add(rogerLowerLegPosition, toAdd);
+							rogerLowerLegPosition = Matrix2.Vector2Add(rogerLowerLegPosition, toAdd);
 							break;
 						default:
 							break;
@@ -752,7 +688,7 @@ namespace BondProject
 						for (Vector2 cloud in clouds)
 						{
 							//cloud.x = cloud.x - cameraPosition.x;
-							DrawTextureEx(cloudTexture, Vector2Subtract(cloud, cameraPosition), 0.0f, 5.0f, Color.WHITE);
+							DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, 5.0f, Color.WHITE);
 						}
 						//DrawTextureEx(rogerSkyDiveTexture, rogerPosition, rogerAirRotation, 3.0f, Color.WHITE);
 						//DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerPosition.x - cameraPosition.x, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
@@ -772,7 +708,7 @@ namespace BondProject
 						// TODO: make these centered 
 						DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Torso.x - cameraPosition.x, baseSkeleton.Torso.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperArm.x - cameraPosition.x, baseSkeleton.UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerArm.x - cameraPosition.x, baseSkeleton.LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerArm.x - cameraPosition.x, baseSkeleton.LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
 						DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperLeg.x - cameraPosition.x, baseSkeleton.UpperLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerLeg.x - cameraPosition.x , baseSkeleton.LowerLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Head.x- cameraPosition.x , baseSkeleton.Head.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
