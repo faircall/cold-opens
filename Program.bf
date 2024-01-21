@@ -111,6 +111,18 @@ namespace BondProject
 
 		}
 
+		// Finally the shape of the hierarchical solution is starting make sense
+		// so what we want is something like
+		// a hierachical struct
+		// 
+		static void RotateAllFromRoot(Skeleton *skeleton, float baseRotation)
+		{
+
+		}
+
+		// if we shift the torso (aka everthing), everything is rotated
+		// then 
+
 		static void RotateLowerArm(Skeleton *skeleton, float baseRotation, float additionalRotation)
 		{
 			// do everything in a basis space
@@ -122,6 +134,32 @@ namespace BondProject
 			Vector2 additionalRotated = Matrix2.RotateVector2(originalRotated, additionalRotation);
 			Vector2 difference = Matrix2.Vector2Subtract(additionalRotated, originalRotated);
 			(*skeleton).LowerArm = Matrix2.Vector2Subtract((*skeleton).LowerArm, difference);
+		}
+
+		static void RotateUpperArm(Skeleton *skeleton, float baseRotation, float additionalRotation)
+		{
+			// do everything in a basis space
+			float armLength = 32.0f;
+			Vector2 result = Vector2(1.0f, 0.0f);
+			result = Matrix2.Vector2Scale(result, armLength);
+
+			Vector2 originalRotated = Matrix2.RotateVector2(result, baseRotation);
+			Vector2 additionalRotated = Matrix2.RotateVector2(originalRotated, additionalRotation);
+			Vector2 difference = Matrix2.Vector2Subtract(additionalRotated, originalRotated);
+			(*skeleton).UpperArm = Matrix2.Vector2Subtract((*skeleton).UpperArm, difference);
+		}
+
+		static void RotateLowerLeg(Skeleton *skeleton, float baseRotation, float additionalRotation)
+		{
+			// do everything in a basis space
+			float armLength = 64.0f;
+			Vector2 result = Vector2(-1.0f, 0.0f);
+			result = Matrix2.Vector2Scale(result, armLength);
+
+			Vector2 originalRotated = Matrix2.RotateVector2(result, baseRotation);
+			Vector2 additionalRotated = Matrix2.RotateVector2(originalRotated, additionalRotation);
+			Vector2 difference = Matrix2.Vector2Subtract(additionalRotated, originalRotated);
+			(*skeleton).LowerLeg = Matrix2.Vector2Subtract((*skeleton).LowerLeg, difference);
 		}
 
 		
@@ -214,6 +252,21 @@ namespace BondProject
 			}
 		}
 
+		public static void MoveBones(Bone *root)
+		{
+			// rotate the current one
+
+			// pass it on to the next
+			if ((*root).Children.Count > 0)
+			{
+				for (var bone in (*root).Children)
+				{
+					MoveBones(&bone); // maybe? think this one through
+				}
+
+			}
+		}
+
 
 		
 
@@ -300,6 +353,8 @@ namespace BondProject
 			float cloudEnd = (float)screenHeight + 10.0f;
 			float cloudStart = -150.0f;
 
+			float groundStart = 5000.0f;
+
 			Vector2 rogerDirection = Vector2(0.0f, 0.0f);
 			Vector2 cameraPosition = Vector2(0.0f, 0.0f); // this will act as our offset
 			Vector2 rogerVelocity = Vector2(0.0f, 0.0f);
@@ -316,6 +371,7 @@ namespace BondProject
 			float lowerArmOffsetToSave = -150.0f;
 			float upperLegOffsetToSave = 80.0f;
 			float lowerLegOffsetToSave = 150.0f;
+
 
 			float armOscilator = 0.0f;
 			float armAngleToOscilate = Math.Sin(armOscilator*2*Math.PI_f / 2.0f) * 10.0f;
@@ -447,6 +503,7 @@ namespace BondProject
 							float rogerAirMotionUp = Math.Cos(Trig.DegToRad(rogerAirRotation % 180));
 							
 							rogerVelocity.x += rogerAirMotion * dt * rogerSpeedAir;
+							// this shouldn't be active when he's on the ground
 							rogerVelocity.y += rogerDirection.y * dt * rogerSpeedAir;
 
 							rogerVelocity.y += (10.0f * dt * rogerAirMotionUp);
@@ -468,12 +525,17 @@ namespace BondProject
 							rogerVelocity.x += rogerFriction.x*dt;
 							rogerVelocity.y += rogerFriction.y*dt;
 							rogerPosition.x += (rogerVelocity.x) * dt;
-							rogerPosition.y += (rogerVelocity.y) * dt;
+							if (rogerPosition.y < groundStart)
+							{
+								rogerPosition.y += (rogerVelocity.y) * dt;
+							}
 
 							baseSkeleton.Torso = rogerPosition;
 							// this will need work to take into account the rotation
 							CenterSkeleton(&baseSkeleton, offsetSkeleton, rogerAirRotation);
 							RotateLowerArm(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
+							RotateUpperArm(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
+							RotateLowerLeg(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
 							//CenterSkeletonAdditional(&baseSkeleton, offsetSkeleton, rogerAirRotation, armAngleToOscilate);
 
 
@@ -690,6 +752,11 @@ namespace BondProject
 							//cloud.x = cloud.x - cameraPosition.x;
 							DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, 5.0f, Color.WHITE);
 						}
+
+						// draw the ground when it's in frame, or just draw it offscreen constantly
+						// start by the dumb way
+						DrawRectangle(0, (int32)(groundStart - cameraPosition.y), screenWidth, screenHeight, Color.DARKBROWN);
+
 						//DrawTextureEx(rogerSkyDiveTexture, rogerPosition, rogerAirRotation, 3.0f, Color.WHITE);
 						//DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerPosition.x - cameraPosition.x, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 
@@ -707,11 +774,12 @@ namespace BondProject
 
 						// TODO: make these centered 
 						DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Torso.x - cameraPosition.x, baseSkeleton.Torso.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperArm.x - cameraPosition.x, baseSkeleton.UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperArm.x - cameraPosition.x, baseSkeleton.UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
 						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerArm.x - cameraPosition.x, baseSkeleton.LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
 						DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperLeg.x - cameraPosition.x, baseSkeleton.UpperLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerLeg.x - cameraPosition.x , baseSkeleton.LowerLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerLeg.x - cameraPosition.x , baseSkeleton.LowerLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
 						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Head.x- cameraPosition.x , baseSkeleton.Head.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+
 						//DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + headOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						//DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + torsoOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						//DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperArmOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
