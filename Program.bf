@@ -13,6 +13,8 @@ using BondMath;
 // make the speed more physics-y
 // make the animation more code driven
 
+// start on a plane
+
 
 namespace BondProject
 {
@@ -310,7 +312,8 @@ namespace BondProject
 
 			//GameState gGameState = GameState.GUNBARREL_SCREEN;
 			//GameState gGameState = GameState.SKELETAL_EDITOR;
-			GameState gGameState = GameState.SKYDIVING_SCREEN;
+			// GameState gGameState = GameState.SKYDIVING_SCREEN;
+			GameState gGameState = GameState.PLANE_SCREEN;
 			Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
 			Texture2D rogerTexture = LoadTexture("adjusted_roger_resized.png");
 			Texture2D cloudTexture = LoadTexture("cloud.png");
@@ -322,6 +325,8 @@ namespace BondProject
 			Texture2D rogerLowerArmTexture = LoadTexture("lowerarm.png");
 			Texture2D rogerUpperLegTexture = LoadTexture("upperleg.png");
 			Texture2D rogerLowerLegTexture = LoadTexture("lowerleg.png");
+
+			Texture2D planeTexture = LoadTexture("plane_at_scale.png");
 
 
 			Shader gbShader = LoadShader("base.vs", "gunbarrel.fs");
@@ -344,6 +349,9 @@ namespace BondProject
 
 			Vector2 circLoc = *dots[maxDots - 1].Position;
 			Vector2 rogerPosition = Vector2(circLoc.x, circLoc.y);
+
+			Vector2 planePosition = Vector2(40.0f, 40.0f);
+			float planeRotation = 0.0f;
 
 			Vector2 cloudPosition = Vector2(40.0f, 40.0f);
 			SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
@@ -458,15 +466,17 @@ namespace BondProject
 						}
 
 						break;
+					case (GameState.PLANE_SCREEN):
+						break;
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
 						for (int i = 0; i < clouds.Count; i++)
 						{
 							Vector2 cloudPos = clouds[i];
 							
-							if (cloudPos.y <= cloudStart)
+							if (cloudPos.y <= rogerPosition.y - screenHeight)
 							{
-								cloudPos.y = cloudEnd;
+								cloudPos.y = rogerPosition.y + screenHeight;
 								cloudPos.x = (float)GetRandomValue(int32(rogerPosition.x - screenWidth), int32(rogerPosition.x + screenWidth));
 							}
 							clouds[i] = cloudPos;
@@ -743,6 +753,11 @@ namespace BondProject
 								DrawCircle((int32)dotStart.Position.x, (int32)dotStart.Position.y, dotRad, Color.WHITE);
 							}
 						}
+						break;
+					case (GameState.PLANE_SCREEN):
+						ClearBackground(.(50, 120, 250, 255));
+						DrawTextureEx(planeTexture, planePosition, planeRotation, 1.0f, Color.RAYWHITE);
+						
 						break;
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
