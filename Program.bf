@@ -16,7 +16,7 @@ using BondMath;
 // start on a plane
 
 
-namespace BondProject
+namespace ColdOpen
 {
 	class Program
 	{
@@ -165,7 +165,21 @@ namespace BondProject
 		}
 
 		
-
+		public static void UpdatePlaneScene(ref Vector2[] planeClouds, float[] planeCloudDistances, ref float planeTimer, float dt, float screenWidth)
+		{
+			planeTimer += dt;
+			
+			for (int i = 0; i < planeClouds.Count; i++)
+			{
+				float cloudSpeed = 100.0f * 1.0f/planeCloudDistances[i];
+				planeClouds[i].x += dt * cloudSpeed;
+				if (planeClouds[i].x > screenWidth+50.0f)
+				{
+					planeClouds[i].x = -150.0f;
+				}
+			}
+			
+		}
 		
 
 		
@@ -281,8 +295,24 @@ namespace BondProject
 			InitWindow(screenWidth, screenHeight, "Moonraker");
 			SetTargetFPS(60);
 
+			Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
+			Texture2D rogerTexture = LoadTexture("adjusted_roger_resized.png");
+			Texture2D cloudTexture = LoadTexture("cloud.png");
+			Texture2D rogerSkyDiveTexture = LoadTexture("rogerskydive.png");
+
+			Texture2D rogerHeadTexture = LoadTexture("head.png");
+			Texture2D rogerTorsoTexture = LoadTexture("torso.png");
+			Texture2D rogerUpperArmTexture = LoadTexture("upperarm.png");
+			Texture2D rogerLowerArmTexture = LoadTexture("lowerarm.png");
+			Texture2D rogerUpperLegTexture = LoadTexture("upperleg.png");
+			Texture2D rogerLowerLegTexture = LoadTexture("lowerleg.png");
+
+			Texture2D planeTexture = LoadTexture("plane_at_scale.png");
+
 			int maxDots = 6;
 			int maxClouds = 12;
+
+			int maxPlaneClouds = 64;
 			GunbarrelDot[] dots = new GunbarrelDot[maxDots];
 			for (int i = 0; i < maxDots; i++)
 			{
@@ -290,6 +320,25 @@ namespace BondProject
 			}
 
 			Vector2[] clouds = new Vector2[maxClouds];
+
+			Vector2[] planeClouds = new Vector2[maxPlaneClouds];
+			float[] planeCloudDistances = new float[maxPlaneClouds];
+			int[] planeCloudWidths = new int[maxPlaneClouds];
+			
+
+			Rectangle cloudRect = Rectangle(0, 0, cloudTexture.width, cloudTexture.height);
+
+			for (int i = 0; i < maxPlaneClouds; i++)
+			{
+				int32 randPos = GetRandomValue(0, screenWidth);
+				int32 randHeight = GetRandomValue(0, screenHeight);
+				float dist = ((float)(maxPlaneClouds - i) / (float)maxPlaneClouds) * 10.0f + 1.0f;
+				planeCloudDistances[i] = dist;
+				planeClouds[i] = Vector2(randPos, randHeight);
+				planeCloudWidths[i] = GetRandomValue(30, 150);
+
+
+			}
 			
 			for (int i = 0; i < maxClouds; i++)
 			{
@@ -312,21 +361,9 @@ namespace BondProject
 
 			//GameState gGameState = GameState.GUNBARREL_SCREEN;
 			//GameState gGameState = GameState.SKELETAL_EDITOR;
-			// GameState gGameState = GameState.SKYDIVING_SCREEN;
+			//GameState gGameState = GameState.SKYDIVING_SCREEN;
 			GameState gGameState = GameState.PLANE_SCREEN;
-			Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
-			Texture2D rogerTexture = LoadTexture("adjusted_roger_resized.png");
-			Texture2D cloudTexture = LoadTexture("cloud.png");
-			Texture2D rogerSkyDiveTexture = LoadTexture("rogerskydive.png");
-
-			Texture2D rogerHeadTexture = LoadTexture("head.png");
-			Texture2D rogerTorsoTexture = LoadTexture("torso.png");
-			Texture2D rogerUpperArmTexture = LoadTexture("upperarm.png");
-			Texture2D rogerLowerArmTexture = LoadTexture("lowerarm.png");
-			Texture2D rogerUpperLegTexture = LoadTexture("upperleg.png");
-			Texture2D rogerLowerLegTexture = LoadTexture("lowerleg.png");
-
-			Texture2D planeTexture = LoadTexture("plane_at_scale.png");
+			
 
 
 			Shader gbShader = LoadShader("base.vs", "gunbarrel.fs");
@@ -345,12 +382,14 @@ namespace BondProject
 
 			float circTimer = 0.0f;
 
+			float planeTimer = 0.0f;
+
 			float spotlightTimer = 100.0f;
 
 			Vector2 circLoc = *dots[maxDots - 1].Position;
 			Vector2 rogerPosition = Vector2(circLoc.x, circLoc.y);
 
-			Vector2 planePosition = Vector2(40.0f, 40.0f);
+			Vector2 planePosition = Vector2(400.0f, 150.0f);
 			float planeRotation = 0.0f;
 
 			Vector2 cloudPosition = Vector2(40.0f, 40.0f);
@@ -467,6 +506,7 @@ namespace BondProject
 
 						break;
 					case (GameState.PLANE_SCREEN):
+						UpdatePlaneScene(ref planeClouds, planeCloudDistances, ref planeTimer, dt, (float)screenWidth);
 						break;
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
@@ -756,7 +796,31 @@ namespace BondProject
 						break;
 					case (GameState.PLANE_SCREEN):
 						ClearBackground(.(50, 120, 250, 255));
+						float planeLoc = 5.0f;
+						for (int i = 0; i < planeClouds.Count; i++)
+						{
+							Vector2 cloud = planeClouds[i];
+							if (planeCloudDistances[i] >= planeLoc)
+							{
+								float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
+								Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
+								DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f, Color.WHITE);
+								//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
+							}
+						}
 						DrawTextureEx(planeTexture, planePosition, planeRotation, 1.0f, Color.RAYWHITE);
+						for (int i = 0; i < planeClouds.Count; i++)
+						{
+							Vector2 cloud = planeClouds[i];
+							if (planeCloudDistances[i] < planeLoc)
+							{
+								float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
+								Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
+								DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f, Color.WHITE);
+								//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
+							}
+						}
+						
 						
 						break;
 					case (GameState.SKYDIVING_SCREEN):
@@ -865,6 +929,9 @@ namespace BondProject
 			delete rogerSpriteSheet;
 
 			delete clouds;
+			delete planeClouds;
+			delete planeCloudDistances;
+			delete planeCloudWidths;
 			delete rogerSpriteSheetSkyDive;
 			delete baseSkeleton;
 			delete offsetSkeleton;

@@ -1,0 +1,7 @@
+FileVersion = 1
+Dependencies = {corlib = "*", raylib-beef = "*"}
+
+[Project]
+Name = "ColdOpen"
+TargetType = "BeefGUIApplication"
+StartupObject = "ColdOpen.Program"
