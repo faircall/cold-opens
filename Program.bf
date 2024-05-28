@@ -16,7 +16,7 @@ using BondMath;
 // start on a plane
 
 
-namespace ColdOpen
+namespace BondProject
 {
 	class Program
 	{
@@ -165,10 +165,27 @@ namespace ColdOpen
 		}
 
 		
-		public static void UpdatePlaneScene(ref Vector2[] planeClouds, float[] planeCloudDistances, ref float planeTimer, float dt, float screenWidth)
+		public static bool UpdatePlaneScene(ref Vector2[] planeClouds, float[] planeCloudDistances, ref Vector2 planePos, ref float planeTimer, float dt, float screenWidth)
 		{
+			bool switchScene = false;
 			planeTimer += dt;
+
+			UpdateClouds(ref planeClouds, planeCloudDistances, dt, screenWidth);
 			
+			
+			float planeSpeed = 130.0f;
+			planePos.x -= planeSpeed * dt;
+
+			if (planePos.x < 0.0f || IsKeyPressed(KeyboardKey.KEY_SPACE))
+			{
+				switchScene = true;
+			}
+
+			return switchScene;
+		}
+
+		public static void UpdateClouds(ref Vector2[] planeClouds, float[] planeCloudDistances, float dt, float screenWidth)
+		{
 			for (int i = 0; i < planeClouds.Count; i++)
 			{
 				float cloudSpeed = 100.0f * 1.0f/planeCloudDistances[i];
@@ -178,7 +195,84 @@ namespace ColdOpen
 					planeClouds[i].x = -150.0f;
 				}
 			}
+		}
+
+		public static int UpdatePlaneInteriorScene(Person roger, Person doorInPlane, float doorWidth, float doorHeight, float dt, float screenWidth, ref Vector2[] planeClouds, float[] planeCloudDistances)
+		{
+			// multiple transition states
+			// so we return int (could really be an enum)
+			static float explosionTimer = 0.0f;
+			float explosionTime = 10.0f;
+			explosionTimer += dt;
+			int switchScene = 0;
+			Vector2 planePressurePoint = Vector2(935.0f, 304.0f);
+			if (explosionTimer <= explosionTime)
+			{
+				roger.Direction.x = 0.0f;
+				roger.Direction.y = 0.0f;
+
+				if (IsKeyDown(KeyboardKey.KEY_A))
+				{
+					roger.Direction.x = -1.0f;
+				}
+				if (IsKeyDown(KeyboardKey.KEY_D))
+				{
+					roger.Direction.x = 1.0f;
+				}
+
+				if (IsKeyDown(KeyboardKey.KEY_W))
+				{
+					roger.Direction.y = -1.0f;
+				}
+				if (IsKeyDown(KeyboardKey.KEY_S))
+				{
+					roger.Direction.y = 1.0f;
+				}
+
+				if (roger.Direction.Length() > 0.0001f)
+				{
+					// normalize and move
+					float moveSpeed = 500.0f;
+					*roger.Direction =  roger.Direction.Normalize(*roger.Direction);
+					*roger.Direction = Matrix2.Vector2Scale(*roger.Direction, dt * moveSpeed);
+					
+					*roger.Position += (*roger.Direction);
+					
+					
+				}
+			}
+			else
+			{
+				switchScene = 1;
+				float moveSpeed = 3000.0f;
+				float distToPoint = Matrix2.Vector2Distance(planePressurePoint, *roger.Position);
+				Vector2 directionToPressurePoint = (planePressurePoint -(*roger.Position));
+				directionToPressurePoint = directionToPressurePoint.Normalize(directionToPressurePoint);
+				directionToPressurePoint = Matrix2.Vector2Scale(directionToPressurePoint, dt * moveSpeed );
+				Vector2 doorDirection = Vector2(-1.0f, 0.0f);
+				float doorSpeed = 3000.0f;
+				*doorInPlane.Position -= Matrix2.Vector2Scale(doorDirection, dt * doorSpeed);
+				if (distToPoint >= 50.0f)
+				{
+					*roger.Position += directionToPressurePoint;
+				}
+				else
+				{
+					switchScene = 2;
+				}
+
+			}
+
 			
+
+			
+
+			UpdateClouds(ref planeClouds, planeCloudDistances, dt, screenWidth);
+
+			// really nice effect I somehow got where he ends up where he
+			// spawns next scene, kinda seamless
+
+			return switchScene;
 		}
 		
 
@@ -251,7 +345,7 @@ namespace ColdOpen
 
 		public static void DrawPartialTextureCentered(Texture2D texture, Rectangle src, float x, float y, float width, float height, float rot, float scale, Color color)
 		{
-			Rectangle dest = Rectangle(x - width/2.0f, y - height/2.0f, width, height);
+			Rectangle dest = Rectangle(x - (width*scale)/2.0f, y - (height*scale)/2.0f, width*scale, height*scale);
 			// this will need some work to make useable with rotations (consider the origin should be the center?)
 			DrawTexturePro(texture, src, dest, Vector2(0.0f, 0.0f), 0.0f, color);
 		}
@@ -283,7 +377,12 @@ namespace ColdOpen
 			}
 		}
 
-
+		public static void DrawMouseDebug()
+		{
+			Vector2 mousePos = GetMousePosition();
+			String mousePosText = scope $"X={mousePos.x} Y= {mousePos.y}";
+			DrawText(mousePosText, 10, 10, 20, Color.PINK);
+		}
 		
 
 		public static int Main()
@@ -299,6 +398,7 @@ namespace ColdOpen
 			Texture2D rogerTexture = LoadTexture("adjusted_roger_resized.png");
 			Texture2D cloudTexture = LoadTexture("cloud.png");
 			Texture2D rogerSkyDiveTexture = LoadTexture("rogerskydive.png");
+			Texture2D planeInteriorTexture = LoadTexture("planeInterior.png");
 
 			Texture2D rogerHeadTexture = LoadTexture("head.png");
 			Texture2D rogerTorsoTexture = LoadTexture("torso.png");
@@ -308,6 +408,8 @@ namespace ColdOpen
 			Texture2D rogerLowerLegTexture = LoadTexture("lowerleg.png");
 
 			Texture2D planeTexture = LoadTexture("plane_at_scale.png");
+
+			
 
 			int maxDots = 6;
 			int maxClouds = 12;
@@ -363,7 +465,13 @@ namespace ColdOpen
 			//GameState gGameState = GameState.SKELETAL_EDITOR;
 			//GameState gGameState = GameState.SKYDIVING_SCREEN;
 			GameState gGameState = GameState.PLANE_SCREEN;
-			
+
+			// plane interior stuff
+			Person rogerInPlane = new Person(Vector2(30.0f, 30.0f), 100);
+
+			float doorWidth = 30.0f;
+			float doorHeight = 30.0f;
+			Person doorInPlane = new Person(Vector2(935.0f - doorWidth, 304.0f - doorHeight) , 100);
 
 
 			Shader gbShader = LoadShader("base.vs", "gunbarrel.fs");
@@ -389,7 +497,7 @@ namespace ColdOpen
 			Vector2 circLoc = *dots[maxDots - 1].Position;
 			Vector2 rogerPosition = Vector2(circLoc.x, circLoc.y);
 
-			Vector2 planePosition = Vector2(400.0f, 150.0f);
+			Vector2 planePosition = Vector2((float)screenWidth, 150.0f);
 			float planeRotation = 0.0f;
 
 			Vector2 cloudPosition = Vector2(40.0f, 40.0f);
@@ -467,6 +575,8 @@ namespace ColdOpen
 			bool needSave = false;
 			bool needLoad = false;
 
+			int planeInteriorState = 0;
+
 			while (!WindowShouldClose())
 			{
 				Update:
@@ -506,7 +616,18 @@ namespace ColdOpen
 
 						break;
 					case (GameState.PLANE_SCREEN):
-						UpdatePlaneScene(ref planeClouds, planeCloudDistances, ref planeTimer, dt, (float)screenWidth);
+						bool switchScene = UpdatePlaneScene(ref planeClouds, planeCloudDistances, ref planePosition, ref planeTimer, dt, (float)screenWidth);
+						if (switchScene)
+						{
+							gGameState = GameState.PLANE_INTERIOR_SCREEN;
+						}
+						break;
+					case (GameState.PLANE_INTERIOR_SCREEN):
+						planeInteriorState = UpdatePlaneInteriorScene(rogerInPlane, doorInPlane, doorWidth, doorHeight, dt, (float)screenWidth, ref planeClouds, planeCloudDistances);
+						if (planeInteriorState == 2)
+						{
+							gGameState = GameState.SKYDIVING_SCREEN;
+						}
 						break;
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
@@ -797,6 +918,7 @@ namespace ColdOpen
 					case (GameState.PLANE_SCREEN):
 						ClearBackground(.(50, 120, 250, 255));
 						float planeLoc = 5.0f;
+						Color slightlyTransparent = Color(255, 255, 255, 180);
 						for (int i = 0; i < planeClouds.Count; i++)
 						{
 							Vector2 cloud = planeClouds[i];
@@ -816,12 +938,55 @@ namespace ColdOpen
 							{
 								float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
 								Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
-								DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f, Color.WHITE);
+								DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f,slightlyTransparent);
 								//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
 							}
 						}
 						
 						
+						break;
+					case (GameState.PLANE_INTERIOR_SCREEN):
+						ClearBackground(.(50, 120, 250, 255));
+						for (int i = 0; i < planeClouds.Count; i++)
+						{
+							Vector2 cloud = planeClouds[i];
+							if (planeCloudDistances[i] <= 5.0f)
+							{
+								float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
+								Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
+								DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f, Color.WHITE);
+								//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
+							}
+						}
+						DrawRectangle((int32)doorInPlane.Position.x - 150, (int32)doorInPlane.Position.y - 250, 300, 500, Color.RED);
+
+
+						//DrawPartialTextureCentered(planeInteriorTexture, Rectangle(0.0f, 0.0f, 10.0f, 10.0f), doorInPlane.Position.x, doorInPlane.Position.y, doorWidth, doorHeight, 0.0f, 10.0f, Color.WHITE);
+						DrawTextureEx(planeInteriorTexture, .(0.0f, 0.0f), 0.0f, 10.0f, Color.RAYWHITE);
+						if (planeInteriorState == 0)
+						{
+							DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerInPlane.Position.x - 50.0f, rogerInPlane.Position.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 4.0f, Color.WHITE);
+						}
+						else
+						{
+							baseSkeleton.Torso = *rogerInPlane.Position;
+							// this will need work to take into account the rotation
+							CenterSkeleton(&baseSkeleton, offsetSkeleton, rogerAirRotation);
+							RotateLowerArm(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
+							RotateUpperArm(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
+							RotateLowerLeg(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
+
+							DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Torso.x - cameraPosition.x, baseSkeleton.Torso.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+							DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperArm.x - cameraPosition.x, baseSkeleton.UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
+							DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerArm.x - cameraPosition.x, baseSkeleton.LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
+							DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperLeg.x - cameraPosition.x, baseSkeleton.UpperLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+							DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerLeg.x - cameraPosition.x , baseSkeleton.LowerLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
+							DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Head.x- cameraPosition.x , baseSkeleton.Head.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						}
+
+						///DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerInPlane.Position.x - 50.0f, rogerInPlane.Position.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 4.0f, Color.WHITE);
+						//DrawMouseDebug();
+						//DrawCircle((int32)planePressurePoint.x, (int32)planePressurePoint.y, 15.0f, Color.PINK);
 						break;
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
@@ -927,6 +1092,16 @@ namespace ColdOpen
 			}
 			delete dots;
 			delete rogerSpriteSheet;
+
+			delete rogerInPlane.Direction;
+			delete rogerInPlane.Position;
+			delete rogerInPlane.Velocity;
+			delete rogerInPlane;
+
+			delete doorInPlane.Direction;
+			delete doorInPlane.Position;
+			delete doorInPlane.Velocity;
+			delete doorInPlane;
 
 			delete clouds;
 			delete planeClouds;

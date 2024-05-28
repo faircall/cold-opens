@@ -12,6 +12,7 @@ namespace Entities
 		MGM_SCREEN,
 		GUNBARREL_SCREEN,
 		PLANE_SCREEN,
+		PLANE_INTERIOR_SCREEN,
 		SKYDIVING_SCREEN,
 		SKELETAL_EDITOR,
 		NUM_STATES
@@ -28,6 +29,25 @@ namespace Entities
 			Position = new Vector2(position.x, position.y);
 			Timer = timer;
 			Active = active;
+		}
+	}
+
+	class Person
+	{
+
+		public Vector2 *Position { get; set;}
+
+		public int Health {get; set;}
+
+		public Vector2 *Direction { get; set;}
+
+		public Vector2 *Velocity { get; set;}
+		public this(Vector2 position, int health)
+		{
+			Position = new Vector2(position.x, position.y);
+			Health = health;
+			Direction = new Vector2(0.0f, 0.0f);
+			Velocity = new Vector2(0.0f, 0.0f);
 		}
 	}
 
