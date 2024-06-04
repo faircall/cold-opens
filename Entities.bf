@@ -35,19 +35,53 @@ namespace Entities
 	class Person
 	{
 
-		public Vector2 *Position { get; set;}
+		public Vector2 *Position {get; set;}
 
 		public int Health {get; set;}
 
-		public Vector2 *Direction { get; set;}
+		public Vector2 *Direction {get; set;}
 
-		public Vector2 *Velocity { get; set;}
+		public Vector2 *Velocity {get; set;}
+
+		public float DecisionTimer {get; set;}
+
+		public float AirRotation {get; set;}
+
+		public bool TimerStarted {get;set;}
+		public float DeathTimer = 0.0f;
+
+		public Skeleton *BaseSkeleton {get;set;}
+		public Skeleton OffsetSkeleton {get;set;}
 		public this(Vector2 position, int health)
 		{
 			Position = new Vector2(position.x, position.y);
 			Health = health;
 			Direction = new Vector2(0.0f, 0.0f);
 			Velocity = new Vector2(0.0f, 0.0f);
+			DecisionTimer = 0.0f;
+			AirRotation = 0.0f;
+			TimerStarted = false;
+			DeathTimer = 0.0f;
+
+			
+			
+			//OffsetSkeleton = new Skeleton();
+		}
+	}
+
+	class GameCamera
+	{
+		public Vector2 *Position {get;set;}
+
+		public int32 ScreenWidth {get;set;}
+		public int32 ScreenHeight {get;set;}
+
+		public this(Vector2 position, int32 screenWidth, int32 screenHeight)
+		{
+			Position = new Vector2(position.x, position.y);
+			ScreenWidth = screenWidth;
+			ScreenHeight = screenHeight;
+
 		}
 	}
 
@@ -60,6 +94,18 @@ namespace Entities
 		public Vector2 LowerArm {get;set;}
 		public Vector2 UpperLeg {get;set;}
 		public Vector2 LowerLeg {get;set;}
+
+		public this()
+		{
+			Torso = Vector2(0.0f, 0.0f);
+			Head = Vector2(0.0f, 0.0f);
+			UpperArm = Vector2(0.0f, 0.0f);
+			LowerArm = Vector2(0.0f, 0.0f);
+			UpperLeg = Vector2(0.0f, 0.0f);
+			LowerLeg = Vector2(0.0f, 0.0f);
+		}
+
+		
 	}
 
 	class Bone

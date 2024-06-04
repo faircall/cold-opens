@@ -197,37 +197,235 @@ namespace BondProject
 			}
 		}
 
+		public static int UpdateSkydivingScene(ref Vector2[] clouds, Person roger, Person henchman, float dt, GameCamera camera)
+		{
+			int switchScene = 0;
+			float groundStart = 5000.0f;
+
+			for (int i = 0; i < clouds.Count; i++)
+			{
+				Vector2 cloudPos = clouds[i];
+				
+				if (cloudPos.y <= roger.Position.y - camera.ScreenHeight)
+				{
+					cloudPos.y = roger.Position.y + camera.ScreenHeight;
+					cloudPos.x = (float)GetRandomValue(int32(roger.Position.x - camera.ScreenWidth), int32(roger.Position.x + camera.ScreenWidth));
+				}
+				clouds[i] = cloudPos;
+			}
+
+			roger.Direction.x = 0.0f;
+			roger.Direction.y = 0.0f;
+			float rogerSpeedAir = 500.0f;
+
+			float enemySpeedAir = 500.0f;
+
+			if (henchman.TimerStarted)
+			{
+				henchman.DeathTimer += dt;
+			}
+
+			if (henchman.Position.y < groundStart)
+			{
+				henchman.Velocity.y = (enemySpeedAir * dt);
+				*henchman.Position += *henchman.Velocity;
+			}
+			else if (henchman.Health > 0)
+			{
+				henchman.Health = 0;
+				if (!henchman.TimerStarted)
+				{
+					henchman.TimerStarted = true;
+				}
+			}
+			
+
+
+			
+
+
+			// enemy choose direction
+
+			//rogerAirRotation = 0.0f;
+			if (IsKeyDown(KeyboardKey.KEY_A))
+			{
+				roger.Direction.x = -1.0f;
+				//rogerAirRotation = -45.0f;
+			}
+			if (IsKeyDown(KeyboardKey.KEY_D))
+			{
+				roger.Direction.x = 1.0f;
+				//rogerAirRotation = 45.0f;
+			}
+
+			if (IsKeyDown(KeyboardKey.KEY_W))
+			{
+				rogerSpeedAir = 100.0f;
+				roger.Direction.y = -1.0f;
+			}
+			if (IsKeyDown(KeyboardKey.KEY_S))
+			{
+				roger.Direction.y = 1.0f;
+			}
+
+			Matrix2.Vector2Normalize(ref *roger.Direction, 0.001f);
+			float rotationSpeed = 75.0f;
+			// this hsould have some acceleration to it too
+			
+			float rogerAirMotion = Math.Sin(Trig.DegToRad(roger.AirRotation % 180));
+			float rogerAirMotionUp = Math.Cos(Trig.DegToRad(roger.AirRotation % 180));
+
+			
+
+			// need to apply some friction
+			Vector2 rogerFriction = Matrix2.Vector2Scale(*roger.Velocity, -0.8f);
+			//float armPerSecond = 10.0f;
+			//armOscilator += dt;
+			//armAngleToOscilate = Math.Sin(armOscilator*2*Math.PI_f / armPerSecond) * 10.0f;
+			float armAngleToOscilate = 5.0f;
+
+			
+			float terminalVelocity = 100.0f; // what was I thinking here?
+			if (roger.TimerStarted)
+			{
+				roger.DeathTimer += dt;
+			}
+
+			if (roger.Position.y < groundStart)
+			{
+				roger.AirRotation += roger.Direction.x * dt * rotationSpeed;
+				roger.Velocity.x += rogerAirMotion * dt * rogerSpeedAir;
+				// this shouldn't be active when he's on the ground
+				roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
+
+				roger.Velocity.y += (10.0f * dt * rogerAirMotionUp);
+
+				roger.Velocity.x += rogerFriction.x*dt;
+				roger.Velocity.y += rogerFriction.y*dt;
+				roger.Position.x += (roger.Velocity.x) * dt;
+				roger.Position.y += (roger.Velocity.y) * dt;
+				roger.Position.y += terminalVelocity * dt;
+			}
+			else if (roger.Health > 0)
+			{
+				roger.Health = 0;
+				if (!roger.TimerStarted)
+				{
+					roger.TimerStarted = true;
+				}
+			}
+
+			
+
+			/*// come back to this later once more of the game is done
+			(*roger.BaseSkeleton).Torso = *roger.Position;
+			// this will need work to take into account the rotation
+			CenterSkeleton(roger.BaseSkeleton, roger.OffsetSkeleton, roger.AirRotation);
+			RotateLowerArm(roger.BaseSkeleton, roger.AirRotation, armAngleToOscilate);
+			RotateUpperArm(roger.BaseSkeleton, roger.AirRotation, armAngleToOscilate);
+			RotateLowerLeg(roger.BaseSkeleton, roger.AirRotation, armAngleToOscilate);
+			//CenterSkeletonAdditional(&baseSkeleton, offsetSkeleton, rogerAirRotation, armAngleToOscilate);*/
+
+
+			
+
+			float cameraSpeed = Math.Abs(roger.Position.x - camera.Position.x);
+			float rogerSpeed = roger.Velocity.Length();
+
+			// camera code needs redoing
+			if (roger.Position.x < (camera.Position.x + 300.0f))
+			{
+				
+				camera.Position.x -= rogerSpeed * dt;
+			} 
+			else if (roger.Position.x >= (camera.Position.x + camera.ScreenWidth - 400.0f))
+			{
+				cameraSpeed = Math.Abs(roger.Position.x - (camera.Position.x + camera.ScreenWidth - 400.0f));
+				camera.Position.x += rogerSpeed * dt;
+			}
+			cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 100.0f));
+			if (roger.Position.y < (camera.Position.y + 100.0f))
+			{
+				
+				camera.Position.y -= rogerSpeed * dt * 1.5f;
+			} 
+			else if (roger.Position.y >= (camera.Position.y + 3*camera.ScreenHeight/4 - 100.0f))
+			{
+				cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 3*camera.ScreenHeight/4 - 100.0f));
+				camera.Position.y += (rogerSpeed + terminalVelocity)* dt;
+			}
+
+			return switchScene;
+
+
+		}
+
 		public static int UpdatePlaneInteriorScene(Person roger, Person doorInPlane, float doorWidth, float doorHeight, float dt, float screenWidth, ref Vector2[] planeClouds, float[] planeCloudDistances)
 		{
 			// multiple transition states
 			// so we return int (could really be an enum)
 			static float explosionTimer = 0.0f;
-			float explosionTime = 10.0f;
+			float explosionTime = 3.0f;
 			explosionTimer += dt;
 			int switchScene = 0;
 			Vector2 planePressurePoint = Vector2(935.0f, 304.0f);
+
+			roger.Direction.x = 0.0f;
+			roger.Direction.y = 0.0f;
+
+			float boundMinX = 50.0f;
+			float boundMaxX = 1200.0f;
+			float boundMinY = 348.0f;
+			float boundMaxY = 548.0f;
+
+			if (IsKeyDown(KeyboardKey.KEY_A))
+			{
+				roger.Direction.x = -1.0f;
+			}
+			if (IsKeyDown(KeyboardKey.KEY_D))
+			{
+				roger.Direction.x = 1.0f;
+			}
+
+			if (IsKeyDown(KeyboardKey.KEY_W))
+			{
+				roger.Direction.y = -1.0f;
+			}
+			if (IsKeyDown(KeyboardKey.KEY_S))
+			{
+				roger.Direction.y = 1.0f;
+			}
+
 			if (explosionTimer <= explosionTime)
 			{
-				roger.Direction.x = 0.0f;
-				roger.Direction.y = 0.0f;
+				
+				if (roger.Direction.Length() > 0.0001f)
+				{
+					// normalize and move
+					float moveSpeed = 500.0f;
+					*roger.Direction =  roger.Direction.Normalize(*roger.Direction);
+					*roger.Direction = Matrix2.Vector2Scale(*roger.Direction, dt * moveSpeed);
+					Vector2 newPosition = *roger.Position + *roger.Direction;
 
-				if (IsKeyDown(KeyboardKey.KEY_A))
-				{
-					roger.Direction.x = -1.0f;
+					if (newPosition.x > boundMinX && newPosition.x < boundMaxX &&
+							newPosition.y > boundMinY && newPosition.y < boundMaxY)
+					{
+						*roger.Position += (*roger.Direction);
+					}
+					else if (newPosition.x > boundMinX && newPosition.x < boundMaxX)
+					{
+						roger.Position.x = newPosition.x;
+						// resolve
+					}
+					else if (newPosition.y > boundMinY && newPosition.y < boundMaxY)
+					{
+						roger.Position.y = newPosition.y;
+					}
+					
 				}
-				if (IsKeyDown(KeyboardKey.KEY_D))
-				{
-					roger.Direction.x = 1.0f;
-				}
-
-				if (IsKeyDown(KeyboardKey.KEY_W))
-				{
-					roger.Direction.y = -1.0f;
-				}
-				if (IsKeyDown(KeyboardKey.KEY_S))
-				{
-					roger.Direction.y = 1.0f;
-				}
+			}
+			else
+			{
 
 				if (roger.Direction.Length() > 0.0001f)
 				{
@@ -240,9 +438,7 @@ namespace BondProject
 					
 					
 				}
-			}
-			else
-			{
+
 				switchScene = 1;
 				float moveSpeed = 3000.0f;
 				float distToPoint = Matrix2.Vector2Distance(planePressurePoint, *roger.Position);
@@ -383,6 +579,12 @@ namespace BondProject
 			String mousePosText = scope $"X={mousePos.x} Y= {mousePos.y}";
 			DrawText(mousePosText, 10, 10, 20, Color.PINK);
 		}
+
+		public static void DrawVector2Debug(Vector2 vec, int32 startX, int32 startY)
+		{
+			String mousePosText = scope $"X={vec.x} Y= {vec.y}";
+			DrawText(mousePosText, startX, startY, 20, Color.PINK);
+		}
 		
 
 		public static int Main()
@@ -408,6 +610,8 @@ namespace BondProject
 			Texture2D rogerLowerLegTexture = LoadTexture("lowerleg.png");
 
 			Texture2D planeTexture = LoadTexture("plane_at_scale.png");
+
+			Texture2D henchmanTexture = LoadTexture("enemy_basic.png");
 
 			
 
@@ -456,18 +660,19 @@ namespace BondProject
 			float dotRad = 40.0f;
 
 			bool dotStopped = false;
-			int dotGrowthCounter = 0;
 			float dotGrowthTimerMax = 0.5f;
 			float dotGrowthTimer = 0.0f;
-
+			
 
 			//GameState gGameState = GameState.GUNBARREL_SCREEN;
 			//GameState gGameState = GameState.SKELETAL_EDITOR;
-			//GameState gGameState = GameState.SKYDIVING_SCREEN;
-			GameState gGameState = GameState.PLANE_SCREEN;
+			GameState gGameState = GameState.SKYDIVING_SCREEN;
+			//GameState gGameState = GameState.PLANE_SCREEN;
 
 			// plane interior stuff
-			Person rogerInPlane = new Person(Vector2(30.0f, 30.0f), 100);
+			Person rogerInPlane = new Person(Vector2(100.0f, 400.0f), 100);
+
+			Person henchman = new Person(Vector2(30.0f, 30.0f), 100);
 
 			float doorWidth = 30.0f;
 			float doorHeight = 30.0f;
@@ -492,7 +697,6 @@ namespace BondProject
 
 			float planeTimer = 0.0f;
 
-			float spotlightTimer = 100.0f;
 
 			Vector2 circLoc = *dots[maxDots - 1].Position;
 			Vector2 rogerPosition = Vector2(circLoc.x, circLoc.y);
@@ -500,18 +704,18 @@ namespace BondProject
 			Vector2 planePosition = Vector2((float)screenWidth, 150.0f);
 			float planeRotation = 0.0f;
 
-			Vector2 cloudPosition = Vector2(40.0f, 40.0f);
+			
 			SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 			SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
-			float cloudSpeed = -500.0f;
-			float cloudEnd = (float)screenHeight + 10.0f;
-			float cloudStart = -150.0f;
+			
 
 			float groundStart = 5000.0f;
 
+			// pull these into a singular Roger
 			Vector2 rogerDirection = Vector2(0.0f, 0.0f);
 			Vector2 cameraPosition = Vector2(0.0f, 0.0f); // this will act as our offset
+			GameCamera gameCamera = new GameCamera(cameraPosition, screenWidth, screenHeight);
 			Vector2 rogerVelocity = Vector2(0.0f, 0.0f);
 
 			SpriteSheet rogerSpriteSheet = new SpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
@@ -520,13 +724,7 @@ namespace BondProject
 
 			float rogerAirRotation = 0.0f;
 
-			float headOffsetToSave = -50.0f;
-			float torsoOffsetToSave = 0.0f;
-			float upperArmOffsetToSave = -100.0f;
-			float lowerArmOffsetToSave = -150.0f;
-			float upperLegOffsetToSave = 80.0f;
-			float lowerLegOffsetToSave = 150.0f;
-
+			
 
 			float armOscilator = 0.0f;
 			float armAngleToOscilate = Math.Sin(armOscilator*2*Math.PI_f / 2.0f) * 10.0f;
@@ -563,6 +761,9 @@ namespace BondProject
 			vbufferedStream.Close();
 			delete vbufferedStream;
 
+			rogerInPlane.BaseSkeleton = &baseSkeleton;
+			rogerInPlane.OffsetSkeleton = offsetSkeleton;
+			//delete rogerInPlane.BaseSkeleton;
 			// move the torso to be at roger position
 			// and then move everything else by that amount?
 			
@@ -576,6 +777,7 @@ namespace BondProject
 			bool needLoad = false;
 
 			int planeInteriorState = 0;
+			int skydivingState = 0;
 
 			while (!WindowShouldClose())
 			{
@@ -631,117 +833,10 @@ namespace BondProject
 						break;
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
-						for (int i = 0; i < clouds.Count; i++)
-						{
-							Vector2 cloudPos = clouds[i];
-							
-							if (cloudPos.y <= rogerPosition.y - screenHeight)
-							{
-								cloudPos.y = rogerPosition.y + screenHeight;
-								cloudPos.x = (float)GetRandomValue(int32(rogerPosition.x - screenWidth), int32(rogerPosition.x + screenWidth));
-							}
-							clouds[i] = cloudPos;
+						skydivingState = UpdateSkydivingScene(ref clouds, rogerInPlane, henchman, dt, gameCamera);
+						
 
-							rogerDirection.x = 0.0f;
-							rogerDirection.y = 0.0f;
-							float rogerSpeedAir = 50.0f;
-							//rogerAirRotation = 0.0f;
-							if (IsKeyDown(KeyboardKey.KEY_A))
-							{
-								rogerDirection.x = -1.0f;
-								//rogerAirRotation = -45.0f;
-							}
-							if (IsKeyDown(KeyboardKey.KEY_D))
-							{
-								rogerDirection.x = 1.0f;
-								//rogerAirRotation = 45.0f;
-							}
-
-							if (IsKeyDown(KeyboardKey.KEY_W))
-							{
-								rogerSpeedAir = 100.0f;
-								rogerDirection.y = -1.0f;
-							}
-							if (IsKeyDown(KeyboardKey.KEY_S))
-							{
-								rogerDirection.y = 1.0f;
-							}
-
-							Matrix2.Vector2Normalize(ref rogerDirection, 0.001f);
-							float rotationSpeed = 5.0f;
-							rogerAirRotation += rogerDirection.x * dt * rotationSpeed;
-							float rogerAirMotion = Math.Sin(Trig.DegToRad(rogerAirRotation % 180));
-							float rogerAirMotionUp = Math.Cos(Trig.DegToRad(rogerAirRotation % 180));
-							
-							rogerVelocity.x += rogerAirMotion * dt * rogerSpeedAir;
-							// this shouldn't be active when he's on the ground
-							rogerVelocity.y += rogerDirection.y * dt * rogerSpeedAir;
-
-							rogerVelocity.y += (10.0f * dt * rogerAirMotionUp);
-
-							// todo : Make sidways motion a function of the angle you're facing
-							// think about the force diagram,
-
-							// also let's make the camera motion actually interesting, possibly even with cuts
-
-
-							
-							
-							// need to apply some friction
-							Vector2 rogerFriction = Matrix2.Vector2Scale(rogerVelocity, -0.8f);
-							float armPerSecond = 10.0f;
-							armOscilator += dt;
-							armAngleToOscilate = Math.Sin(armOscilator*2*Math.PI_f / armPerSecond) * 10.0f;
-							
-							rogerVelocity.x += rogerFriction.x*dt;
-							rogerVelocity.y += rogerFriction.y*dt;
-							rogerPosition.x += (rogerVelocity.x) * dt;
-							if (rogerPosition.y < groundStart)
-							{
-								rogerPosition.y += (rogerVelocity.y) * dt;
-							}
-
-							baseSkeleton.Torso = rogerPosition;
-							// this will need work to take into account the rotation
-							CenterSkeleton(&baseSkeleton, offsetSkeleton, rogerAirRotation);
-							RotateLowerArm(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
-							RotateUpperArm(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
-							RotateLowerLeg(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
-							//CenterSkeletonAdditional(&baseSkeleton, offsetSkeleton, rogerAirRotation, armAngleToOscilate);
-
-
-							float terminalVelocity = 0.0f;
-							rogerPosition.y += terminalVelocity * dt;
-
-							float cameraSpeed = Math.Abs(rogerPosition.x - cameraPosition.x);
-							if (rogerPosition.x < (cameraPosition.x + 100.0f))
-							{
-								
-								cameraPosition.x -= cameraSpeed * dt;
-							} 
-							else if (rogerPosition.x >= (cameraPosition.x + screenWidth - 100.0f))
-							{
-								cameraSpeed = Math.Abs(rogerPosition.x - (cameraPosition.x + screenWidth - 100.0f));
-								cameraPosition.x += cameraSpeed * dt;
-							}
-							cameraSpeed = Math.Abs(rogerPosition.y - (cameraPosition.y + 100.0f));
-							if (rogerPosition.y < (cameraPosition.y + 100.0f))
-							{
-								
-								cameraPosition.y -= cameraSpeed * dt;
-							} 
-							else if (rogerPosition.y >= (cameraPosition.y + screenHeight - 100.0f))
-							{
-								cameraSpeed = Math.Abs(rogerPosition.y - (cameraPosition.y + screenHeight - 100.0f));
-								cameraPosition.y += cameraSpeed * dt;
-							}
-
-							
-
-							// rogerPosition.y = Math.Min(screenHeight-50.0f, rogerPosition.y);
-							// rogerPosition.y = Math.Max(50.0f, rogerPosition.y);
-
-						}
+						
 						
 						break;
 					case GameState.SKELETAL_EDITOR:
@@ -985,7 +1080,8 @@ namespace BondProject
 						}
 
 						///DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerInPlane.Position.x - 50.0f, rogerInPlane.Position.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 4.0f, Color.WHITE);
-						//DrawMouseDebug();
+						DrawMouseDebug();
+						DrawVector2Debug(*rogerInPlane.Position, 10, 30);
 						//DrawCircle((int32)planePressurePoint.x, (int32)planePressurePoint.y, 15.0f, Color.PINK);
 						break;
 					case (GameState.SKYDIVING_SCREEN):
@@ -994,35 +1090,66 @@ namespace BondProject
 						for (Vector2 cloud in clouds)
 						{
 							//cloud.x = cloud.x - cameraPosition.x;
-							DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, 5.0f, Color.WHITE);
+							DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, *gameCamera.Position), 0.0f, 5.0f, Color.WHITE);
 						}
 
 						// draw the ground when it's in frame, or just draw it offscreen constantly
 						// start by the dumb way
-						DrawRectangle(0, (int32)(groundStart - cameraPosition.y), screenWidth, screenHeight, Color.DARKBROWN);
+						DrawRectangle(0, (int32)(groundStart - gameCamera.Position.y), screenWidth, screenHeight, Color.DARKBROWN);
 
-						//DrawTextureEx(rogerSkyDiveTexture, rogerPosition, rogerAirRotation, 3.0f, Color.WHITE);
-						//DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerPosition.x - cameraPosition.x, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						//DrawTextureEx(rogerSkyDiveTexture, *rogerInPlane.Position - *gameCamera.Position, rogerInPlane.AirRotation, 3.0f, Color.WHITE);
+						if (rogerInPlane.Health > 0)
+						{
+							DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerInPlane.Position.x - gameCamera.Position.x, rogerInPlane.Position.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerInPlane.AirRotation, Color.WHITE);
+						}
+						else
+						{
+							int particleCount = 30;
+							for (int i = 0; i < particleCount; i++)
+							{
+								// create a radius effect and shoot particles
+								float angle = (float)i / (float)(particleCount - 1);
+								float radius = rogerInPlane.DeathTimer;
+								float radiusScale = 400.0f; // make this based on impact velocity
+								radius *= radiusScale;
+								// we need a fall-off I think...?
+								// or can make them physical chunks
+								DrawCircle((int32)(rogerInPlane.Position.x + radius*Math.Cos(angle*2.0f*Math.PI_f) - gameCamera.Position.x), (int32)(rogerInPlane.Position.y + radius*Math.Sin(angle*2.0f*Math.PI_f) - gameCamera.Position.y), 15.0f, Color.RED);
+							}
+						}
 
-						// debug draw the skeletal parts
-						float headOffset = -50.0f; // why not calculate the offset?
-						float torsoOffset = 0.0f;
-						float upperArmOffset = -100.0f;
-						float lowerArmOffset = -150.0f;
-						float upperLegOffset = 80.0f;
-						float lowerLegOffset = 150.0f;
+
+						
 
 						// think about the rotation point
 						// but also think like, actual skeletal system
 
 
-						// TODO: make these centered 
-						DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Torso.x - cameraPosition.x, baseSkeleton.Torso.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperArm.x - cameraPosition.x, baseSkeleton.UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
-						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerArm.x - cameraPosition.x, baseSkeleton.LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
-						DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperLeg.x - cameraPosition.x, baseSkeleton.UpperLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerLeg.x - cameraPosition.x , baseSkeleton.LowerLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
-						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Head.x- cameraPosition.x , baseSkeleton.Head.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						// TODO: make these centered
+						if (henchman.Health > 0)
+						{
+							DrawTextureEx(henchmanTexture, *henchman.Position - *gameCamera.Position, 0.0f, 2.0f, Color.WHITE);
+						}
+						else
+						{
+							int particleCount = 30;
+							for (int i = 0; i < particleCount; i++)
+							{
+								// create a radius effect and shoot particles
+								float angle = (float)i / (float)(particleCount - 1);
+								float radius = henchman.DeathTimer;
+								float radiusScale = 400.0f; // make this based on impact velocity
+								radius *= radiusScale;
+								// we need a fall-off I think...?
+								// or can make them physical chunks
+								DrawCircle((int32)(henchman.Position.x + radius*Math.Cos(angle*2.0f*Math.PI_f) - gameCamera.Position.x), (int32)(henchman.Position.y + radius*Math.Sin(angle*2.0f*Math.PI_f) - gameCamera.Position.y), 15.0f, Color.RED);
+							}
+						}
+						/*DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).Torso.x - gameCamera.Position.x, (*rogerInPlane.BaseSkeleton).Torso.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
+						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).UpperArm.x - cameraPosition.x, (*rogerInPlane.BaseSkeleton).UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
+						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).LowerArm.x - cameraPosition.x, (*rogerInPlane.BaseSkeleton).LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
+						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).LowerLeg.x - cameraPosition.x , (*rogerInPlane.BaseSkeleton).LowerLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
+						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).Head.x- cameraPosition.x , (*rogerInPlane.BaseSkeleton).Head.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);*/
 
 						//DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + headOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						//DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + torsoOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
@@ -1096,12 +1223,24 @@ namespace BondProject
 			delete rogerInPlane.Direction;
 			delete rogerInPlane.Position;
 			delete rogerInPlane.Velocity;
+			//delete rogerInPlane.BaseSkeleton;
+			//delete rogerInPlane.OffsetSkeleton;
 			delete rogerInPlane;
+
+			//delete offsetSkeleton;
+
+			delete gameCamera.Position;
+			delete gameCamera;
 
 			delete doorInPlane.Direction;
 			delete doorInPlane.Position;
 			delete doorInPlane.Velocity;
 			delete doorInPlane;
+
+			delete henchman.Direction;
+			delete henchman.Position;
+			delete henchman.Velocity;
+			delete henchman;
 
 			delete clouds;
 			delete planeClouds;
