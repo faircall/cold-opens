@@ -3,6 +3,7 @@ using System.Collections;
 using static raylib_beef.Raylib;
 using raylib_beef.Types;
 using raylib_beef.Enums;
+using BondMath;
 
 namespace Entities
 {
@@ -52,6 +53,12 @@ namespace Entities
 
 		public Skeleton *BaseSkeleton {get;set;}
 		public Skeleton OffsetSkeleton {get;set;}
+
+		public Particle[] Particles {get;set;} = null;
+
+		public bool IsRolling {get;set;} = false;
+
+		
 		public this(Vector2 position, int health)
 		{
 			Position = new Vector2(position.x, position.y);
@@ -62,11 +69,122 @@ namespace Entities
 			AirRotation = 0.0f;
 			TimerStarted = false;
 			DeathTimer = 0.0f;
-
-			
-			
 			//OffsetSkeleton = new Skeleton();
 		}
+
+		public ~this()
+		{
+			delete Direction;
+			delete Position;
+			delete Velocity;
+			//delete Particles;
+			if (Particles != null)
+			{
+				for (var particle in Particles)
+				{
+					delete particle;
+				}
+				delete Particles;
+			}
+			
+			
+			//delete this;
+		}
+
+		public void AddParticleSystem(int waves, int particlesPerWave, float totalDuration, float emissionSpeed)
+		{
+			int particleCount = waves * particlesPerWave;
+			this.Particles = new Particle[particleCount];
+			
+			int wavesAdded = 0;
+			for (int i = 0; i < waves; i++)
+			{
+				for (int j = 0; j < particlesPerWave; j++)
+				{
+					Particle particleToAdd = new Particle();
+					float lerpedTimeValue = (float)i / (float) waves;
+					float lerpedPositionValue = (float)j / (float) particlesPerWave;
+					particleToAdd.Position = Vector2(this.Position.x, this.Position.y);
+					particleToAdd.LifetimeStart = emissionSpeed * lerpedTimeValue;
+					particleToAdd.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration;
+					float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
+					particleToAdd.Velocity = Vector2(Math.Cos(lerpedAngle), Math.Sin(lerpedAngle));
+					if (particleToAdd.Velocity.y > 0.0f)
+					{
+						particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, -1.0f);
+					}
+					float initialSpeed = 100f + (float)(100.0f*GetRandomValue(0, 100));
+					particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, initialSpeed);
+					this.Particles[wavesAdded++] = particleToAdd;
+				}
+			}
+		}
+
+		public void DrawParticleSystem(GameCamera gameCamera, float dt, float gravityConstant, float groundLoc)
+		{
+			for (int i = 0; i < this.Particles.Count; i++)
+			{
+				Particle particle = this.Particles[i];
+				if (this.DeathTimer >= particle.LifetimeStart &&
+					this.DeathTimer <= particle.LifetimeEnd &&
+					(particle.Position.y <= groundLoc) || (particle.Velocity.y < 0)
+					)
+				{
+					
+					Vector2 gravity = Vector2(0.0f, gravityConstant*dt);
+					particle.Velocity += gravity;
+					particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
+					DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+					this.Particles[i] = particle;
+					
+					
+				}
+				else if (particle.Position.y >= groundLoc)
+				{
+					DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+					//float poolingTime = 1.0f;
+					//float timeSinceGround  = Math.Max(Math.Min(this.DeathTimer - particle.LifetimeEnd, poolingTime), 0.1f);
+					//float lerped = timeSinceGround / poolingTime;
+					
+					//DrawEllipse((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 20.0f * lerped, 10.0f * lerped, Color.RED);
+				}
+			}
+		}
+	}
+
+	class ParticleSystem
+	{
+		public Particle[] Particles {get;set;}
+
+	}
+
+	class Particle
+	{
+		public Vector2 Position {get;set;}
+		public Vector2 Velocity {get;set;}
+		public Vector2 Acceleration {get;set;}
+		public float LifetimeStart {get;set;}
+		public float LifetimeEnd {get;set;}
+
+		public this()
+		{
+			Position = Vector2(0.0f, 0.0f);
+			Velocity = Vector2(0.0f, 0.0f);
+			Acceleration = Vector2(0.0f, 0.0f);
+			LifetimeStart = 0.0f;
+			LifetimeEnd = 0.0f;
+		}
+
+		public this(Vector2 position, float lifetimeStart, float lifetimeEnd)
+		{
+			Position = position;
+			Velocity = Vector2(0.0f, 0.0f);
+			Acceleration = Vector2(0.0f, 0.0f);
+			LifetimeStart = lifetimeStart;
+			LifetimeEnd = lifetimeEnd;
+		}
+		
+
 	}
 
 	class GameCamera

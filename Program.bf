@@ -59,6 +59,26 @@ namespace BondProject
 
 		}
 
+		static void DrawBloodExplosion(Vector2 originPosition, GameCamera gameCamera, float timer)
+		{
+			// how should we handle their trajectories?
+			int particleCount = 30;
+			for (int i = 0; i < particleCount; i++)
+			{
+				// create a radius effect and shoot particles
+				float angle = (float)i / (float)(particleCount - 1);
+				float radius = timer;
+				float radiusScale = 600.0f; // make this based on impact velocity
+				radius *= radiusScale;
+				float angleToUse = angle*Math.PI_f + Math.PI_f;
+				// we need a fall-off I think...?
+				// or can make them physical chunks
+				DrawCircle((int32)(originPosition.x + radius*Math.Cos(angleToUse) - gameCamera.Position.x), (int32)(originPosition.y + radius*Math.Sin(angleToUse) - gameCamera.Position.y), 5.0f + 20*(1.0f/(1.0f+timer)), Color.RED);
+			}
+		}
+
+		//
+
 
 
 		static void TranslateSkeleton(Vector2 trans, Skeleton *skeleton)
@@ -236,6 +256,7 @@ namespace BondProject
 				if (!henchman.TimerStarted)
 				{
 					henchman.TimerStarted = true;
+					henchman.AddParticleSystem(5, 50, 3.0f, 0.4f);
 				}
 			}
 			
@@ -268,13 +289,25 @@ namespace BondProject
 				roger.Direction.y = 1.0f;
 			}
 
+			if (IsKeyDown(KeyboardKey.KEY_SPACE) && roger.Direction.x != 0.0f)
+			{
+				roger.IsRolling = true;
+			}
+			else
+			{
+				roger.IsRolling = false;
+			}
+
 			Matrix2.Vector2Normalize(ref *roger.Direction, 0.001f);
 			float rotationSpeed = 75.0f;
 			// this hsould have some acceleration to it too
 			
-			float rogerAirMotion = Math.Sin(Trig.DegToRad(roger.AirRotation % 180));
-			float rogerAirMotionUp = Math.Cos(Trig.DegToRad(roger.AirRotation % 180));
-
+			float rogerAirMotion = Math.Sin(Trig.DegToRad((int)roger.AirRotation % 360));
+			float rogerAirMotionUp = Math.Cos(Trig.DegToRad((int)roger.AirRotation % 360));
+			String airMotionText = scope $"AirMotion = {rogerAirMotion}";
+			String airRotationText = scope $"From air rotation = {roger.AirRotation}";
+			DrawText(airMotionText, 10, 10, 16, Color.RED);
+			DrawText(airRotationText, 10, 20, 16, Color.RED);	
 			
 
 			// need to apply some friction
@@ -293,18 +326,37 @@ namespace BondProject
 
 			if (roger.Position.y < groundStart)
 			{
-				roger.AirRotation += roger.Direction.x * dt * rotationSpeed;
-				roger.Velocity.x += rogerAirMotion * dt * rogerSpeedAir;
-				// this shouldn't be active when he's on the ground
-				roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
+				if (!roger.IsRolling)
+				{
+					roger.AirRotation += roger.Direction.x * dt * rotationSpeed;
+					roger.Velocity.x += rogerAirMotion * dt * rogerSpeedAir;
+					// this shouldn't be active when he's on the ground
+					roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
 
-				roger.Velocity.y += (10.0f * dt * rogerAirMotionUp);
+					roger.Velocity.y += (10.0f * dt * rogerAirMotionUp);
 
-				roger.Velocity.x += rogerFriction.x*dt;
-				roger.Velocity.y += rogerFriction.y*dt;
-				roger.Position.x += (roger.Velocity.x) * dt;
-				roger.Position.y += (roger.Velocity.y) * dt;
-				roger.Position.y += terminalVelocity * dt;
+					roger.Velocity.x += rogerFriction.x*dt;
+					roger.Velocity.y += rogerFriction.y*dt;
+					roger.Position.x += (roger.Velocity.x) * dt;
+					roger.Position.y += (roger.Velocity.y) * dt;
+					roger.Position.y += terminalVelocity * dt;
+				}
+				else
+				{
+					roger.AirRotation += roger.Direction.x * dt * rotationSpeed * 10.0f;
+					//roger.Velocity.x += rogerAirMotion * dt * rogerSpeedAir;
+					// this shouldn't be active when he's on the ground
+					roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
+
+					roger.Velocity.y += (10.0f * dt * rogerAirMotionUp);
+
+					roger.Velocity.x += rogerFriction.x*dt;
+					roger.Velocity.y += rogerFriction.y*dt;
+					roger.Position.x += (roger.Velocity.x) * dt;
+					roger.Position.y += (roger.Velocity.y) * dt;
+					roger.Position.y += terminalVelocity * dt;
+				}
+				
 			}
 			else if (roger.Health > 0)
 			{
@@ -312,6 +364,8 @@ namespace BondProject
 				if (!roger.TimerStarted)
 				{
 					roger.TimerStarted = true;
+					// and spawn particles
+					roger.AddParticleSystem(10, 50, 3.0f, 0.2f);
 				}
 			}
 
@@ -331,17 +385,22 @@ namespace BondProject
 
 			float cameraSpeed = Math.Abs(roger.Position.x - camera.Position.x);
 			float rogerSpeed = roger.Velocity.Length();
+			// maybe we need to CENTER him
+			// might explain why it's less of an issue
 
 			// camera code needs redoing
+
+			// the issue I think is that he's moving faster than the camera 
 			if (roger.Position.x < (camera.Position.x + 300.0f))
 			{
-				
-				camera.Position.x -= rogerSpeed * dt;
+				// do we actually want abs?
+				cameraSpeed = roger.Position.x - (camera.Position.x + 300.0f);
+				camera.Position.x += (cameraSpeed * dt);
 			} 
 			else if (roger.Position.x >= (camera.Position.x + camera.ScreenWidth - 400.0f))
 			{
 				cameraSpeed = Math.Abs(roger.Position.x - (camera.Position.x + camera.ScreenWidth - 400.0f));
-				camera.Position.x += rogerSpeed * dt;
+				camera.Position.x += cameraSpeed * dt;
 			}
 			cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 100.0f));
 			if (roger.Position.y < (camera.Position.y + 100.0f))
@@ -352,7 +411,7 @@ namespace BondProject
 			else if (roger.Position.y >= (camera.Position.y + 3*camera.ScreenHeight/4 - 100.0f))
 			{
 				cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 3*camera.ScreenHeight/4 - 100.0f));
-				camera.Position.y += (rogerSpeed + terminalVelocity)* dt;
+				camera.Position.y +=  cameraSpeed;//(rogerSpeed + terminalVelocity)* dt;
 			}
 
 			return switchScene;
@@ -517,6 +576,24 @@ namespace BondProject
 			}
 		}
 
+		public static void DrawParticleSystemPerson(Person person, GameCamera gameCamera, float dt)
+		{
+			for (int i = 0; i < person.Particles.Count; i++)
+			{
+				Particle particle = person.Particles[i];
+				if (person.DeathTimer >= particle.LifetimeStart &&
+					person.DeathTimer <= particle.LifetimeEnd)
+				{
+					// add gravity
+					Vector2 gravity = Vector2(0.0f, 2200.0f*dt);
+					particle.Velocity += gravity;
+					particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
+					DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+					person.Particles[i] = particle;
+				}
+			}
+		}
+
 		public static void UpdateMGMScreen()
 		{
 
@@ -573,6 +650,8 @@ namespace BondProject
 			}
 		}
 
+		
+
 		public static void DrawMouseDebug()
 		{
 			Vector2 mousePos = GetMousePosition();
@@ -589,8 +668,8 @@ namespace BondProject
 
 		public static int Main()
 		{
-			int32 screenWidth = 1280;
-			int32 screenHeight = 720;
+			int32 screenWidth = 1920;
+			int32 screenHeight = 1080;
 			float gameTimer = 0.0f;
 			//SetTraceLogLevel();
 			InitWindow(screenWidth, screenHeight, "Moonraker");
@@ -965,6 +1044,7 @@ namespace BondProject
 				{
 					BeginDrawing();
 					ClearBackground(.(0, 0, 0, 255));
+					float dt = GetFrameTime();
 					switch (gGameState)
 					{
 					case (GameState.MGM_SCREEN):
@@ -1100,22 +1180,29 @@ namespace BondProject
 						//DrawTextureEx(rogerSkyDiveTexture, *rogerInPlane.Position - *gameCamera.Position, rogerInPlane.AirRotation, 3.0f, Color.WHITE);
 						if (rogerInPlane.Health > 0)
 						{
-							DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerInPlane.Position.x - gameCamera.Position.x, rogerInPlane.Position.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerInPlane.AirRotation, Color.WHITE);
+							DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerInPlane.Position.x - gameCamera.Position.x, rogerInPlane.Position.y - gameCamera.Position.y, 1.5f*128.0f, 1.5f*128.0f),Vector2(1.5f*64.0f, 1.5f*64.0f), rogerInPlane.AirRotation, Color.WHITE);
 						}
 						else
 						{
-							int particleCount = 30;
-							for (int i = 0; i < particleCount; i++)
-							{
-								// create a radius effect and shoot particles
-								float angle = (float)i / (float)(particleCount - 1);
-								float radius = rogerInPlane.DeathTimer;
-								float radiusScale = 400.0f; // make this based on impact velocity
-								radius *= radiusScale;
-								// we need a fall-off I think...?
-								// or can make them physical chunks
-								DrawCircle((int32)(rogerInPlane.Position.x + radius*Math.Cos(angle*2.0f*Math.PI_f) - gameCamera.Position.x), (int32)(rogerInPlane.Position.y + radius*Math.Sin(angle*2.0f*Math.PI_f) - gameCamera.Position.y), 15.0f, Color.RED);
-							}
+							// prototype one
+							//DrawBloodExplosion(*rogerInPlane.Position, gameCamera, rogerInPlane.DeathTimer);
+							//DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerInPlane.Position.x - gameCamera.Position.x, rogerInPlane.Position.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerInPlane.AirRotation, Color.WHITE);
+							//for (int i = 0; i < rogerInPlane.Particles.Count; i++)
+							//{
+							//	Particle particle = rogerInPlane.Particles[i];
+							//	if (rogerInPlane.DeathTimer >= particle.LifetimeStart &&
+							//		rogerInPlane.DeathTimer <= particle.LifetimeEnd)
+							//	{
+							//		// add gravity
+							//		Vector2 gravity = Vector2(0.0f, 2200.0f*dt);
+							//		particle.Velocity += gravity;
+							//		particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
+							//		DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+							//		rogerInPlane.Particles[i] = particle;
+							//	}
+							//}
+							rogerInPlane.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
+							//DrawParticleSystemPerson(rogerInPlane, gameCamera, dt);
 						}
 
 
@@ -1132,18 +1219,9 @@ namespace BondProject
 						}
 						else
 						{
-							int particleCount = 30;
-							for (int i = 0; i < particleCount; i++)
-							{
-								// create a radius effect and shoot particles
-								float angle = (float)i / (float)(particleCount - 1);
-								float radius = henchman.DeathTimer;
-								float radiusScale = 400.0f; // make this based on impact velocity
-								radius *= radiusScale;
-								// we need a fall-off I think...?
-								// or can make them physical chunks
-								DrawCircle((int32)(henchman.Position.x + radius*Math.Cos(angle*2.0f*Math.PI_f) - gameCamera.Position.x), (int32)(henchman.Position.y + radius*Math.Sin(angle*2.0f*Math.PI_f) - gameCamera.Position.y), 15.0f, Color.RED);
-							}
+							henchman.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
+							//DrawParticleSystemPerson(henchman, gameCamera, dt);
+							//DrawBloodExplosion(*henchman.Position, gameCamera, henchman.DeathTimer);
 						}
 						/*DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).Torso.x - gameCamera.Position.x, (*rogerInPlane.BaseSkeleton).Torso.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).UpperArm.x - cameraPosition.x, (*rogerInPlane.BaseSkeleton).UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
@@ -1220,26 +1298,28 @@ namespace BondProject
 			delete dots;
 			delete rogerSpriteSheet;
 
-			delete rogerInPlane.Direction;
-			delete rogerInPlane.Position;
-			delete rogerInPlane.Velocity;
-			//delete rogerInPlane.BaseSkeleton;
-			//delete rogerInPlane.OffsetSkeleton;
 			delete rogerInPlane;
+			//delete rogerInPlane.Direction;
+			//delete rogerInPlane.Position;
+			//delete rogerInPlane.Velocity;
+			//for (var thing in rogerInPlane.Particles)
+			//{
+			//	delete thing;
+			//}
+			//delete rogerInPlane.Particles;
+			////delete rogerInPlane.BaseSkeleton;
+			////delete rogerInPlane.OffsetSkeleton;
+			//delete rogerInPlane;
 
 			//delete offsetSkeleton;
 
 			delete gameCamera.Position;
 			delete gameCamera;
 
-			delete doorInPlane.Direction;
-			delete doorInPlane.Position;
-			delete doorInPlane.Velocity;
+			
 			delete doorInPlane;
 
-			delete henchman.Direction;
-			delete henchman.Position;
-			delete henchman.Velocity;
+			
 			delete henchman;
 
 			delete clouds;
