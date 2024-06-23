@@ -19,6 +19,7 @@ namespace Entities
 		NUM_STATES
 	}
 
+
 	class GunbarrelDot
 	{
 		public Vector2 *Position { get; set;}
@@ -30,6 +31,34 @@ namespace Entities
 			Position = new Vector2(position.x, position.y);
 			Timer = timer;
 			Active = active;
+		}
+	}
+
+	class ProjectileManager
+	{
+		int SpawnedAmount {get;set;}
+		Projectile[] Projectiles {get;set;}
+		int MaxProjectiles {get;set;}
+
+		public this(int maxProjectiles)
+		{
+			SpawnedAmount = 0;
+			MaxProjectiles = maxProjectiles;
+			Projectiles = new Projectile[MaxProjectiles];
+		}
+
+	}
+
+	class Projectile
+	{
+		public Vector2 Position {get; set;}
+		public Vector2 Velocity {get; set;}
+		public int Damage {get;set;}
+
+		public this(Vector2 position, int damage)
+		{
+			Position = Vector2(position.x, position.y);
+			Damage = damage;
 		}
 	}
 
@@ -241,4 +270,3 @@ namespace Entities
 
 	}
 }
-

@@ -219,6 +219,9 @@ namespace BondProject
 
 		public static int UpdateSkydivingScene(ref Vector2[] clouds, Person roger, Person henchman, float dt, GameCamera camera)
 		{
+			// have weapons fall from the sky that you can pick up?
+			// or at least, have weapons able to be knocked out of people's hands mid air
+			// and you can 'catch'/regather them. yeah, love that idea
 			int switchScene = 0;
 			float groundStart = 5000.0f;
 
@@ -709,6 +712,10 @@ namespace BondProject
 			Vector2[] planeClouds = new Vector2[maxPlaneClouds];
 			float[] planeCloudDistances = new float[maxPlaneClouds];
 			int[] planeCloudWidths = new int[maxPlaneClouds];
+
+			//
+			int maxBullets = 8096;
+			Projectile[] projectiles = new Projectile[maxBullets];
 			
 
 			Rectangle cloudRect = Rectangle(0, 0, cloudTexture.width, cloudTexture.height);
