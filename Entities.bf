@@ -36,16 +36,110 @@ namespace Entities
 
 	class ProjectileManager
 	{
-		int SpawnedAmount {get;set;}
-		Projectile[] Projectiles {get;set;}
-		int MaxProjectiles {get;set;}
+		public int SpawnedAmount {get;set;}
+		public Projectile[] Projectiles {get;set;}
+		public int MaxProjectiles {get;set;}
 
 		public this(int maxProjectiles)
 		{
 			SpawnedAmount = 0;
 			MaxProjectiles = maxProjectiles;
 			Projectiles = new Projectile[MaxProjectiles];
+			for (int i = 0; i < MaxProjectiles ; i++)
+			{
+				Projectile projectileToAdd = new Projectile(Vector2(0.0f, 0.0f));
+				Projectiles[i] = projectileToAdd;
+			}
 		}
+
+		public ~this()
+		{
+			for (int i = 0; i < MaxProjectiles; i++)
+			{
+				delete Projectiles[i];
+			}
+			delete Projectiles;
+		}
+
+		public bool AddProjectile(Vector2 position, Vector2 velocity, int damage, float lifetime)
+		{
+			bool suceeded = false;
+			if (SpawnedAmount == MaxProjectiles)
+			{
+				return suceeded;
+			}
+
+			for (int i = 0; i < MaxProjectiles; i++)
+			{
+				if (!Projectiles[i].Active)
+				{
+					Projectiles[i].Active = true;
+					Projectiles[i].Position = position;
+					Projectiles[i].Velocity = velocity;
+					Projectiles[i].Damage = damage;
+					Projectiles[i].Lifetime = lifetime;
+					SpawnedAmount++;
+					suceeded = true;
+					break;
+				}
+			}
+			return suceeded;
+		}
+
+		public void UpdateProjectiles(float dt, Person person) // make array of peopple
+		{
+			for (int i = 0; i < MaxProjectiles; i++)
+			{
+				if (Projectiles[i].Active)
+				{
+					bool shouldDespawn = false;
+					Projectiles[i].Timer += dt;
+					if (Projectiles[i].Timer >= Projectiles[i].Lifetime)
+					{
+						Projectiles[i].Active = false;
+						SpawnedAmount--;
+						continue;
+					}
+
+					
+					Projectiles[i].Position = Matrix2.Vector2Add(Projectiles[i].Position, Matrix2.Vector2Scale(Projectiles[i].Velocity, dt));
+
+					//for (Person person in people)
+					//{
+					float hitbox = 15.0f;
+					if (Matrix2.Vector2Distance(Projectiles[i].Position, *person.Position) < hitbox)
+					{
+							person.Health -= Projectiles[i].Damage;
+							// also add a gore effect to spawn, or mini particle system or whatever
+							shouldDespawn = true;
+							//break;
+					}
+					//}
+
+
+					if (shouldDespawn)
+					{
+						Projectiles[i].Active = false;
+						SpawnedAmount--;
+					}
+					
+				}
+			}
+		}
+
+		public void RenderProjectiles(GameCamera gameCamera, float dt)
+		{
+			for (int i = 0; i < MaxProjectiles; i++)
+			{
+				if (Projectiles[i].Active)
+				{
+					DrawCircle((int32)(Projectiles[i].Position.x - gameCamera.Position.x), (int32)(Projectiles[i].Position.y - gameCamera.Position.y), 5.0f,  Color.DARKGRAY);
+					
+					
+				}
+			}
+		}
+
 
 	}
 
@@ -54,11 +148,16 @@ namespace Entities
 		public Vector2 Position {get; set;}
 		public Vector2 Velocity {get; set;}
 		public int Damage {get;set;}
-
-		public this(Vector2 position, int damage)
+		public bool Active {get;set;}
+		public float Timer {get;set;}
+		public float Lifetime {get;set;}
+		public this(Vector2 position, int damage = 0, float lifetime = 0.0f)
 		{
 			Position = Vector2(position.x, position.y);
 			Damage = damage;
+			Active = false;
+			Timer = 0.0f;
+			Lifetime = lifetime;
 		}
 	}
 
@@ -79,6 +178,7 @@ namespace Entities
 
 		public bool TimerStarted {get;set;}
 		public float DeathTimer = 0.0f;
+		public float ShotTimer = 0.0f;
 
 		public Skeleton *BaseSkeleton {get;set;}
 		public Skeleton OffsetSkeleton {get;set;}
@@ -86,6 +186,7 @@ namespace Entities
 		public Particle[] Particles {get;set;} = null;
 
 		public bool IsRolling {get;set;} = false;
+		public bool IsShooting {get;set;} = false;
 
 		
 		public this(Vector2 position, int health)

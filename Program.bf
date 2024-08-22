@@ -217,7 +217,9 @@ namespace BondProject
 			}
 		}
 
-		public static int UpdateSkydivingScene(ref Vector2[] clouds, Person roger, Person henchman, float dt, GameCamera camera)
+		// TODO (Cooper): rather than having individual arguments we should just pass in a gamestate struct that has everything that we need
+		// so we don't have to continually modify the function parameters
+		public static int UpdateSkydivingScene(ref Vector2[] clouds, Person roger, Person henchman, float dt, GameCamera camera, ProjectileManager projectileManager)
 		{
 			// have weapons fall from the sky that you can pick up?
 			// or at least, have weapons able to be knocked out of people's hands mid air
@@ -292,7 +294,7 @@ namespace BondProject
 				roger.Direction.y = 1.0f;
 			}
 
-			if (IsKeyDown(KeyboardKey.KEY_SPACE) && roger.Direction.x != 0.0f)
+			if (IsKeyDown(KeyboardKey.KEY_LEFT_SHIFT) && roger.Direction.x != 0.0f)
 			{
 				roger.IsRolling = true;
 			}
@@ -301,7 +303,25 @@ namespace BondProject
 				roger.IsRolling = false;
 			}
 
+			roger.IsShooting = false;
+			if (IsKeyPressed(KeyboardKey.KEY_SPACE))
+			{
+				roger.IsShooting = true;
+			}
+
+			
+
 			Matrix2.Vector2Normalize(ref *roger.Direction, 0.001f);
+			if (roger.IsShooting)
+			{
+				// apply an impluse to the wrists that hold the gun
+				// the wrists have a homeostatic thing where they want to return to a netural orientation
+				// also spawn a projectile into the projectile manager
+				DrawText("bang!", 10, 40, 16, Color.RED);
+				Vector2 spawnPos = *roger.Position + Matrix2.Vector2Scale(*roger.Direction, 100.0f);
+				Vector2 spawnVel =  Matrix2.Vector2Scale(Vector2(Math.Cos(Trig.DegToRad((int)roger.AirRotation % 360)), Math.Sin(Trig.DegToRad((int)roger.AirRotation % 360))), 3000.0f);
+				projectileManager.AddProjectile(spawnPos, spawnVel, 50, 50.0f);
+			}
 			float rotationSpeed = 75.0f;
 			// this hsould have some acceleration to it too
 			
@@ -416,6 +436,9 @@ namespace BondProject
 				cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 3*camera.ScreenHeight/4 - 100.0f));
 				camera.Position.y +=  cameraSpeed;//(rogerSpeed + terminalVelocity)* dt;
 			}
+
+			projectileManager.UpdateProjectiles(dt, henchman);
+			
 
 			return switchScene;
 
@@ -715,7 +738,8 @@ namespace BondProject
 
 			//
 			int maxBullets = 8096;
-			Projectile[] projectiles = new Projectile[maxBullets];
+			
+			ProjectileManager projectileManager = new ProjectileManager(maxBullets);
 			
 
 			Rectangle cloudRect = Rectangle(0, 0, cloudTexture.width, cloudTexture.height);
@@ -919,7 +943,7 @@ namespace BondProject
 						break;
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
-						skydivingState = UpdateSkydivingScene(ref clouds, rogerInPlane, henchman, dt, gameCamera);
+						skydivingState = UpdateSkydivingScene(ref clouds, rogerInPlane, henchman, dt, gameCamera, projectileManager);
 						
 
 						
@@ -1230,6 +1254,7 @@ namespace BondProject
 							//DrawParticleSystemPerson(henchman, gameCamera, dt);
 							//DrawBloodExplosion(*henchman.Position, gameCamera, henchman.DeathTimer);
 						}
+						projectileManager.RenderProjectiles(gameCamera, dt);
 						/*DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).Torso.x - gameCamera.Position.x, (*rogerInPlane.BaseSkeleton).Torso.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
 						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).UpperArm.x - cameraPosition.x, (*rogerInPlane.BaseSkeleton).UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
 						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).LowerArm.x - cameraPosition.x, (*rogerInPlane.BaseSkeleton).LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
@@ -1329,6 +1354,8 @@ namespace BondProject
 			
 			delete henchman;
 
+			delete projectileManager;
+
 			delete clouds;
 			delete planeClouds;
 			delete planeCloudDistances;
@@ -1336,6 +1363,7 @@ namespace BondProject
 			delete rogerSpriteSheetSkyDive;
 			delete baseSkeleton;
 			delete offsetSkeleton;
+			
 			return 0;
 		}
 	}
