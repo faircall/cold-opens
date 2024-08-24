@@ -34,6 +34,27 @@ namespace Entities
 		}
 	}
 
+	class AudioManager
+	{
+		public List<String> SoundsToPlay;
+
+		public this()
+		{
+
+			SoundsToPlay = new List<String>();
+		}
+
+		public ~this()
+		{
+			for (String sound in SoundsToPlay)
+			{
+				delete sound;
+			}
+			delete SoundsToPlay;
+		}
+
+	}
+
 	class ProjectileManager
 	{
 		public int SpawnedAmount {get;set;}

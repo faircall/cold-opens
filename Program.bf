@@ -219,7 +219,7 @@ namespace BondProject
 
 		// TODO (Cooper): rather than having individual arguments we should just pass in a gamestate struct that has everything that we need
 		// so we don't have to continually modify the function parameters
-		public static int UpdateSkydivingScene(ref Vector2[] clouds, Person roger, Person henchman, float dt, GameCamera camera, ProjectileManager projectileManager)
+		public static int UpdateSkydivingScene(ref Vector2[] clouds, Person roger, Person henchman, float dt, GameCamera camera, ProjectileManager projectileManager, AudioManager audioManager)
 		{
 			// have weapons fall from the sky that you can pick up?
 			// or at least, have weapons able to be knocked out of people's hands mid air
@@ -262,6 +262,7 @@ namespace BondProject
 				{
 					henchman.TimerStarted = true;
 					henchman.AddParticleSystem(5, 50, 3.0f, 0.4f);
+					audioManager.SoundsToPlay.Add("splat");
 				}
 			}
 			
@@ -389,6 +390,7 @@ namespace BondProject
 					roger.TimerStarted = true;
 					// and spawn particles
 					roger.AddParticleSystem(10, 50, 3.0f, 0.2f);
+					audioManager.SoundsToPlay.Add("splat");
 				}
 			}
 
@@ -438,6 +440,7 @@ namespace BondProject
 			}
 
 			projectileManager.UpdateProjectiles(dt, henchman);
+
 			
 
 			return switchScene;
@@ -699,6 +702,7 @@ namespace BondProject
 			float gameTimer = 0.0f;
 			//SetTraceLogLevel();
 			InitWindow(screenWidth, screenHeight, "Moonraker");
+			InitAudioDevice();
 			SetTargetFPS(60);
 
 			Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
@@ -740,6 +744,7 @@ namespace BondProject
 			int maxBullets = 8096;
 			
 			ProjectileManager projectileManager = new ProjectileManager(maxBullets);
+			AudioManager audioManager = new AudioManager();
 			
 
 			Rectangle cloudRect = Rectangle(0, 0, cloudTexture.width, cloudTexture.height);
@@ -772,6 +777,14 @@ namespace BondProject
 			bool dotStopped = false;
 			float dotGrowthTimerMax = 0.5f;
 			float dotGrowthTimer = 0.0f;
+
+			// we need some sounds
+			Wave air_wave = LoadWave("sounds/air_loop.wav");
+			Wave ground_hit_wave = LoadWave("sounds/ground_hit.wav");
+			Sound air_loop_sound = LoadSoundFromWave(air_wave);
+			Sound ground_hit_sound = LoadSoundFromWave(ground_hit_wave);
+
+
 			
 
 			//GameState gGameState = GameState.GUNBARREL_SCREEN;
@@ -893,6 +906,10 @@ namespace BondProject
 			{
 				Update:
 				{
+					if (!IsSoundPlaying(air_loop_sound))
+					{
+						PlaySound(air_loop_sound);
+					}
 					float dt = GetFrameTime();
 
 					gameTimer += dt;
@@ -943,7 +960,17 @@ namespace BondProject
 						break;
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
-						skydivingState = UpdateSkydivingScene(ref clouds, rogerInPlane, henchman, dt, gameCamera, projectileManager);
+						skydivingState = UpdateSkydivingScene(ref clouds, rogerInPlane, henchman, dt, gameCamera, projectileManager, audioManager);
+
+						// do audio stuff
+						if (audioManager.SoundsToPlay.Count > 0) {
+							for (var sound in audioManager.SoundsToPlay) {
+								if (sound == "splat") {
+									PlaySound(ground_hit_sound);
+									audioManager.SoundsToPlay.Remove(sound);
+								}
+							}
+						}
 						
 
 						
@@ -1363,7 +1390,7 @@ namespace BondProject
 			delete rogerSpriteSheetSkyDive;
 			delete baseSkeleton;
 			delete offsetSkeleton;
-			
+			delete audioManager;
 			return 0;
 		}
 	}
