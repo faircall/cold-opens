@@ -319,8 +319,13 @@ namespace BondProject
 				// the wrists have a homeostatic thing where they want to return to a netural orientation
 				// also spawn a projectile into the projectile manager
 				DrawText("bang!", 10, 40, 16, Color.RED);
-				Vector2 spawnPos = *roger.Position + Matrix2.Vector2Scale(*roger.Direction, 100.0f);
-				Vector2 spawnVel =  Matrix2.Vector2Scale(Vector2(Math.Cos(Trig.DegToRad((int)roger.AirRotation % 360)), Math.Sin(Trig.DegToRad((int)roger.AirRotation % 360))), 3000.0f);
+				// instead make a vector fr
+				
+				Vector2 spawnVel =  Matrix2.Vector2Scale(Vector2(Math.Cos(Trig.DegToRad((int)roger.AirRotation % 360)), Math.Sin(Trig.DegToRad((int)roger.AirRotation % 360))), -3000.0f);
+				Vector2 spawnDirection = Matrix2.Vector2Normalized(spawnVel,0.001f);
+				Vector2 spawnPos = *roger.Position + Matrix2.Vector2Scale(spawnDirection, 100.0f);
+				// draw something at the spawn position to figure out why it's behaving weird
+				DrawCircle((int32)(spawnPos.x - camera.Position.x), (int32)(spawnPos.y - camera.Position.y), 5.0f, Color.GOLD);
 				projectileManager.AddProjectile(spawnPos, spawnVel, 50, 50.0f);
 			}
 			float rotationSpeed = 75.0f;

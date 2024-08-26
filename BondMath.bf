@@ -60,6 +60,20 @@ namespace BondMath
 			a.y /= len;
 		}
 
+		public static Vector2 Vector2Normalized(Vector2 a, float tolerance)
+		{
+			Vector2 result = a;
+			if (Vector2Length(a) <= tolerance)
+			{
+				return a;
+			}
+
+			float len = Vector2Length(a);
+			result.x /= len;
+			result.y /= len;
+			return result;
+		}
+
 		public static float Vector2Distance(Vector2 a, Vector2 b)
 		{
 			return Math.Sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
