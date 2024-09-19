@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using static raylib_beef.Raylib;
 using raylib_beef.Types;
 using raylib_beef.Enums;
@@ -308,6 +309,7 @@ namespace BondProject
 			if (IsKeyPressed(KeyboardKey.KEY_SPACE))
 			{
 				roger.IsShooting = true;
+				audioManager.SoundsToPlay.Add("pistol_shot");
 			}
 
 			
@@ -325,7 +327,7 @@ namespace BondProject
 				Vector2 spawnDirection = Matrix2.Vector2Normalized(spawnVel,0.001f);
 				Vector2 spawnPos = *roger.Position + Matrix2.Vector2Scale(spawnDirection, 100.0f);
 				// draw something at the spawn position to figure out why it's behaving weird
-				DrawCircle((int32)(spawnPos.x - camera.Position.x), (int32)(spawnPos.y - camera.Position.y), 5.0f, Color.GOLD);
+				//DrawCircle((int32)(spawnPos.x - camera.Position.x), (int32)(spawnPos.y - camera.Position.y), 5.0f, Color.GOLD);
 				projectileManager.AddProjectile(spawnPos, spawnVel, 50, 50.0f);
 			}
 			float rotationSpeed = 75.0f;
@@ -444,7 +446,14 @@ namespace BondProject
 				camera.Position.y +=  cameraSpeed;//(rogerSpeed + terminalVelocity)* dt;
 			}
 
-			projectileManager.UpdateProjectiles(dt, henchman);
+			projectileManager.UpdateProjectiles(dt, henchman, audioManager.SoundsToPlay);
+
+			if (henchman.Health <= 0 && !henchman.TimerStarted)
+			{
+				henchman.TimerStarted = true;
+				henchman.AddParticleSystem(5, 50, 3.0f, 0.4f);
+			}
+			
 
 			
 
@@ -788,6 +797,7 @@ namespace BondProject
 			Wave ground_hit_wave = LoadWave("sounds/ground_hit.wav");
 			Sound air_loop_sound = LoadSoundFromWave(air_wave);
 			Sound ground_hit_sound = LoadSoundFromWave(ground_hit_wave);
+			Sound gunshot_sound = LoadSound("sounds/pistol_shot.wav");
 
 
 			
@@ -800,7 +810,7 @@ namespace BondProject
 			// plane interior stuff
 			Person rogerInPlane = new Person(Vector2(100.0f, 400.0f), 100);
 
-			Person henchman = new Person(Vector2(30.0f, 30.0f), 100);
+			Person henchman = new Person(Vector2(30.0f, 30.0f), 50);
 
 			float doorWidth = 30.0f;
 			float doorHeight = 30.0f;
@@ -972,6 +982,10 @@ namespace BondProject
 							for (var sound in audioManager.SoundsToPlay) {
 								if (sound == "splat") {
 									PlaySound(ground_hit_sound);
+									audioManager.SoundsToPlay.Remove(sound);
+								}
+								if (sound == "pistol_shot") {
+									PlaySound(gunshot_sound);
 									audioManager.SoundsToPlay.Remove(sound);
 								}
 							}
@@ -1282,6 +1296,7 @@ namespace BondProject
 						}
 						else
 						{
+							// we haven't made the particle system yet
 							henchman.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
 							//DrawParticleSystemPerson(henchman, gameCamera, dt);
 							//DrawBloodExplosion(*henchman.Position, gameCamera, henchman.DeathTimer);

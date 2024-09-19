@@ -107,8 +107,16 @@ namespace Entities
 			return suceeded;
 		}
 
-		public void UpdateProjectiles(float dt, Person person) // make array of peopple
+		public void UpdateProjectiles(float dt, Person person, List<String> soundsToPlay) // make array of peopple
 		{
+
+			// thing to do here would be to first store the position of each person
+			// as potential hitboxes with ids occupying it
+			// then for each projectile,
+			// do the lookup of that position and apply damage to entities at that id
+			// *then*
+			// for each projectile, see
+			
 			for (int i = 0; i < MaxProjectiles; i++)
 			{
 				if (Projectiles[i].Active)
@@ -117,9 +125,10 @@ namespace Entities
 					Projectiles[i].Timer += dt;
 					if (Projectiles[i].Timer >= Projectiles[i].Lifetime)
 					{
-						Projectiles[i].Active = false;
-						SpawnedAmount--;
-						continue;
+						shouldDespawn = true;
+						//Projectiles[i].Active = false;
+						//SpawnedAmount--;
+						//continue;
 					}
 
 					
@@ -127,10 +136,11 @@ namespace Entities
 
 					//for (Person person in people)
 					//{
-					float hitbox = 15.0f;
-					if (Matrix2.Vector2Distance(Projectiles[i].Position, *person.Position) < hitbox)
+					float hitbox = 35.0f;
+					if (Matrix2.Vector2Distance(Projectiles[i].Position, *(person).Position) < hitbox)
 					{
-							person.Health -= Projectiles[i].Damage;
+							(person).Health -= Projectiles[i].Damage;
+							soundsToPlay.Add("splat");
 							// also add a gore effect to spawn, or mini particle system or whatever
 							shouldDespawn = true;
 							//break;
