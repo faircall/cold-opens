@@ -220,13 +220,13 @@ namespace BondProject
 
 		// TODO (Cooper): rather than having individual arguments we should just pass in a gamestate struct that has everything that we need
 		// so we don't have to continually modify the function parameters
-		public static int UpdateSkydivingScene(ref Vector2[] clouds, Person roger, Person henchman, float dt, GameCamera camera, ProjectileManager projectileManager, AudioManager audioManager)
+		public static int UpdateSkydivingScene(ref Vector2[] clouds, Person roger, Person henchman, float dt, GameCamera camera, ProjectileManager projectileManager, AudioManager audioManager, float groundStart)
 		{
 			// have weapons fall from the sky that you can pick up?
 			// or at least, have weapons able to be knocked out of people's hands mid air
 			// and you can 'catch'/regather them. yeah, love that idea
 			int switchScene = 0;
-			float groundStart = 5000.0f;
+			//float groundStart = 5000.0f;
 
 			for (int i = 0; i < clouds.Count; i++)
 			{
@@ -239,12 +239,12 @@ namespace BondProject
 				}
 				clouds[i] = cloudPos;
 			}
-
+			float terminalVelocity = 1000.0f; // what was I thinking here?
 			roger.Direction.x = 0.0f;
 			roger.Direction.y = 0.0f;
 			float rogerSpeedAir = 500.0f;
 
-			float enemySpeedAir = 500.0f;
+			float enemySpeedAir = 1000.0f;
 
 			if (henchman.TimerStarted)
 			{
@@ -288,7 +288,7 @@ namespace BondProject
 
 			if (IsKeyDown(KeyboardKey.KEY_W))
 			{
-				rogerSpeedAir = 100.0f;
+				//rogerSpeedAir = 500.0f;
 				roger.Direction.y = -1.0f;
 			}
 			if (IsKeyDown(KeyboardKey.KEY_S))
@@ -349,28 +349,31 @@ namespace BondProject
 			float armAngleToOscilate = 5.0f;
 
 			
-			float terminalVelocity = 100.0f; // what was I thinking here?
+			
 			if (roger.TimerStarted)
 			{
 				roger.DeathTimer += dt;
 			}
-
-			if (roger.Position.y < groundStart)
+			// (TODO) : use force vectors
+			if (roger.Position.y < groundStart) // i.e we are in the air
+				// there is such thing as terminal velocity
+				// the maximum speed attainable in the air
 			{
+				roger.Position.y += terminalVelocity * dt; // this is our base falling rate
 				if (!roger.IsRolling)
 				{
 					roger.AirRotation += roger.Direction.x * dt * rotationSpeed;
 					roger.Velocity.x += rogerAirMotion * dt * rogerSpeedAir;
 					// this shouldn't be active when he's on the ground
-					roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
+					//roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
 
-					roger.Velocity.y += (10.0f * dt * rogerAirMotionUp);
+					//roger.Velocity.y += (10.0f * dt * rogerAirMotionUp);
 
 					roger.Velocity.x += rogerFriction.x*dt;
-					roger.Velocity.y += rogerFriction.y*dt;
+					//roger.Velocity.y += rogerFriction.y*dt;
 					roger.Position.x += (roger.Velocity.x) * dt;
 					roger.Position.y += (roger.Velocity.y) * dt;
-					roger.Position.y += terminalVelocity * dt;
+					//roger.Position.y += terminalVelocity * dt;
 				}
 				else
 				{
@@ -385,7 +388,7 @@ namespace BondProject
 					roger.Velocity.y += rogerFriction.y*dt;
 					roger.Position.x += (roger.Velocity.x) * dt;
 					roger.Position.y += (roger.Velocity.y) * dt;
-					roger.Position.y += terminalVelocity * dt;
+					//roger.Position.y += terminalVelocity * dt;
 				}
 				
 			}
@@ -415,14 +418,18 @@ namespace BondProject
 
 			
 
-			float cameraSpeed = Math.Abs(roger.Position.x - camera.Position.x);
+			float cameraSpeed = Math.Min(Math.Abs(roger.Position.x - camera.Position.x), terminalVelocity);
+			// would it be better to have a velocity for the camera?
 			float rogerSpeed = roger.Velocity.Length();
 			// maybe we need to CENTER him
 			// might explain why it's less of an issue
 
 			// camera code needs redoing
 
-			// the issue I think is that he's moving faster than the camera 
+			// the issue I think is that he's moving faster than the camera
+			// just have a unified system here where the camera has a velocity
+			// and will adjust dynamically, including jumping (?) if totally out of bounds
+			// for sufficient time
 			if (roger.Position.x < (camera.Position.x + 300.0f))
 			{
 				// do we actually want abs?
@@ -431,19 +438,23 @@ namespace BondProject
 			} 
 			else if (roger.Position.x >= (camera.Position.x + camera.ScreenWidth - 400.0f))
 			{
-				cameraSpeed = Math.Abs(roger.Position.x - (camera.Position.x + camera.ScreenWidth - 400.0f));
+				cameraSpeed = Math.Min(Math.Abs(roger.Position.x - (camera.Position.x + camera.ScreenWidth - 400.0f)), terminalVelocity);
 				camera.Position.x += cameraSpeed * dt;
 			}
-			cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 100.0f));
+			//cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 100.0f));
 			if (roger.Position.y < (camera.Position.y + 100.0f))
 			{
-				
-				camera.Position.y -= rogerSpeed * dt * 1.5f;
+				cameraSpeed = Math.Min(Math.Abs(roger.Position.y - (camera.Position.y + 100.0f)), terminalVelocity);
+				String camSpeedString = scope $"roger behind camera, setting to {cameraSpeed}";
+				//DrawText(camSpeedString, 10, 10, 10, Color.GOLD);
+				camera.Position.y -= cameraSpeed*dt;
 			} 
-			else if (roger.Position.y >= (camera.Position.y + 3*camera.ScreenHeight/4 - 100.0f))
+			else if (roger.Position.y > (camera.Position.y + 3.0f*camera.ScreenHeight/4.0f ))
 			{
-				cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 3*camera.ScreenHeight/4 - 100.0f));
-				camera.Position.y +=  cameraSpeed;//(rogerSpeed + terminalVelocity)* dt;
+				cameraSpeed = Math.Max(Math.Abs(roger.Position.y - (camera.Position.y + 3.0f*camera.ScreenHeight/4.0f )), terminalVelocity);
+				String camSpeedString = scope $"roger ahead camera, setting to {cameraSpeed}";
+				DrawText(camSpeedString, 10, 10, 10, Color.GOLD);
+				camera.Position.y +=  cameraSpeed*dt;//(rogerSpeed + terminalVelocity)* dt;
 			}
 
 			projectileManager.UpdateProjectiles(dt, henchman, audioManager.SoundsToPlay);
@@ -666,6 +677,14 @@ namespace BondProject
 			DrawTexturePro(texture, src, dest, Vector2(0.0f, 0.0f), 0.0f, color);
 		}
 
+		public static void DrawPartialTextureCenteredFlipped(Texture2D texture, Rectangle src, float x, float y, float width, float height, float rot, float scale, Color color)
+		{
+			Rectangle src_to_use = Rectangle(src.x, src.y, -src.width, src.height);
+			Rectangle dest = Rectangle(x - (width*scale)/2.0f, y - (height*scale)/2.0f, width*scale, height*scale);
+			// this will need some work to make useable with rotations (consider the origin should be the center?)
+			DrawTexturePro(texture, src_to_use, dest, Vector2(0.0f, 0.0f), 0.0f, color);
+		}
+
 
 		public static void UpdateSpriteSheet(ref SpriteSheet spriteSheet, float dt)
 		{
@@ -711,6 +730,8 @@ namespace BondProject
 
 		public static int Main()
 		{
+			// opening block
+			
 			int32 screenWidth = 1920;
 			int32 screenHeight = 1080;
 			float gameTimer = 0.0f;
@@ -798,13 +819,14 @@ namespace BondProject
 			Sound air_loop_sound = LoadSoundFromWave(air_wave);
 			Sound ground_hit_sound = LoadSoundFromWave(ground_hit_wave);
 			Sound gunshot_sound = LoadSound("sounds/pistol_shot.wav");
+			Sound gunshot_hit_sound = LoadSound("sounds/gun_hit.wav");
 
 
 			
-
-			//GameState gGameState = GameState.GUNBARREL_SCREEN;
+			// emacs comment
+			GameState gGameState = GameState.GUNBARREL_SCREEN;
 			//GameState gGameState = GameState.SKELETAL_EDITOR;
-			GameState gGameState = GameState.SKYDIVING_SCREEN;
+			//GameState gGameState = GameState.SKYDIVING_SCREEN;
 			//GameState gGameState = GameState.PLANE_SCREEN;
 
 			// plane interior stuff
@@ -848,7 +870,7 @@ namespace BondProject
 			SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			
 
-			float groundStart = 5000.0f;
+			float groundStart = 50000.0f;
 
 			// pull these into a singular Roger
 			Vector2 rogerDirection = Vector2(0.0f, 0.0f);
@@ -917,18 +939,19 @@ namespace BondProject
 			int planeInteriorState = 0;
 			int skydivingState = 0;
 
+			MainWhileLoop:
 			while (!WindowShouldClose())
 			{
 				Update:
 				{
-					if (!IsSoundPlaying(air_loop_sound))
-					{
-						PlaySound(air_loop_sound);
-					}
+
 					float dt = GetFrameTime();
 
 					gameTimer += dt;
 
+					
+
+					
 					switch (gGameState)
 					{
 					case (GameState.MGM_SCREEN):
@@ -975,7 +998,11 @@ namespace BondProject
 						break;
 					case (GameState.SKYDIVING_SCREEN):
 						// set blue sky background
-						skydivingState = UpdateSkydivingScene(ref clouds, rogerInPlane, henchman, dt, gameCamera, projectileManager, audioManager);
+						if (!IsSoundPlaying(air_loop_sound))
+						{
+							PlaySound(air_loop_sound);		
+						}
+						skydivingState = UpdateSkydivingScene(ref clouds, rogerInPlane, henchman, dt, gameCamera, projectileManager, audioManager, groundStart);
 
 						// do audio stuff
 						if (audioManager.SoundsToPlay.Count > 0) {
@@ -986,6 +1013,10 @@ namespace BondProject
 								}
 								if (sound == "pistol_shot") {
 									PlaySound(gunshot_sound);
+									audioManager.SoundsToPlay.Remove(sound);
+								}
+								if (sound == "gun_hit") {
+									PlaySound(gunshot_hit_sound);
 									audioManager.SoundsToPlay.Remove(sound);
 								}
 							}
@@ -1159,7 +1190,21 @@ namespace BondProject
 								// DrawTextureCentered(rogerTexture, rogerPosition.x - 10.0f, rogerPosition.y - 50.0f, 0.0f, 2.0f, Color.WHITE);
 								
 								EndShaderMode();
-								DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 50.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
+								// check for roger's direction here
+								if (rogerDirection.x < 0.0f)
+								{
+									DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 50.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
+								}
+								else if (rogerDirection.x > 0.0f)
+								{
+									DrawPartialTextureCenteredFlipped(rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 50.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
+								}
+								else
+								{
+									DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 50.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
+								}
+
+
 							}
 							else
 							{
