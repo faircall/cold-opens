@@ -5,3 +5,6 @@ Dependencies = {corlib = "*", raylib-beef = "*"}
 Name = "ColdOpen"
 TargetType = "BeefGUIApplication"
 StartupObject = "ColdOpen.Program"
+
+[Configs.Debug.Win64]
+DebugWorkingDirectory = "c:\\Users\\weiju\\Documents\\GitHub\\cold-opens\\dist"
