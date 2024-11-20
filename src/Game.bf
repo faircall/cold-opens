@@ -32,53 +32,7 @@ namespace Game
 		}
 	}
 
-	// class GunbarrelScene
-	// {
-	// 	// mostly cutscene
-	// 	public int m_MaxDots;
-	// 	public int m_DotCounter;
-	// 	public float m_CircTimer;
-	// 	public float m_GrowthTimer;
-	// 	public float m_GrowthTimerMax;
-	// 	public float m_DotSpeed;
-	// 	public float m_DotTimeout;
-	// 	public bool m_DotStopped;
-	// 	public GunbarrelDot[] m_Dots;
-	// 	public GunbarrelDot m_DotStart;
-	// 	public GunbarrelDot m_NextDot;
-		
 
-	// 	// mostly interactive
-	// 	public Vector2 m_PlayerDirection;
-	// 	public Vector2 m_PlayerPosition;
-	// 	public float m_PersistentDirection; // maybe make this a vector also?
-
-	// 	public this(int maxDots, int screenWidth, float growthTimerMax)
-	// 	{
-	// 		m_MaxDots = maxDots;
-	// 		m_Dots = new GunbarrelDot[maxDots];
-	// 		for (int i = 0; i < maxDots; i++)
-	// 		{
-	// 			m_Dots[i] = GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 300.0f), 0.0f, false);
-	// 		}
-	// 		mDotCounter = 0;
-	// 		m_CircTimer = 0.0f;
-	// 		m_GrowthTimer = 0.0f;
-	// 		m_GrowthTimerMax = growthTimerMax;
-	// 		m_DotStart = m_Dots[0];
-	// 		m_NextDot = m_Dots[0];
-	// 		m_DotStopped = false;
-			
-	// 	}
-
-	// 	public static void Update(float dt)
-	// 	{
-	// 	}
-
-	// 	public static void Render()
-	// 	{
-	// 	}
-	// }
 	class TextureDrawing
 	{
 
@@ -273,6 +227,7 @@ namespace Game
 
 		public void InitScene(int _maxDots, GameResources gameResources, float _screenWidth = 1920.0f)
 		{
+			screenWidth = _screenWidth;
 			maxDots = _maxDots;
 			m_Dots = new GunbarrelDot[maxDots];
 			for (int i = 0; i < maxDots; i++)
@@ -280,7 +235,7 @@ namespace Game
 				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 300.0f), 0.0f, false);
 			}
 			
-			screenWidth = _screenWidth;
+			
 			dotStart = m_Dots[0];
 			nextDot = m_Dots[0];
 			rogerSpriteSheet = new SpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
@@ -293,6 +248,7 @@ namespace Game
 			SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 			SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+			dotStopped = false;
 		}
 
 		public void ResetScene()
@@ -348,7 +304,7 @@ namespace Game
 			{
 				TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
 			}
-
+			//dotStart.Position.x += dt * dotSpeed;
 			if (dotStart.Position.x < m_Dots[maxDots - 1].Position.x && !dotStopped)
 			{
 				dotStart.Position.x += dt * dotSpeed;
@@ -394,6 +350,7 @@ namespace Game
 		{
 			for (var dot in m_Dots)
 			{
+				//DrawCircle((int32)dot.Position.x, (int32)dot.Position.y, dotRad, Color.WHITE);
 				if (dot.Active)
  				{
 					 DrawCircle((int32)dot.Position.x, (int32)dot.Position.y, dotRad, Color.WHITE);
