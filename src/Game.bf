@@ -125,6 +125,26 @@ namespace Game
 		public Sound gunshot_sound;
 		public Sound gunshot_hit_sound;
 
+		// why not include shaders here?
+
+		public Shader gbShader;
+		public Shader slShader;
+		public int32 gbTexLoc;
+		public int32 slTexLoc;
+
+
+		public int32 gbTimerLoc;
+		public int32 gbCircLoc;
+
+		public int32 slTimerLoc;
+		public int32 slCircLoc;
+
+		// SetShaderValueTexture(gbShader, gbTexLoc, gameResources.gunbarrelTexture);
+		// SetShaderValueTexture(slShader, slTexLoc, gameResources.rogerTexture);
+		// SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+		// SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+		// SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+
 		public this()
 		{
 			gunbarrelTexture = LoadTexture("gunbarrel.png");
@@ -143,10 +163,26 @@ namespace Game
 			planeTexture = LoadTexture("plane_at_scale.png");
 			henchmanTexture = LoadTexture("enemy_basic.png");
 
-			Sound air_loop_sound = LoadSound("sounds/air_loop.wav");
-			Sound ground_hit_sound = LoadSound("sounds/ground_hit.wav");
-			Sound gunshot_sound = LoadSound("sounds/pistol_shot.wav");
-			Sound gunshot_hit_sound = LoadSound("sounds/gun_hit.wav");
+			air_loop_sound = LoadSound("sounds/air_loop.wav");
+			ground_hit_sound = LoadSound("sounds/ground_hit.wav");
+			gunshot_sound = LoadSound("sounds/pistol_shot.wav");
+			gunshot_hit_sound = LoadSound("sounds/gun_hit.wav");
+
+			gbShader = LoadShader("base.vs", "gunbarrel.fs");
+			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
+			gbTexLoc = GetShaderLocation(gbShader, "tex");
+			slTexLoc = GetShaderLocation(slShader, "tex");
+
+
+			gbTimerLoc = GetShaderLocation(gbShader, "timer");
+			gbCircLoc = GetShaderLocation(gbShader, "circCent");
+
+			slTimerLoc = GetShaderLocation(slShader, "timer");
+			slCircLoc = GetShaderLocation(slShader, "circCent");
+
+			SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
+			SetShaderValueTexture(slShader, slTexLoc, rogerTexture);
+			
 		}
 
 		public ~this()
@@ -184,17 +220,7 @@ namespace Game
 		float dotGrowthTimerMax = 0.5f;
 		float dotGrowthTimer = 0.0f;
 
-		Shader gbShader = LoadShader("base.vs", "gunbarrel.fs");
-		Shader slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
-		int32 gbTexLoc = GetShaderLocation(gbShader, "tex");
-		int32 slTexLoc = GetShaderLocation(slShader, "tex");
 
-
-		int32 gbTimerLoc = GetShaderLocation(gbShader, "timer");
-		int32 gbCircLoc = GetShaderLocation(gbShader, "circCent");
-
-		int32 slTimerLoc = GetShaderLocation(slShader, "timer");
-		int32 slCircLoc = GetShaderLocation(slShader, "circCent");
 		float circTimer = 0.0f;
 		float planeTimer = 0.0f;
 
@@ -243,12 +269,16 @@ namespace Game
 			circLoc = *m_Dots[maxDots - 1].Position;
 			rogerPosition = Vector2(circLoc.x, circLoc.y);
 			rogerDirection = Vector2(0.0f, 0.0f);
-			SetShaderValueTexture(gbShader, gbTexLoc, gameResources.gunbarrelTexture);
-			SetShaderValueTexture(slShader, slTexLoc, gameResources.rogerTexture);
-			SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
-			SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
-			SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+			// SetShaderValueTexture(gbShader, gbTexLoc, gameResources.gunbarrelTexture);
+			// SetShaderValueTexture(slShader, slTexLoc, gameResources.rogerTexture);
+			// SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+			// SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+			// SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			dotStopped = false;
+
+			SetShaderValue(gameResources.gbShader, gameResources.gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+			SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+			SetShaderValue(gameResources.slShader, gameResources.slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 		}
 
 		public void ResetScene()
@@ -359,8 +389,8 @@ namespace Game
 
 			if (dotStopped)
 			{
-				BeginShaderMode(gbShader);
-				SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+				BeginShaderMode(gameResources.gbShader);
+				SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 				DrawTextureEx(gameResources.gunbarrelTexture, Vector2(-1800.0f + rogerPosition.x, 0.0f), 0.0f, 10.0f, Color.WHITE);
 				EndShaderMode();
 								// rather than a straight circle, what we actually want here is to draw
@@ -369,15 +399,16 @@ namespace Game
 				DrawCircle((int32)rogerPosition.x, (int32)rogerPosition.y, dotRad + dotGrowthTimer*200.0f, Color.WHITE);
 								
 								
-				BeginShaderMode(slShader);
+				BeginShaderMode(gameResources.slShader);
 				//float spotlightRad = dotRad + dotGrowthTimer*200.0f;
 				float spotlightRad = (dotRad + dotGrowthTimer*200.0f)/140.0f;
-				SetShaderValue(slShader, slTimerLoc, (void*)&spotlightRad, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+				SetShaderValue(gameResources.slShader, gameResources.slTimerLoc, (void*)&spotlightRad, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 				//DrawTextureEx(rogerTexture, Vector2(50.0f, 50.0f), 0.0f, 10.0f, Color.WHITE);
 				// DrawTextureCentered(rogerTexture, rogerPosition.x - 10.0f, rogerPosition.y - 50.0f, 0.0f, 2.0f, Color.WHITE);
 								
 				EndShaderMode();
 				// check for roger's direction here
+				// TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 				if (rogerDirection.x < 0.0f)
 				{
 					TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
