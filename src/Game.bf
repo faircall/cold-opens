@@ -131,6 +131,7 @@ namespace Game
 		public Shader gbShader;
         public Shader gbBackgroundShader;
 		public Shader slShader;
+        public Shader slBackgroundShader;
 		public int32 gbTexLoc;
 		public int32 slTexLoc;
 
@@ -143,6 +144,9 @@ namespace Game
 
 		public int32 slTimerLoc;
 		public int32 slCircLoc;
+
+        public int32 slBackgroundTimerLoc;
+		public int32 slBackgroundCircLo;
 
 		// SetShaderValueTexture(gbShader, gbTexLoc, gameResources.gunbarrelTexture);
 		// SetShaderValueTexture(slShader, slTexLoc, gameResources.rogerTexture);
@@ -308,7 +312,7 @@ namespace Game
 			m_Dots = new GunbarrelDot[maxDots];
 			for (int i = 0; i < maxDots; i++)
 			{
-				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 300.0f), 0.0f, false);
+				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 500.0f), 0.0f, false);
 			}
 			
 			
@@ -317,6 +321,7 @@ namespace Game
 			rogerSpriteSheet = new SpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
 
 			circLoc = *m_Dots[maxDots - 1].Position;
+            
 			rogerPosition = Vector2(circLoc.x, circLoc.y);
 			rogerDirection = Vector2(0.0f, 0.0f);
             dotCounter = 0;
@@ -343,7 +348,7 @@ namespace Game
 
 			for (int i = 0; i < maxDots; i++)
 			{
-				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 300.0f), 0.0f, false);
+				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 600.0f), 0.0f, false);
 			}
 			dotStart = m_Dots[0];
 			nextDot = m_Dots[0];
@@ -462,7 +467,7 @@ namespace Game
 				BeginShaderMode(gameResources.gbShader);
 				SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
                 DrawTextureEx(gameResources.gunbarrelBGTexture, Vector2(0.0f, 0.0f), 0.0f, 100.0f, Color.WHITE);
-				DrawTextureEx(gameResources.gunbarrelTexture, Vector2(-600.0f + rogerPosition.x, 0.0f), 0.0f, 10.0f, Color.WHITE);
+				DrawTextureEx(gameResources.gunbarrelTexture, Vector2(-600.0f + rogerPosition.x, 200.0f), 0.0f, 10.0f, Color.WHITE);
 				EndShaderMode();
                 // rather than a straight circle, what we actually want here is to draw
                 // the Roger/Sean/Daniel/Tim/George/Pierce sprite with a circle shader on it. 
