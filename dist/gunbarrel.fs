@@ -11,8 +11,8 @@ uniform sampler2D tex;
 out vec4 fragOut;
 
 //how to get the pixel coord?
-float screenWidth = 1280.0f;
-float screenHeight = 720.0f;
+float screenWidth = 1920.0f;
+float screenHeight = 1080.0f;
 
 void main()
 {

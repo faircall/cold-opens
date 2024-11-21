@@ -131,22 +131,23 @@ namespace Game
 		public Shader gbShader;
         public Shader gbBackgroundShader;
 		public Shader slShader;
-        public Shader slBackgroundShader;
+
+        
 		public int32 gbTexLoc;
+        public int32 gbBackgroundTexLoc;
 		public int32 slTexLoc;
 
-
+        
 		public int32 gbTimerLoc;
-		public int32 gbCircLoc;
-
         public int32 gbBackgroundTimerLoc;
+		public int32 gbCircLoc;        
 		public int32 gbBackgroundCircLoc;
 
 		public int32 slTimerLoc;
 		public int32 slCircLoc;
 
-        public int32 slBackgroundTimerLoc;
-		public int32 slBackgroundCircLo;
+
+
 
 		// SetShaderValueTexture(gbShader, gbTexLoc, gameResources.gunbarrelTexture);
 		// SetShaderValueTexture(slShader, slTexLoc, gameResources.rogerTexture);
@@ -182,18 +183,20 @@ namespace Game
 			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
 
             gbBackgroundShader = LoadShader("base.vs", "gunbarrel.fs");
-			slBackgroundShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
+			
             
 			gbTexLoc = GetShaderLocation(gbShader, "tex");
+            gbBackgroundTexLoc = GetShaderLocation(gbBackgroundShader, "tex");
 			slTexLoc = GetShaderLocation(slShader, "tex");
 
-
+            gbBackgroundTimerLoc = GetShaderLocation(gbBackgroundShader, "timer");
 			gbTimerLoc = GetShaderLocation(gbShader, "timer");
 			gbCircLoc = GetShaderLocation(gbShader, "circCent");
+            gbBackgroundCircLoc = GetShaderLocation(gbBackgroundShader, "circCent");
 
 			slTimerLoc = GetShaderLocation(slShader, "timer");
 			slCircLoc = GetShaderLocation(slShader, "circCent");
-
+            SetShaderValueTexture(gbBackgroundShader, gbBackgroundTexLoc, gunbarrelBGTexture);
 			SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
 			SetShaderValueTexture(slShader, slTexLoc, rogerTexture);
 			
@@ -228,18 +231,25 @@ namespace Game
 			gunshot_hit_sound = LoadSound("sounds/gun_hit.wav");
 
 			gbShader = LoadShader("base.vs", "gunbarrel.fs");
+            gbBackgroundShader = LoadShader("base.vs", "gunbarrel.fs");
+            
 			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
+            
 			gbTexLoc = GetShaderLocation(gbShader, "tex");
+            gbBackgroundTexLoc = GetShaderLocation(gbBackgroundShader, "tex");
 			slTexLoc = GetShaderLocation(slShader, "tex");
 
 
 			gbTimerLoc = GetShaderLocation(gbShader, "timer");
+            gbBackgroundTimerLoc = GetShaderLocation(gbBackgroundShader, "timer");
 			gbCircLoc = GetShaderLocation(gbShader, "circCent");
+            gbBackgroundCircLoc = GetShaderLocation(gbBackgroundShader, "circCent");
 
 			slTimerLoc = GetShaderLocation(slShader, "timer");
 			slCircLoc = GetShaderLocation(slShader, "circCent");
 
-			SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
+            SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
+			SetShaderValueTexture(gbBackgroundShader, gbBackgroundTexLoc, gunbarrelBGTexture);
 			SetShaderValueTexture(slShader, slTexLoc, rogerTexture);
         }
 
@@ -315,7 +325,7 @@ namespace Game
 				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 500.0f), 0.0f, false);
 			}
 			
-			
+			dotGrowthTimerMax = 0.5f;
 			dotStart = m_Dots[0];
 			nextDot = m_Dots[0];
 			rogerSpriteSheet = new SpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
@@ -334,7 +344,9 @@ namespace Game
 			dotStopped = false;
 
 			SetShaderValue(gameResources.gbShader, gameResources.gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+            SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 			SetShaderValue(gameResources.slShader, gameResources.slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 		}
 
@@ -348,7 +360,7 @@ namespace Game
 
 			for (int i = 0; i < maxDots; i++)
 			{
-				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 600.0f), 0.0f, false);
+				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 500.0f), 0.0f, false);
 			}
 			dotStart = m_Dots[0];
 			nextDot = m_Dots[0];
@@ -358,10 +370,13 @@ namespace Game
 			dotStopped = false;
             circTimer = 0.0f;
             dotGrowthTimer = 0.0f;
+            dotGrowthTimerMax = 0.8f;
             dotCounter = 0;
 
             SetShaderValue(gameResources.gbShader, gameResources.gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+            SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+			SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 			SetShaderValue(gameResources.slShader, gameResources.slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			
 		}
@@ -464,11 +479,20 @@ namespace Game
 
 			if (dotStopped)
 			{
+                // NOTE (Cooper) : two ways of handling this
+                // either we figure  out how to do 2 shaders at once
+                // or we switch out one large texture for the split version
+                SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+                BeginShaderMode(gameResources.gbBackgroundShader);                
+                DrawTextureEx(gameResources.gunbarrelBGTexture, Vector2(0.0f, 0.0f), 0.0f, 10.0f, Color.WHITE);
+                EndShaderMode();
+                
 				BeginShaderMode(gameResources.gbShader);
 				SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
-                DrawTextureEx(gameResources.gunbarrelBGTexture, Vector2(0.0f, 0.0f), 0.0f, 100.0f, Color.WHITE);
+                
 				DrawTextureEx(gameResources.gunbarrelTexture, Vector2(-600.0f + rogerPosition.x, 200.0f), 0.0f, 10.0f, Color.WHITE);
 				EndShaderMode();
+                
                 // rather than a straight circle, what we actually want here is to draw
                 // the Roger/Sean/Daniel/Tim/George/Pierce sprite with a circle shader on it. 
                 //DrawCircle((int32)dotStart.Position.x, (int32)dotStart.Position.y, dotRad + dotGrowthTimer*200.0f, Color.WHITE);
