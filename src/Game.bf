@@ -129,6 +129,7 @@ namespace Game
 		// why not include shaders here?
 
 		public Shader gbShader;
+        public Shader gbBackgroundShader;
 		public Shader slShader;
 		public int32 gbTexLoc;
 		public int32 slTexLoc;
@@ -136,6 +137,9 @@ namespace Game
 
 		public int32 gbTimerLoc;
 		public int32 gbCircLoc;
+
+        public int32 gbBackgroundTimerLoc;
+		public int32 gbBackgroundCircLoc;
 
 		public int32 slTimerLoc;
 		public int32 slCircLoc;
@@ -172,6 +176,10 @@ namespace Game
 
 			gbShader = LoadShader("base.vs", "gunbarrel.fs");
 			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
+
+            gbBackgroundShader = LoadShader("base.vs", "gunbarrel.fs");
+			slBackgroundShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
+            
 			gbTexLoc = GetShaderLocation(gbShader, "tex");
 			slTexLoc = GetShaderLocation(slShader, "tex");
 
@@ -190,6 +198,46 @@ namespace Game
 		public ~this()
 		{
 		}
+
+        public void Reload()
+        {
+            gunbarrelBGTexture = LoadTexture("gunbarrel.png");
+			gunbarrelTexture = LoadTexture("just_gunbarrel.png");
+			rogerTexture = LoadTexture("adjusted_roger_resized.png");
+			cloudTexture = LoadTexture("cloud.png");
+			rogerSkyDiveTexture = LoadTexture("rogerskydive.png");
+			planeInteriorTexture = LoadTexture("planeInterior.png");
+
+			rogerHeadTexture = LoadTexture("head.png");
+			rogerTorsoTexture = LoadTexture("torso.png");
+			rogerUpperArmTexture = LoadTexture("upperarm.png");
+			rogerLowerArmTexture = LoadTexture("lowerarm.png");
+			rogerUpperLegTexture = LoadTexture("upperleg.png");
+			rogerLowerLegTexture = LoadTexture("lowerleg.png");
+
+			planeTexture = LoadTexture("plane_at_scale.png");
+			henchmanTexture = LoadTexture("enemy_basic.png");
+
+			air_loop_sound = LoadSound("sounds/air_loop.wav");
+			ground_hit_sound = LoadSound("sounds/ground_hit.wav");
+			gunshot_sound = LoadSound("sounds/pistol_shot.wav");
+			gunshot_hit_sound = LoadSound("sounds/gun_hit.wav");
+
+			gbShader = LoadShader("base.vs", "gunbarrel.fs");
+			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
+			gbTexLoc = GetShaderLocation(gbShader, "tex");
+			slTexLoc = GetShaderLocation(slShader, "tex");
+
+
+			gbTimerLoc = GetShaderLocation(gbShader, "timer");
+			gbCircLoc = GetShaderLocation(gbShader, "circCent");
+
+			slTimerLoc = GetShaderLocation(slShader, "timer");
+			slCircLoc = GetShaderLocation(slShader, "circCent");
+
+			SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
+			SetShaderValueTexture(slShader, slTexLoc, rogerTexture);
+        }
 
 		
 	}
@@ -271,6 +319,8 @@ namespace Game
 			circLoc = *m_Dots[maxDots - 1].Position;
 			rogerPosition = Vector2(circLoc.x, circLoc.y);
 			rogerDirection = Vector2(0.0f, 0.0f);
+            dotCounter = 0;
+            circTimer = 0.0f;
 			// SetShaderValueTexture(gbShader, gbTexLoc, gameResources.gunbarrelTexture);
 			// SetShaderValueTexture(slShader, slTexLoc, gameResources.rogerTexture);
 			// SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
@@ -283,7 +333,7 @@ namespace Game
 			SetShaderValue(gameResources.slShader, gameResources.slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 		}
 
-		public void ResetScene()
+		public void ResetScene(GameResources gameResources)
 		{
 			for (int i = 0; i < maxDots; i++)
 			{
@@ -301,6 +351,13 @@ namespace Game
 			rogerPosition = Vector2(circLoc.x, circLoc.y);
 			rogerDirection = Vector2(0.0f, 0.0f);
 			dotStopped = false;
+            circTimer = 0.0f;
+            dotGrowthTimer = 0.0f;
+            dotCounter = 0;
+
+            SetShaderValue(gameResources.gbShader, gameResources.gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+			SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+			SetShaderValue(gameResources.slShader, gameResources.slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			
 		}
 
@@ -315,10 +372,9 @@ namespace Game
 
 			rogerDirection.x = 0.0f;
 			rogerDirection.y = 0.0f;
-			if (IsKeyPressed(KeyboardKey.KEY_SPACE))
-			{
-				ResetScene();
-			}
+			
+
+
 			if (IsKeyDown(KeyboardKey.KEY_A))
 			{
 				rogerDirection.x = -1.0f;
@@ -380,6 +436,15 @@ namespace Game
 
 		public void Render(GameResources gameResources)
         {
+            if (IsKeyPressed(KeyboardKey.KEY_F11))
+			{
+				ResetScene(gameResources);
+			}
+            if (IsKeyPressed(KeyboardKey.KEY_F10))
+			{
+                gameResources.Reload();
+			}
+            
             if (!dotStopped)
             {
                 for (var dot in m_Dots)
@@ -396,7 +461,8 @@ namespace Game
 			{
 				BeginShaderMode(gameResources.gbShader);
 				SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
-				DrawTextureEx(gameResources.gunbarrelTexture, Vector2(-1800.0f + rogerPosition.x, 0.0f), 0.0f, 10.0f, Color.WHITE);
+                DrawTextureEx(gameResources.gunbarrelBGTexture, Vector2(0.0f, 0.0f), 0.0f, 100.0f, Color.WHITE);
+				DrawTextureEx(gameResources.gunbarrelTexture, Vector2(-600.0f + rogerPosition.x, 0.0f), 0.0f, 10.0f, Color.WHITE);
 				EndShaderMode();
                 // rather than a straight circle, what we actually want here is to draw
                 // the Roger/Sean/Daniel/Tim/George/Pierce sprite with a circle shader on it. 
