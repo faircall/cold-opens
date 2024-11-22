@@ -157,48 +157,8 @@ namespace Game
 
 		public this()
 		{
-            gunbarrelBGTexture = LoadTexture("gunbarrel.png");
-			gunbarrelTexture = LoadTexture("just_gunbarrel.png");
-			rogerTexture = LoadTexture("adjusted_roger_resized.png");
-			cloudTexture = LoadTexture("cloud.png");
-			rogerSkyDiveTexture = LoadTexture("rogerskydive.png");
-			planeInteriorTexture = LoadTexture("planeInterior.png");
 
-			rogerHeadTexture = LoadTexture("head.png");
-			rogerTorsoTexture = LoadTexture("torso.png");
-			rogerUpperArmTexture = LoadTexture("upperarm.png");
-			rogerLowerArmTexture = LoadTexture("lowerarm.png");
-			rogerUpperLegTexture = LoadTexture("upperleg.png");
-			rogerLowerLegTexture = LoadTexture("lowerleg.png");
-
-			planeTexture = LoadTexture("plane_at_scale.png");
-			henchmanTexture = LoadTexture("enemy_basic.png");
-
-			air_loop_sound = LoadSound("sounds/air_loop.wav");
-			ground_hit_sound = LoadSound("sounds/ground_hit.wav");
-			gunshot_sound = LoadSound("sounds/pistol_shot.wav");
-			gunshot_hit_sound = LoadSound("sounds/gun_hit.wav");
-
-			gbShader = LoadShader("base.vs", "gunbarrel.fs");
-			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
-
-            gbBackgroundShader = LoadShader("base.vs", "gunbarrel.fs");
-			
-            
-			gbTexLoc = GetShaderLocation(gbShader, "tex");
-            gbBackgroundTexLoc = GetShaderLocation(gbBackgroundShader, "tex");
-			slTexLoc = GetShaderLocation(slShader, "tex");
-
-            gbBackgroundTimerLoc = GetShaderLocation(gbBackgroundShader, "timer");
-			gbTimerLoc = GetShaderLocation(gbShader, "timer");
-			gbCircLoc = GetShaderLocation(gbShader, "circCent");
-            gbBackgroundCircLoc = GetShaderLocation(gbBackgroundShader, "circCent");
-
-			slTimerLoc = GetShaderLocation(slShader, "timer");
-			slCircLoc = GetShaderLocation(slShader, "circCent");
-            SetShaderValueTexture(gbBackgroundShader, gbBackgroundTexLoc, gunbarrelBGTexture);
-			SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
-			SetShaderValueTexture(slShader, slTexLoc, rogerTexture);
+            Reload();
 			
 		}
 
@@ -230,27 +190,27 @@ namespace Game
 			gunshot_sound = LoadSound("sounds/pistol_shot.wav");
 			gunshot_hit_sound = LoadSound("sounds/gun_hit.wav");
 
-			gbShader = LoadShader("base.vs", "gunbarrel.fs");
-            gbBackgroundShader = LoadShader("base.vs", "gunbarrel.fs");
-            
+			gbShader = LoadShader("base.vs", "gunbarrel_transparent.fs");
 			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
+
+            gbBackgroundShader = LoadShader("base.vs", "gunbarrel.fs");
+			
             
 			gbTexLoc = GetShaderLocation(gbShader, "tex");
             gbBackgroundTexLoc = GetShaderLocation(gbBackgroundShader, "tex");
 			slTexLoc = GetShaderLocation(slShader, "tex");
 
-
-			gbTimerLoc = GetShaderLocation(gbShader, "timer");
             gbBackgroundTimerLoc = GetShaderLocation(gbBackgroundShader, "timer");
+			gbTimerLoc = GetShaderLocation(gbShader, "timer");
 			gbCircLoc = GetShaderLocation(gbShader, "circCent");
             gbBackgroundCircLoc = GetShaderLocation(gbBackgroundShader, "circCent");
 
 			slTimerLoc = GetShaderLocation(slShader, "timer");
 			slCircLoc = GetShaderLocation(slShader, "circCent");
-
-            SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
-			SetShaderValueTexture(gbBackgroundShader, gbBackgroundTexLoc, gunbarrelBGTexture);
+            SetShaderValueTexture(gbBackgroundShader, gbBackgroundTexLoc, gunbarrelBGTexture);
+			SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
 			SetShaderValueTexture(slShader, slTexLoc, rogerTexture);
+
         }
 
 		
@@ -482,7 +442,8 @@ namespace Game
                 // NOTE (Cooper) : two ways of handling this
                 // either we figure  out how to do 2 shaders at once
                 // or we switch out one large texture for the split version
-                SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+                float fasterCircTimer = Math.Max(circTimer*1.0f, 1.0f);
+                SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundTimerLoc, (void*)&fasterCircTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
                 BeginShaderMode(gameResources.gbBackgroundShader);                
                 DrawTextureEx(gameResources.gunbarrelBGTexture, Vector2(0.0f, 0.0f), 0.0f, 10.0f, Color.WHITE);
                 EndShaderMode();
