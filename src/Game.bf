@@ -246,6 +246,7 @@ namespace Game
 
 
 		float circTimer = 0.0f;
+        float fasterCircTimer = 0.0f;
 		float planeTimer = 0.0f;
 
 		Vector2 rogerPosition;
@@ -254,6 +255,7 @@ namespace Game
 		float persistentDirection = 0.0f;
 
 		float screenWidth;
+        
 
 		
 		Vector2 circLoc;
@@ -329,6 +331,7 @@ namespace Game
 			rogerDirection = Vector2(0.0f, 0.0f);
 			dotStopped = false;
             circTimer = 0.0f;
+            fasterCircTimer = 0.0f;
             dotGrowthTimer = 0.0f;
             dotGrowthTimerMax = 0.8f;
             dotCounter = 0;
@@ -442,7 +445,7 @@ namespace Game
                 // NOTE (Cooper) : two ways of handling this
                 // either we figure  out how to do 2 shaders at once
                 // or we switch out one large texture for the split version
-                float fasterCircTimer = Math.Max(circTimer*1.0f, 1.0f);
+                fasterCircTimer = circTimer;
                 SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundTimerLoc, (void*)&fasterCircTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
                 BeginShaderMode(gameResources.gbBackgroundShader);                
                 DrawTextureEx(gameResources.gunbarrelBGTexture, Vector2(0.0f, 0.0f), 0.0f, 10.0f, Color.WHITE);
