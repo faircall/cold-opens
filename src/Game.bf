@@ -249,12 +249,23 @@ namespace Game
         float fasterCircTimer = 0.0f;
 		float planeTimer = 0.0f;
 
-		Vector2 rogerPosition;
+		Vector2 rogerPosition; // much of this should be melded into a single player class/object/entity
 		Vector2 rogerDirection;
 		SpriteSheet rogerSpriteSheet;
 		float persistentDirection = 0.0f;
 
+        bool gunHolstered = false; // could get the right effect by pulling out the gun to another layer and having it have its own sprite sheet, possibly
+
 		float screenWidth;
+
+        bool firing = false;
+
+        float firingTimer = 0.0f;
+        float aimToFireDuration = 0.5f;
+        float timeBetweenShots = 0.1f;
+        float interShotTimer = 0.0f;
+        float interShotCooldown = 1.0f;
+        // probably think about a state machine here, to handle multiple shots in a row etc
         
 
 		
@@ -356,7 +367,34 @@ namespace Game
 			rogerDirection.x = 0.0f;
 			rogerDirection.y = 0.0f;
 			
+            if (IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
+            {
+                if (!gunHolstered)
+                {
+                    // play firing animation
+                    firing = true;
+                }
+            }
 
+            if (firing)
+            {
+                firingTimer += dt;
+                if (firingTimer >= aimToFireDuration)
+                {
+                    firingTimer = aimToFireDuration - timeBetweenShots;
+                    firing = false;
+                }
+            }
+
+            if (!firing && firingTimer > 0.0f) // this is actually the just finished firing, 'between shots' phase
+            {
+                interShotTimer += dt;
+
+                if (interShotTimer >= interShotCooldown)
+                {
+                    firingTimer = 0.0f;
+                }
+            }
 
 			if (IsKeyDown(KeyboardKey.KEY_A))
 			{
@@ -446,7 +484,7 @@ namespace Game
                 // either we figure  out how to do 2 shaders at once
                 // or we switch out one large texture for the split version
                 fasterCircTimer = circTimer;
-                SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundTimerLoc, (void*)&fasterCircTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+                SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
                 BeginShaderMode(gameResources.gbBackgroundShader);                
                 DrawTextureEx(gameResources.gunbarrelBGTexture, Vector2(0.0f, 0.0f), 0.0f, 10.0f, Color.WHITE);
                 EndShaderMode();
