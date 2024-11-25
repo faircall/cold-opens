@@ -11,8 +11,8 @@ uniform sampler2D tex;
 out vec4 fragOut;
 
 //how to get the pixel coord?
-float screenWidth = 1280.0f;
-float screenHeight = 720.0f;
+float screenWidth = 1920.0f;
+float screenHeight = 1080.0f;
 
 void main()
 {
@@ -21,7 +21,7 @@ void main()
     if (distance(texCoord, circCentNorm) < timer) {
         fragOut = texture(tex, texCoord);
     } else {
-        fragOut = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        fragOut = vec4(1.0f, 1.0f, 1.0f, 0.0f);
     }
     
     

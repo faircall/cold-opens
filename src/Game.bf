@@ -169,7 +169,7 @@ namespace Game
         public void Reload()
         {
             gunbarrelBGTexture = LoadTexture("gunbarrel.png");
-			gunbarrelTexture = LoadTexture("just_gunbarrel.png");
+			gunbarrelTexture = LoadTexture("better_gunbarrel.png");
 			rogerTexture = LoadTexture("adjusted_roger_resized.png");
 			cloudTexture = LoadTexture("cloud.png");
 			rogerSkyDiveTexture = LoadTexture("rogerskydive.png");
@@ -295,7 +295,7 @@ namespace Game
 			m_Dots = new GunbarrelDot[maxDots];
 			for (int i = 0; i < maxDots; i++)
 			{
-				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 500.0f), 0.0f, false);
+				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 520.0f), 0.0f, false);
 			}
 			
 			dotGrowthTimerMax = 0.5f;
@@ -315,6 +315,7 @@ namespace Game
 			// SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 			// SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			dotStopped = false;
+            dotRad = 40.0f;
 
 			SetShaderValue(gameResources.gbShader, gameResources.gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
             SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
@@ -333,19 +334,21 @@ namespace Game
 
 			for (int i = 0; i < maxDots; i++)
 			{
-				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 500.0f), 0.0f, false);
+				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 520.0f), 0.0f, false);
 			}
 			dotStart = m_Dots[0];
 			nextDot = m_Dots[0];
 			circLoc = *m_Dots[maxDots - 1].Position;
 			rogerPosition = Vector2(circLoc.x, circLoc.y);
 			rogerDirection = Vector2(0.0f, 0.0f);
+            persistentDirection = 0.0f;
 			dotStopped = false;
             circTimer = 0.0f;
             fasterCircTimer = 0.0f;
             dotGrowthTimer = 0.0f;
             dotGrowthTimerMax = 0.8f;
             dotCounter = 0;
+            dotRad = 40.0f;
 
             SetShaderValue(gameResources.gbShader, gameResources.gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
@@ -357,8 +360,10 @@ namespace Game
 
 		
 
-		public void Update(float dt)
+		public void Update(float _dt)
 		{
+            // float dt = _dt / 5.0f; // for slowmo
+            float dt = _dt;
 			// if (!dotStopped)
 			// {
 			// 	return;
@@ -492,23 +497,26 @@ namespace Game
 				BeginShaderMode(gameResources.gbShader);
 				SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
                 
-				DrawTextureEx(gameResources.gunbarrelTexture, Vector2(-600.0f + rogerPosition.x, 200.0f), 0.0f, 10.0f, Color.WHITE);
+				DrawTextureEx(gameResources.gunbarrelTexture, Vector2(-560.0f + rogerPosition.x, 200.0f), 0.0f, 10.0f, Color.WHITE);
 				EndShaderMode();
                 
                 // rather than a straight circle, what we actually want here is to draw
                 // the Roger/Sean/Daniel/Tim/George/Pierce sprite with a circle shader on it. 
                 //DrawCircle((int32)dotStart.Position.x, (int32)dotStart.Position.y, dotRad + dotGrowthTimer*200.0f, Color.WHITE);
-				DrawCircle((int32)rogerPosition.x, (int32)rogerPosition.y, dotRad + dotGrowthTimer*200.0f, Color.WHITE);
+				DrawCircle((int32)rogerPosition.x, (int32)rogerPosition.y, dotRad + dotGrowthTimer*140.0f, Color.WHITE);
 								
-								
+
+                float spotlightRad = (dotGrowthTimer)/(dotGrowthTimerMax);
+                //float spotlightRad = Math.Max(0.2f,(dotGrowthTimer)/(dotGrowthTimerMax));
+                SetShaderValue(gameResources.slShader, gameResources.slTimerLoc, (void*)&spotlightRad, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 				BeginShaderMode(gameResources.slShader);
 				//float spotlightRad = dotRad + dotGrowthTimer*200.0f;
-				float spotlightRad = (dotRad + dotGrowthTimer*200.0f)/140.0f;
-				SetShaderValue(gameResources.slShader, gameResources.slTimerLoc, (void*)&spotlightRad, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+				
+				
 				//DrawTextureEx(rogerTexture, Vector2(50.0f, 50.0f), 0.0f, 10.0f, Color.WHITE);
 				// DrawTextureCentered(rogerTexture, rogerPosition.x - 10.0f, rogerPosition.y - 50.0f, 0.0f, 2.0f, Color.WHITE);
 								
-				EndShaderMode();
+				
 				// check for roger's direction here
 				// TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 				if (rogerDirection.x < 0.0f)
@@ -523,6 +531,7 @@ namespace Game
 				{
 					TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 				}
+                EndShaderMode();
 			}
 			else
 			{
