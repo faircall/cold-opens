@@ -145,6 +145,7 @@ namespace Game
 
 		public int32 slTimerLoc;
 		public int32 slCircLoc;
+        
 
 
 
@@ -244,6 +245,9 @@ namespace Game
 		float dotGrowthTimerMax = 0.5f;
 		float dotGrowthTimer = 0.0f;
 
+        float revealTimer = 0.0f;
+        float revealTimerMax = 1.6f; // btw we're gonna start to need functions that are less linear
+
 
 		float circTimer = 0.0f;
         float fasterCircTimer = 0.0f;
@@ -265,6 +269,7 @@ namespace Game
         float timeBetweenShots = 0.1f;
         float interShotTimer = 0.0f;
         float interShotCooldown = 1.0f;
+        float revealTimerInterp = 0.0f;
         // probably think about a state machine here, to handle multiple shots in a row etc
         
 
@@ -309,6 +314,7 @@ namespace Game
 			rogerDirection = Vector2(0.0f, 0.0f);
             dotCounter = 0;
             circTimer = 0.0f;
+            fasterCircTimer = 0.0f;
 			// SetShaderValueTexture(gbShader, gbTexLoc, gameResources.gunbarrelTexture);
 			// SetShaderValueTexture(slShader, slTexLoc, gameResources.rogerTexture);
 			// SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
@@ -316,6 +322,12 @@ namespace Game
 			// SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			dotStopped = false;
             dotRad = 40.0f;
+
+            revealTimer = 0.0f;
+            revealTimerMax = 1.6f;
+            revealTimerInterp = 0.0f;
+
+            
 
 			SetShaderValue(gameResources.gbShader, gameResources.gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
             SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
@@ -349,6 +361,11 @@ namespace Game
             dotGrowthTimerMax = 0.8f;
             dotCounter = 0;
             dotRad = 40.0f;
+
+            revealTimer = 0.0f;
+            revealTimerMax = 3.2f;
+            
+            revealTimerInterp = 0.0f;
 
             SetShaderValue(gameResources.gbShader, gameResources.gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
@@ -464,6 +481,13 @@ namespace Game
 				if (dotGrowthTimer < dotGrowthTimerMax) {
 					dotGrowthTimer += dt;
 				}
+
+                if (revealTimer < revealTimerMax)
+                {
+                    revealTimer += dt;
+                    revealTimerInterp = Math.Min(revealTimer / revealTimerMax, 1.0f);
+                }
+                
 			}
 		}
 
@@ -513,9 +537,9 @@ namespace Game
 				DrawCircle((int32)rogerPosition.x, (int32)rogerPosition.y, dotRad + dotGrowthTimer*140.0f, Color.WHITE);
 								
 
-                float spotlightRad = (dotGrowthTimer)/(dotGrowthTimerMax);
-                //float spotlightRad = Math.Max(0.2f,(dotGrowthTimer)/(dotGrowthTimerMax));
-                SetShaderValue(gameResources.slShader, gameResources.slTimerLoc, (void*)&spotlightRad, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+                
+
+                SetShaderValue(gameResources.slShader, gameResources.slTimerLoc, (void*)&revealTimerInterp, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 				BeginShaderMode(gameResources.slShader);
 				//float spotlightRad = dotRad + dotGrowthTimer*200.0f;
 				
