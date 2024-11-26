@@ -364,10 +364,11 @@ namespace Game
 		{
             // float dt = _dt / 5.0f; // for slowmo
             float dt = _dt;
-			// if (!dotStopped)
-			// {
-			// 	return;
-			// }
+
+            // let's do a system where
+            // when you stop and aren't on a 'stop' frame,
+            // it finds the nearest one
+
 
 			rogerDirection.x = 0.0f;
 			rogerDirection.y = 0.0f;
@@ -413,11 +414,17 @@ namespace Game
 			}
 			float rogerSpeed = 120.0f;
 			rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
+
 			
 			if (rogerDirection.x != 0.0f)
 			{
 				TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
 			}
+            
+            // else if (!rogerSpriteSheet.CurrentFrame = 4)
+            // {
+            //     TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
+            // }
 			//dotStart.Position.x += dt * dotSpeed;
 			if (dotStart.Position.x < m_Dots[maxDots - 1].Position.x && !dotStopped)
 			{
@@ -532,6 +539,11 @@ namespace Game
 					TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 				}
                 EndShaderMode();
+
+                String animFrameText = scope  $"anim frame is {rogerSpriteSheet.CurrentFrame}";
+            
+
+                DrawText(animFrameText, 10, 10, 12, Color.WHITE);
 			}
 			else
 			{
@@ -722,6 +734,8 @@ namespace Game
 
 		
 	}
+
+
 
 	
 }
