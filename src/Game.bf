@@ -102,6 +102,51 @@ namespace Game
 
 	}
 
+    class RogerSpriteSheet
+	{
+        public float FrameWidth;
+		public float FrameHeight;
+		public Rectangle CurrentRect;
+        
+		public int32 CurrentFrame;
+		int32 TotalFrames;
+		float Timer;
+		float FrameTime;
+        //int32 TotalFramesSection;
+           
+		public this(int32 currentFrame, int32 totalFrames, float timer, float frameTime, float frameWidth, float frameHeight)
+		{
+			CurrentFrame = currentFrame;
+            TotalFrames = totalFrames;
+            Timer = timer;
+			FrameTime = frameTime;
+	 		FrameWidth = frameWidth;
+			FrameHeight = frameHeight;
+			CurrentRect = Rectangle(0.0f, 0.0f, FrameWidth, FrameHeight);
+		}
+
+        public void Reset()
+        {
+            CurrentFrame = 0;
+            Timer = 0.0f;
+            CurrentRect = Rectangle(CurrentFrame * FrameWidth, 0.0f, FrameWidth, FrameHeight);
+        }
+
+        public void Update(float dt)
+        {
+            Timer += dt;
+            if (Timer >= FrameTime)
+            {
+                Timer = 0.0f;
+                CurrentFrame = (CurrentFrame + 1) % TotalFrames; // make this in section instead
+                CurrentRect = Rectangle(CurrentFrame * FrameWidth, 0.0f, FrameWidth, FrameHeight);
+            }
+            
+        }
+            
+
+	}
+
 	class GameResources
 	{
 		public Texture2D gunbarrelBGTexture;
@@ -255,7 +300,7 @@ namespace Game
 
 		Vector2 rogerPosition; // much of this should be melded into a single player class/object/entity
 		Vector2 rogerDirection;
-		SpriteSheet rogerSpriteSheet;
+		RogerSpriteSheet rogerSpriteSheet;
 		float persistentDirection = 0.0f;
 
         bool gunHolstered = false; // could get the right effect by pulling out the gun to another layer and having it have its own sprite sheet, possibly
@@ -306,7 +351,7 @@ namespace Game
 			dotGrowthTimerMax = 0.5f;
 			dotStart = m_Dots[0];
 			nextDot = m_Dots[0];
-			rogerSpriteSheet = new SpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
+			rogerSpriteSheet = new RogerSpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
 
 			circLoc = *m_Dots[maxDots - 1].Position;
             
@@ -361,6 +406,8 @@ namespace Game
             dotGrowthTimerMax = 0.8f;
             dotCounter = 0;
             dotRad = 40.0f;
+
+            rogerSpriteSheet.Reset();
 
             revealTimer = 0.0f;
             revealTimerMax = 3.2f;
@@ -435,7 +482,8 @@ namespace Game
 			
 			if (rogerDirection.x != 0.0f)
 			{
-				TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
+                rogerSpriteSheet.Update(dt*1.5f);
+				//TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
 			}
             
             // else if (!rogerSpriteSheet.CurrentFrame = 4)
