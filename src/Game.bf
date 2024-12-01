@@ -23,7 +23,8 @@ namespace Game
     public enum RogerAnimationState
         {
             STATIONARY,
-            WALKING
+            WALKING,
+            SHOOTING, 
         }
     
 	class GameUpdateAndRender
@@ -126,6 +127,9 @@ namespace Game
 
         int32 WalkingFrameStart = 1;
         int32 WalkingFrameEnd = 17;
+
+        int32 ShootingFrameStart = 18;
+        int32 ShootingFrameEnd = 24;
         
         int32 IdleFrameStart = 0;
         int32 IdleFrameEnd = 0;
@@ -163,6 +167,11 @@ namespace Game
             {
                 SectionStart = WalkingFrameStart;
                 SectionEnd = WalkingFrameEnd;
+            }
+            else if (State == RogerAnimationState.SHOOTING)
+            {
+                SectionStart = ShootingFrameStart;
+                SectionEnd = ShootingFrameEnd;
             }
 
             TotalFramesSection = Math.Max(SectionEnd - SectionStart, 1);
@@ -491,6 +500,10 @@ namespace Game
 
             if (firing)
             {
+                if (rogerSpriteSheet.State != RogerAnimationState.SHOOTING)
+                {
+                    rogerSpriteSheet.SetState(RogerAnimationState.SHOOTING);
+                }
                 firingTimer += dt;
                 if (firingTimer >= aimToFireDuration)
                 {
@@ -523,19 +536,20 @@ namespace Game
 			rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
 
 			
-			if (rogerDirection.x != 0.0f)
+			if (rogerDirection.x != 0.0f && rogerSpriteSheet.State != RogerAnimationState.SHOOTING)
 			{
                 if (rogerSpriteSheet.State != RogerAnimationState.WALKING)
                 {
                     rogerSpriteSheet.SetState(RogerAnimationState.WALKING);
                 }
-                rogerSpriteSheet.Update(dt*1.5f);
+                
 				//TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
 			}
-            else if (rogerSpriteSheet.State != RogerAnimationState.STATIONARY)
+            else if (rogerSpriteSheet.State == RogerAnimationState.WALKING)
             {
                 rogerSpriteSheet.SetState(RogerAnimationState.STATIONARY);
             }
+            rogerSpriteSheet.Update(dt*1.5f);
             // else if (!rogerSpriteSheet.CurrentFrame = 4)
             // {
             //     TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
