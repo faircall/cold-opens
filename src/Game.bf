@@ -19,6 +19,12 @@ namespace Game
             SKELETAL_EDITOR,
             NUM_STATES
         }
+
+    public enum RogerAnimationState
+        {
+            STATIONARY,
+            WALKING
+        }
     
 	class GameUpdateAndRender
 	{
@@ -109,15 +115,26 @@ namespace Game
 		public Rectangle CurrentRect;
         
 		public int32 CurrentFrame;
-		int32 TotalFrames;
+        public int32 CurrentFrameSection;
+        public RogerAnimationState State;
+
 		float Timer;
 		float FrameTime;
-        //int32 TotalFramesSection;
+
+        int32 SectionStart = 0;
+        int32 SectionEnd = 0;
+
+        int32 WalkingFrameStart = 1;
+        int32 WalkingFrameEnd = 17;
+        
+        int32 IdleFrameStart = 0;
+        int32 IdleFrameEnd = 0;
+        
+        int32 TotalFramesSection;
            
-		public this(int32 currentFrame, int32 totalFrames, float timer, float frameTime, float frameWidth, float frameHeight)
+		public this(RogerAnimationState state, float timer, float frameTime, float frameWidth, float frameHeight)
 		{
-			CurrentFrame = currentFrame;
-            TotalFrames = totalFrames;
+            SetState(state);
             Timer = timer;
 			FrameTime = frameTime;
 	 		FrameWidth = frameWidth;
@@ -130,6 +147,28 @@ namespace Game
             CurrentFrame = 0;
             Timer = 0.0f;
             CurrentRect = Rectangle(CurrentFrame * FrameWidth, 0.0f, FrameWidth, FrameHeight);
+            SetState(RogerAnimationState.STATIONARY);
+        }
+
+        public void SetState(RogerAnimationState newState)
+        {
+            State = newState;
+            CurrentFrame = 0;
+            if (State == RogerAnimationState.STATIONARY)
+            {                
+                SectionStart = IdleFrameStart;
+                SectionEnd = IdleFrameEnd;                
+            }
+            else if (State == RogerAnimationState.WALKING)
+            {
+                SectionStart = WalkingFrameStart;
+                SectionEnd = WalkingFrameEnd;
+            }
+
+            TotalFramesSection = Math.Max(SectionEnd - SectionStart, 1);
+            CurrentFrameSection = SectionStart + CurrentFrame;
+            CurrentRect = Rectangle(CurrentFrameSection * FrameWidth, 0.0f, FrameWidth, FrameHeight);
+            
         }
 
         public void Update(float dt)
@@ -138,8 +177,12 @@ namespace Game
             if (Timer >= FrameTime)
             {
                 Timer = 0.0f;
-                CurrentFrame = (CurrentFrame + 1) % TotalFrames; // make this in section instead
-                CurrentRect = Rectangle(CurrentFrame * FrameWidth, 0.0f, FrameWidth, FrameHeight);
+                CurrentFrame = (CurrentFrame + 1) % TotalFramesSection; // make this in section instead
+                CurrentFrameSection = SectionStart + CurrentFrame;
+                String currentFrameText = scope $"current frame is {CurrentFrameSection}";
+                DrawText(currentFrameText, 10, 10, 16, Color.RED);
+                // then map it to a region
+                CurrentRect = Rectangle(CurrentFrameSection * FrameWidth, 0.0f, FrameWidth, FrameHeight);
             }
             
         }
@@ -291,7 +334,7 @@ namespace Game
 		float dotGrowthTimer = 0.0f;
 
         float revealTimer = 0.0f;
-        float revealTimerMax = 1.6f; // btw we're gonna start to need functions that are less linear
+        float revealTimerMax = 1.5f; // btw we're gonna start to need functions that are less linear
 
 
 		float circTimer = 0.0f;
@@ -351,7 +394,7 @@ namespace Game
 			dotGrowthTimerMax = 0.5f;
 			dotStart = m_Dots[0];
 			nextDot = m_Dots[0];
-			rogerSpriteSheet = new RogerSpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
+			rogerSpriteSheet = new RogerSpriteSheet(RogerAnimationState.STATIONARY, 0.0f, 0.125f, 128.0f, 128.0f);
 
 			circLoc = *m_Dots[maxDots - 1].Position;
             
@@ -369,7 +412,7 @@ namespace Game
             dotRad = 40.0f;
 
             revealTimer = 0.0f;
-            revealTimerMax = 1.6f;
+            revealTimerMax = 0.7f;
             revealTimerInterp = 0.0f;
 
             
@@ -410,7 +453,7 @@ namespace Game
             rogerSpriteSheet.Reset();
 
             revealTimer = 0.0f;
-            revealTimerMax = 3.2f;
+            revealTimerMax = 0.7f;
             
             revealTimerInterp = 0.0f;
 
@@ -482,10 +525,17 @@ namespace Game
 			
 			if (rogerDirection.x != 0.0f)
 			{
+                if (rogerSpriteSheet.State != RogerAnimationState.WALKING)
+                {
+                    rogerSpriteSheet.SetState(RogerAnimationState.WALKING);
+                }
                 rogerSpriteSheet.Update(dt*1.5f);
 				//TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
 			}
-            
+            else if (rogerSpriteSheet.State != RogerAnimationState.STATIONARY)
+            {
+                rogerSpriteSheet.SetState(RogerAnimationState.STATIONARY);
+            }
             // else if (!rogerSpriteSheet.CurrentFrame = 4)
             // {
             //     TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
