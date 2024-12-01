@@ -118,6 +118,9 @@ namespace Game
 		public int32 CurrentFrame;
         public int32 CurrentFrameSection;
         public RogerAnimationState State;
+        public bool CurrentAnimFinished = false;
+        public bool CurrentAnimLoops = true;
+        public bool CurrentAnimReverses = true;
 
 		float Timer;
 		float FrameTime;
@@ -135,6 +138,8 @@ namespace Game
         int32 IdleFrameEnd = 0;
         
         int32 TotalFramesSection;
+
+        
            
 		public this(RogerAnimationState state, float timer, float frameTime, float frameWidth, float frameHeight)
 		{
@@ -154,19 +159,24 @@ namespace Game
             SetState(RogerAnimationState.STATIONARY);
         }
 
-        public void SetState(RogerAnimationState newState)
+        public void SetState(RogerAnimationState newState, bool animLoops = true, bool animReverses = false)
         {
             State = newState;
             CurrentFrame = 0;
+            CurrentAnimLoops = animLoops;
+            CurrentAnimReverses = animReverses;
+            
             if (State == RogerAnimationState.STATIONARY)
             {                
                 SectionStart = IdleFrameStart;
-                SectionEnd = IdleFrameEnd;                
+                SectionEnd = IdleFrameEnd;
+                
             }
             else if (State == RogerAnimationState.WALKING)
             {
                 SectionStart = WalkingFrameStart;
                 SectionEnd = WalkingFrameEnd;
+
             }
             else if (State == RogerAnimationState.SHOOTING)
             {
@@ -176,9 +186,10 @@ namespace Game
 
             TotalFramesSection = Math.Max(SectionEnd - SectionStart, 1);
             CurrentFrameSection = SectionStart + CurrentFrame;
-            CurrentRect = Rectangle(CurrentFrameSection * FrameWidth, 0.0f, FrameWidth, FrameHeight);
-            
+            CurrentRect = Rectangle(CurrentFrameSection * FrameWidth, 0.0f, FrameWidth, FrameHeight);            
         }
+
+        
 
         public void Update(float dt)
         {
@@ -186,8 +197,17 @@ namespace Game
             if (Timer >= FrameTime)
             {
                 Timer = 0.0f;
-                CurrentFrame = (CurrentFrame + 1) % TotalFramesSection; // make this in section instead
-                CurrentFrameSection = SectionStart + CurrentFrame;
+                if (CurrentAnimLoops)
+                {
+                    CurrentFrame = (CurrentFrame + 1) % TotalFramesSection; // make this in section instead
+                    CurrentFrameSection = SectionStart + CurrentFrame;
+                }
+                else
+                {
+                    CurrentFrame = Math.Min(CurrentFrame + 1,  TotalFramesSection); // make this in section instead
+                    CurrentFrameSection = SectionStart + CurrentFrame;
+                }
+                
                 String currentFrameText = scope $"current frame is {CurrentFrameSection}";
                 DrawText(currentFrameText, 10, 10, 16, Color.RED);
                 // then map it to a region
@@ -498,11 +518,20 @@ namespace Game
                 }
             }
 
+            if (IsMouseButtonPressed(MouseButton.MOUSE_RIGHT_BUTTON))
+            {
+                if (gunHolstered)
+                {
+                    // play firing animation
+                    firing = true;
+                }
+            }
+
             if (firing)
             {
                 if (rogerSpriteSheet.State != RogerAnimationState.SHOOTING)
                 {
-                    rogerSpriteSheet.SetState(RogerAnimationState.SHOOTING);
+                    rogerSpriteSheet.SetState(RogerAnimationState.SHOOTING, false);
                 }
                 firingTimer += dt;
                 if (firingTimer >= aimToFireDuration)
@@ -511,6 +540,13 @@ namespace Game
                     firing = false;
                 }
             }
+            // else if (rogerSpriteSheet.State == RogerAnimationState.SHOOTING)
+            // {
+            //     // this is going to get out of hand quickly,
+            //     // need to think more about the state machine
+            //     // or whatever
+            //     rogerSpriteSheet.SetState(RogerAnimationState.STATIONARY);
+            // }
 
             if (!firing && firingTimer > 0.0f) // this is actually the just finished firing, 'between shots' phase
             {
@@ -536,7 +572,7 @@ namespace Game
 			rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
 
 			
-			if (rogerDirection.x != 0.0f && rogerSpriteSheet.State != RogerAnimationState.SHOOTING)
+			if (rogerDirection.x != 0.0f)
 			{
                 if (rogerSpriteSheet.State != RogerAnimationState.WALKING)
                 {
