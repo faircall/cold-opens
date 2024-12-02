@@ -24,6 +24,8 @@ namespace Game
         {
             STATIONARY,
             WALKING,
+            UNHOLSTERING,
+            AIMING, 
             SHOOTING, 
         }
     
@@ -122,6 +124,8 @@ namespace Game
         public bool CurrentAnimLoops = true;
         public bool CurrentAnimReverses = true;
 
+        public float AnimLerp = 0.0f;
+
 		float Timer;
 		float FrameTime;
 
@@ -183,6 +187,11 @@ namespace Game
                 SectionStart = ShootingFrameStart;
                 SectionEnd = ShootingFrameEnd;
             }
+            else if (State == RogerAnimationState.UNHOLSTERING)
+            {
+                SectionStart = ShootingFrameStart;
+                SectionEnd = ShootingFrameEnd;
+            }
 
             TotalFramesSection = Math.Max(SectionEnd - SectionStart, 1);
             CurrentFrameSection = SectionStart + CurrentFrame;
@@ -204,7 +213,8 @@ namespace Game
                 }
                 else
                 {
-                    CurrentFrame = Math.Min(CurrentFrame + 1,  TotalFramesSection); // make this in section instead
+                    CurrentFrame = (int32)(AnimLerp * TotalFramesSection);
+                    //CurrentFrame = Math.Min(CurrentFrame + 1,  TotalFramesSection); // make this in section instead
                     CurrentFrameSection = SectionStart + CurrentFrame;
                 }
                 
@@ -375,6 +385,8 @@ namespace Game
 		RogerSpriteSheet rogerSpriteSheet;
 		float persistentDirection = 0.0f;
 
+        bool holstering = false;
+
         bool gunHolstered = false; // could get the right effect by pulling out the gun to another layer and having it have its own sprite sheet, possibly
 
 		float screenWidth;
@@ -382,7 +394,10 @@ namespace Game
         bool firing = false;
 
         float firingTimer = 0.0f;
+        float aimingTimer = 0.0f;
         float aimToFireDuration = 0.5f;
+        float holsteringTimer = 0.0f;
+        float holsteringDuration = 0.5f;
         float timeBetweenShots = 0.1f;
         float interShotTimer = 0.0f;
         float interShotCooldown = 1.0f;
@@ -518,14 +533,46 @@ namespace Game
                 }
             }
 
-            if (IsMouseButtonPressed(MouseButton.MOUSE_RIGHT_BUTTON))
+            holstering = false;
+            if (IsMouseButtonDown(MouseButton.MOUSE_RIGHT_BUTTON))
             {
-                if (gunHolstered)
-                {
-                    // play firing animation
-                    firing = true;
-                }
+                holstering = true;
+                // if (gunHolstered)
+                // {
+                //     // play firing animation
+                //     holstering = true;
+                // }
             }
+
+            // should probably move to a lerped system
+            // so we can go back and forth between animation states
+            // if it don't loop, then the update
+            // is a lerp?
+
+            if (holstering)
+            {
+                if (rogerSpriteSheet.State != RogerAnimationState.UNHOLSTERING)
+                {
+                    rogerSpriteSheet.SetState(RogerAnimationState.UNHOLSTERING, false);
+                }
+                holsteringTimer += dt;
+                holsteringTimer = Math.Min(holsteringTimer, holsteringDuration);
+                // if (holsteringTimer >= holsteringDuration)
+                // {
+                //     gunHolstered = false;
+                //     holstering = false;
+                //     rogerSpriteSheet.SetState(RogerAnimationState.UNHOLSTERING, false);
+                // }
+                String holsterFrameText = scope  $"holster time is {holsteringTimer}";
+                DrawText(holsterFrameText, 10, 10, 12, Color.WHITE);
+            }
+            else
+            {
+                holsteringTimer -= dt;
+                holsteringTimer = Math.Max(holsteringTimer, 0.0f);
+            }
+            
+            rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
 
             if (firing)
             {
@@ -581,7 +628,9 @@ namespace Game
                 
 				//TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
 			}
-            else if (rogerSpriteSheet.State == RogerAnimationState.WALKING)
+            else if (rogerSpriteSheet.State == RogerAnimationState.WALKING ||
+                     (rogerSpriteSheet.State == RogerAnimationState.UNHOLSTERING && !holstering && holsteringTimer == 0.0f)
+                )
             {
                 rogerSpriteSheet.SetState(RogerAnimationState.STATIONARY);
             }
@@ -712,10 +761,10 @@ namespace Game
 				}
                 EndShaderMode();
 
-                String animFrameText = scope  $"anim frame is {rogerSpriteSheet.CurrentFrame}";
+                // String animFrameText = scope  $"anim frame is {rogerSpriteSheet.CurrentFrame}";
             
 
-                DrawText(animFrameText, 10, 10, 12, Color.WHITE);
+                // DrawText(animFrameText, 10, 10, 12, Color.WHITE);
 			}
 			else
 			{
