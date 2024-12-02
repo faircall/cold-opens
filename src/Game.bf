@@ -392,6 +392,7 @@ namespace Game
 		float screenWidth;
 
         bool firing = false;
+        bool fired = false;
 
         float firingTimer = 0.0f;
         float aimingTimer = 0.0f;
@@ -402,6 +403,7 @@ namespace Game
         float interShotTimer = 0.0f;
         float interShotCooldown = 1.0f;
         float revealTimerInterp = 0.0f;
+        Particle[] Particles = null;
         // probably think about a state machine here, to handle multiple shots in a row etc
         
 
@@ -422,6 +424,68 @@ namespace Game
 			}
 			delete rogerSpriteSheet;
 			delete m_Dots;
+		}
+
+        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
+		{
+			int particleCount = waves * particlesPerWave;
+			this.Particles = new Particle[particleCount];
+			
+			int particlesAdded = 0;
+			for (int i = 0; i < waves; i++)
+			{
+				for (int j = 0; j < particlesPerWave; j++)
+				{
+					Particle particleToAdd = new Particle();
+					float lerpedTimeValue = (float)i / (float) waves;
+					float lerpedPositionValue = (float)j / (float) particlesPerWave;
+					particleToAdd.Position = Vector2(pos.x, pos.y);
+					particleToAdd.LifetimeStart = emissionSpeed * lerpedTimeValue;
+					particleToAdd.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration;
+					float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
+					particleToAdd.Velocity = Vector2(Math.Cos(lerpedAngle), Math.Sin(lerpedAngle));
+					if (particleToAdd.Velocity.y > 0.0f)
+					{
+						particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, -1.0f);
+					}
+					float initialSpeed = initialSpeedBase + (float)(randomScale*GetRandomValue(0, randomBound));
+					particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, initialSpeed);
+					this.Particles[particlesAdded++] = particleToAdd;
+				}
+			}
+		}
+
+        public void DrawParticleSystem(float dt, float gravityConstant, float groundLoc, float particleTimer)
+		{
+            // TODO: store some flag about if all particles are finished, so you have early return
+            // or no function call at all
+			for (int i = 0; i < this.Particles.Count; i++)
+			{
+				Particle particle = this.Particles[i];
+				if (particleTimer >= particle.LifetimeStart &&
+					particleTimer <= particle.LifetimeEnd &&
+					(particle.Position.y <= groundLoc) || (particle.Velocity.y < 0)
+					)
+				{
+					
+					Vector2 gravity = Vector2(0.0f, gravityConstant*dt);
+					particle.Velocity += gravity;
+					particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
+					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, Color.GRAY);
+					this.Particles[i] = particle;
+					
+					
+				}
+				else if (particle.Position.y >= groundLoc)
+				{
+					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, Color.GRAY);
+					//float poolingTime = 1.0f;
+					//float timeSinceGround  = Math.Max(Math.Min(this.DeathTimer - particle.LifetimeEnd, poolingTime), 0.1f);
+					//float lerped = timeSinceGround / poolingTime;
+					
+					//DrawEllipse((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 20.0f * lerped, 10.0f * lerped, Color.RED);
+				}
+			}
 		}
 
 
@@ -576,16 +640,23 @@ namespace Game
 
             if (firing)
             {
-                if (rogerSpriteSheet.State != RogerAnimationState.SHOOTING)
+                // if (rogerSpriteSheet.State != RogerAnimationState.SHOOTING)
+                // {
+                //     rogerSpriteSheet.SetState(RogerAnimationState.SHOOTING, false);
+                // }
+                if (!fired)
                 {
-                    rogerSpriteSheet.SetState(RogerAnimationState.SHOOTING, false);
+                    AddParticleSystem(rogerPosition, 1, 7, 0.5f, 0.25f, 100.0f, 100.0f, 100);
                 }
+                
                 firingTimer += dt;
                 if (firingTimer >= aimToFireDuration)
                 {
                     firingTimer = aimToFireDuration - timeBetweenShots;
                     firing = false;
+                    fired = false;
                 }
+                DrawParticleSystem(dt, 0.0f, 800.0f, firingTimer);
             }
             // else if (rogerSpriteSheet.State == RogerAnimationState.SHOOTING)
             // {
