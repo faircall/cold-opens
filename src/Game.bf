@@ -424,6 +424,16 @@ namespace Game
 			}
 			delete rogerSpriteSheet;
 			delete m_Dots;
+            if (Particles != null)
+            {
+                for (var particle in Particles)
+                {
+                    delete particle;
+                }
+                delete Particles;
+                Particles = null;
+            }
+
 		}
 
         public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
@@ -647,6 +657,7 @@ namespace Game
                 if (!fired)
                 {
                     AddParticleSystem(rogerPosition, 1, 7, 0.5f, 0.25f, 100.0f, 100.0f, 100);
+                    fired = true;
                 }
                 
                 firingTimer += dt;
