@@ -439,6 +439,9 @@ namespace Game
         public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
 		{
 			int particleCount = waves * particlesPerWave;
+            // NOTE (Cooper) : the memory leak is right here,
+            // that's why it triggers on the _second_click i believe, the old ones don't get deleted.
+            // and yeah, it's an issue
 			this.Particles = new Particle[particleCount];
 			
 			int particlesAdded = 0;
