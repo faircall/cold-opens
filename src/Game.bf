@@ -404,6 +404,7 @@ namespace Game
         float interShotCooldown = 1.0f;
         float revealTimerInterp = 0.0f;
         Particle[] Particles = null;
+        float particleTimer = 0.0f;
         // probably think about a state machine here, to handle multiple shots in a row etc
         
 
@@ -439,9 +440,20 @@ namespace Game
         public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
 		{
 			int particleCount = waves * particlesPerWave;
-            // NOTE (Cooper) : the memory leak is right here,
-            // that's why it triggers on the _second_click i believe, the old ones don't get deleted.
-            // and yeah, it's an issue
+            particleTimer = 0.0f;
+
+            if (this.Particles != null)
+            {
+                // will have to immediately change this
+                // to support multiple particle systems
+                // we could just do a flat array of them
+                for (var particle in Particles)
+                {
+                    delete particle;
+                }
+                delete Particles;
+                Particles = null;                
+            }
 			this.Particles = new Particle[particleCount];
 			
 			int particlesAdded = 0;
@@ -468,36 +480,49 @@ namespace Game
 			}
 		}
 
-        public void DrawParticleSystem(float dt, float gravityConstant, float groundLoc, float particleTimer)
-		{
-            // TODO: store some flag about if all particles are finished, so you have early return
-            // or no function call at all
-			for (int i = 0; i < this.Particles.Count; i++)
+        public void UpdateParticleSystem(float dt)
+        {
+            float gravityConstant = 9.5f;
+            if (this.Particles == null)
+            {
+                return;
+            }
+            
+            for (int i = 0; i < this.Particles.Count; i++)
 			{
 				Particle particle = this.Particles[i];
 				if (particleTimer >= particle.LifetimeStart &&
 					particleTimer <= particle.LifetimeEnd &&
-					(particle.Position.y <= groundLoc) || (particle.Velocity.y < 0)
+					(particle.Velocity.y < 0)
 					)
-				{
-					
+				{					
 					Vector2 gravity = Vector2(0.0f, gravityConstant*dt);
 					particle.Velocity += gravity;
 					particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
-					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, Color.GRAY);
-					this.Particles[i] = particle;
-					
-					
+					this.Particles[i] = particle;										
 				}
-				else if (particle.Position.y >= groundLoc)
-				{
-					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, Color.GRAY);
-					//float poolingTime = 1.0f;
-					//float timeSinceGround  = Math.Max(Math.Min(this.DeathTimer - particle.LifetimeEnd, poolingTime), 0.1f);
-					//float lerped = timeSinceGround / poolingTime;
-					
-					//DrawEllipse((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 20.0f * lerped, 10.0f * lerped, Color.RED);
+
+			}
+        }
+
+        public void DrawParticleSystem()
+		{
+            // TODO: store some flag about if all particles are finished, so you have early return
+            // or no function call at all
+            if (this.Particles == null)
+            {
+                return;
+            }
+			for (int i = 0; i < this.Particles.Count; i++)
+			{
+				Particle particle = this.Particles[i];
+				if (particleTimer >= particle.LifetimeStart &&
+					particleTimer <= particle.LifetimeEnd					
+					)
+				{					
+					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, Color.GRAY);										
 				}
+
 			}
 		}
 
@@ -670,7 +695,7 @@ namespace Game
                     firing = false;
                     fired = false;
                 }
-                DrawParticleSystem(dt, 0.0f, 800.0f, firingTimer);
+                
             }
             // else if (rogerSpriteSheet.State == RogerAnimationState.SHOOTING)
             // {
@@ -690,12 +715,12 @@ namespace Game
                 }
             }
 
-			if (IsKeyDown(KeyboardKey.KEY_A))
+			if (IsKeyDown(KeyboardKey.KEY_A) && rogerSpriteSheet.State != RogerAnimationState.UNHOLSTERING)
 			{
 				rogerDirection.x = -1.0f;
 				persistentDirection = rogerDirection.x;
 			}
-			if (IsKeyDown(KeyboardKey.KEY_D))
+			if (IsKeyDown(KeyboardKey.KEY_D) && rogerSpriteSheet.State != RogerAnimationState.UNHOLSTERING)
 			{
 				rogerDirection.x = 1.0f;
 				persistentDirection = rogerDirection.x;
@@ -771,6 +796,7 @@ namespace Game
                 }
                 
 			}
+            UpdateParticleSystem(dt);
 		}
 
 		public void Render(GameResources gameResources)
@@ -855,6 +881,7 @@ namespace Game
 			{
 				DrawCircle((int32)dotStart.Position.x, (int32)dotStart.Position.y, dotRad, Color.WHITE);
 			}
+            DrawParticleSystem();
 		}
 	}
 
