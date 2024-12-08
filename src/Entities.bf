@@ -308,12 +308,16 @@ namespace Entities
 
 	class ParticleSystem
 	{
+        public bool IsActive = false;
 		Particle[] Particles = null;
+        // we should probably create each one as a max amount?
+        // and then just track active/inactive
         float ParticleTimer = 0.0f;
-        bool IsActive = false;
+        
 
         public this(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
         {
+            IsActive = true;
             AddParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale,  randomBound);
         }
 

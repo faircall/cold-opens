@@ -403,7 +403,9 @@ namespace Game
         float interShotTimer = 0.0f;
         float interShotCooldown = 1.0f;
         float revealTimerInterp = 0.0f;
-        Particle[] Particles = null;
+        ParticleSystem[] ParticleSystems = null; // why not a list?
+        
+        int maxParticleSystems = 16;
         float particleTimer = 0.0f; // having only one timer is an issue
         // probably think about a state machine here, to handle multiple shots in a row etc
         
@@ -425,107 +427,70 @@ namespace Game
 			}
 			delete rogerSpriteSheet;
 			delete m_Dots;
-            if (Particles != null)
-            {
-                for (var particle in Particles)
-                {
-                    delete particle;
-                }
-                delete Particles;
-                Particles = null;
-            }
+            delete ParticleSystems;
 
 		}
 
         public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
 		{
-			int particleCount = waves * particlesPerWave;
-            particleTimer = 0.0f;
+            // if (this.ParticleSystems != null)
+            // {
+            //     // will have to immediately change this
+            //     // to support multiple particle systems
+            //     // we could just do a flat array of them
+            //     for (var particle in Particles)
+            //     {
+            //         delete particle;
+            //     }
+            //     delete Particles;
+            //     Particles = null;                
+            // }
 
-            if (this.Particles != null)
+            
+
+            for (int i = 0; i < maxParticleSystems; i++)
             {
-                // will have to immediately change this
-                // to support multiple particle systems
-                // we could just do a flat array of them
-                for (var particle in Particles)
+                if ((ParticleSystems[i] != null && !ParticleSystems[i].IsActive)) 
                 {
-                    delete particle;
+                    delete ParticleSystems[i]; // we will remove this step soon
+                    ParticleSystem psToAdd = new ParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale, randomBound);
+                    ParticleSystems[i] = psToAdd;
+                    break;
                 }
-                delete Particles;
-                Particles = null;                
+                else if (ParticleSystems[i] == null)
+                {
+                    ParticleSystem psToAdd = new ParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale, randomBound);
+                    ParticleSystems[i] = psToAdd;
+                    break;
+                }
+                                
             }
-			this.Particles = new Particle[particleCount];
+                                                            
 			
-			int particlesAdded = 0;
-			for (int i = 0; i < waves; i++)
-			{
-				for (int j = 0; j < particlesPerWave; j++)
-				{
-					Particle particleToAdd = new Particle();
-					float lerpedTimeValue = (float)i / (float) waves;
-					float lerpedPositionValue = (float)j / (float) particlesPerWave;
-					particleToAdd.Position = Vector2(pos.x, pos.y);
-					particleToAdd.LifetimeStart = emissionSpeed * lerpedTimeValue;
-					particleToAdd.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration;
-					float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
-					particleToAdd.Velocity = Vector2(Math.Cos(lerpedAngle), Math.Sin(lerpedAngle));
-					if (particleToAdd.Velocity.y > 0.0f)
-					{
-						particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, -1.0f);
-					}
-					float initialSpeed = initialSpeedBase + (float)(randomScale*GetRandomValue(0, randomBound));
-					particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, initialSpeed);
-					this.Particles[particlesAdded++] = particleToAdd;
-				}
-			}
+			// int particlesAdded = 0;
+			// for (int i = 0; i < waves; i++)
+			// {
+			// 	for (int j = 0; j < particlesPerWave; j++)
+			// 	{
+			// 		Particle particleToAdd = new Particle();
+			// 		float lerpedTimeValue = (float)i / (float) waves;
+			// 		float lerpedPositionValue = (float)j / (float) particlesPerWave;
+			// 		particleToAdd.Position = Vector2(pos.x, pos.y);
+			// 		particleToAdd.LifetimeStart = emissionSpeed * lerpedTimeValue;
+			// 		particleToAdd.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration;
+			// 		float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
+			// 		particleToAdd.Velocity = Vector2(Math.Cos(lerpedAngle), Math.Sin(lerpedAngle));
+			// 		if (particleToAdd.Velocity.y > 0.0f)
+			// 		{
+			// 			particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, -1.0f);
+			// 		}
+			// 		float initialSpeed = initialSpeedBase + (float)(randomScale*GetRandomValue(0, randomBound));
+			// 		particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, initialSpeed);
+			// 		this.Particles[particlesAdded++] = particleToAdd;
+			// 	}
+			// }
 		}
 
-        public void UpdateParticleSystem(float dt)
-        {
-            float gravityConstant = 9.5f;
-            if (this.Particles == null)
-            {
-                return;
-            }
-
-            particleTimer += dt;
-            for (int i = 0; i < this.Particles.Count; i++)
-			{
-				Particle particle = this.Particles[i];
-				if (particleTimer >= particle.LifetimeStart &&
-					particleTimer <= particle.LifetimeEnd &&
-					(particle.Velocity.y < 0)
-					)
-				{					
-					Vector2 gravity = Vector2(0.0f, gravityConstant*dt);
-					particle.Velocity += gravity;
-					particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
-					this.Particles[i] = particle;										
-				}
-
-			}
-        }
-
-        public void DrawParticleSystem()
-		{
-            // TODO: store some flag about if all particles are finished, so you have early return
-            // or no function call at all
-            if (this.Particles == null)
-            {
-                return;
-            }
-			for (int i = 0; i < this.Particles.Count; i++)
-			{
-				Particle particle = this.Particles[i];
-				if (particleTimer >= particle.LifetimeStart &&
-					particleTimer <= particle.LifetimeEnd					
-					)
-				{					
-					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, Color.GRAY);										
-				}
-
-			}
-		}
 
 
 		public void InitScene(int _maxDots, GameResources gameResources, float _screenWidth = 1920.0f)
@@ -563,6 +528,13 @@ namespace Game
             revealTimerInterp = 0.0f;
 
             gunHolstered = true;
+
+            
+            
+            ParticleSystems = new ParticleSystem[maxParticleSystems];
+
+            
+
 
 			SetShaderValue(gameResources.gbShader, gameResources.gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
             SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
@@ -801,7 +773,17 @@ namespace Game
                 }
                 
 			}
-            UpdateParticleSystem(dt);
+            
+
+            for (int i = 0; i < maxParticleSystems; i++)
+            {
+                if (ParticleSystems[i] != null) // let's make this not possible
+                {
+                    ParticleSystems[i].UpdateParticleSystem(dt);
+                }
+                
+            }
+            
 		}
 
 		public void Render(GameResources gameResources)
@@ -886,7 +868,15 @@ namespace Game
 			{
 				DrawCircle((int32)dotStart.Position.x, (int32)dotStart.Position.y, dotRad, Color.WHITE);
 			}
-            DrawParticleSystem();
+
+            for (int i = 0; i < maxParticleSystems; i++)
+            {
+                if (ParticleSystems[i] != null)
+                {
+                    ParticleSystems[i].DrawParticleSystem();
+                }
+                
+            }
 		}
 	}
 
