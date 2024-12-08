@@ -3,3 +3,11 @@
 dist/Beef042Dbg64.dll
 dist/Beef042RT64.dll
 dist/BondProject.exe
+/recovery
+dist/screenshot000.png
+dist/screenshot001.png
+recovery/Game_4AF1800A47FA980C720E6404DC1AEC2A.bf
+recovery/Game_57C5442A0B59CC991CB3C41C597B830B.bf
+recovery/index.txt
+recovery/Program_1E36701C0716958859ECB2BD2E371990.bf
+BeefSpace_User.toml
