@@ -308,7 +308,158 @@ namespace Entities
 
 	class ParticleSystem
 	{
-		public Particle[] Particles {get;set;}
+		Particle[] Particles = null;
+        float ParticleTimer = 0.0f;
+        bool IsActive = false;
+
+        public this(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
+        {
+            AddParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale,  randomBound);
+        }
+
+        public ~this()
+        {
+            if (Particles != null)
+            {
+                for (var particle in Particles)
+                {
+                    delete particle;
+                }
+                delete Particles;
+                Particles = null;
+            }
+        }
+
+        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
+		{
+			int particleCount = waves * particlesPerWave;
+            ParticleTimer = 0.0f;
+
+            if (this.Particles != null)
+            {
+                // will have to immediately change this
+                // to support multiple particle systems
+                // we could just do a flat array of them
+                for (var particle in Particles)
+                {
+                    delete particle;
+                }
+                delete Particles;
+                Particles = null;                
+            }
+			this.Particles = new Particle[particleCount];
+			
+			int particlesAdded = 0;
+			for (int i = 0; i < waves; i++)
+			{
+				for (int j = 0; j < particlesPerWave; j++)
+				{
+					Particle particleToAdd = new Particle();
+					float lerpedTimeValue = (float)i / (float) waves;
+					float lerpedPositionValue = (float)j / (float) particlesPerWave;
+					particleToAdd.Position = Vector2(pos.x, pos.y);
+					particleToAdd.LifetimeStart = emissionSpeed * lerpedTimeValue;
+					particleToAdd.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration;
+					float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
+					particleToAdd.Velocity = Vector2(Math.Cos(lerpedAngle), Math.Sin(lerpedAngle));
+					if (particleToAdd.Velocity.y > 0.0f)
+					{
+						particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, -1.0f);
+					}
+					float initialSpeed = initialSpeedBase + (float)(randomScale*GetRandomValue(0, randomBound));
+					particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, initialSpeed);
+					this.Particles[particlesAdded++] = particleToAdd;
+				}
+			}
+		}
+
+        public void SetExistingParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
+		{
+			int particleCount = waves * particlesPerWave;
+            ParticleTimer = 0.0f;						
+			int particlesUpdated = 0;
+			for (int i = 0; i < waves; i++)
+			{
+				for (int j = 0; j < particlesPerWave; j++)
+				{
+					Particle particleToUpdate = Particles[particlesUpdated];
+					float lerpedTimeValue = (float)i / (float) waves;
+					float lerpedPositionValue = (float)j / (float) particlesPerWave;
+					particleToUpdate.Position = Vector2(pos.x, pos.y);
+					particleToUpdate.LifetimeStart = emissionSpeed * lerpedTimeValue;
+					particleToUpdate.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration;
+					float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
+					particleToUpdate.Velocity = Vector2(Math.Cos(lerpedAngle), Math.Sin(lerpedAngle));
+					if (particleToUpdate.Velocity.y > 0.0f)
+					{
+						particleToUpdate.Velocity = Matrix2.Vector2Scale(particleToUpdate.Velocity, -1.0f);
+					}
+					float initialSpeed = initialSpeedBase + (float)(randomScale*GetRandomValue(0, randomBound));
+					particleToUpdate.Velocity = Matrix2.Vector2Scale(particleToUpdate.Velocity, initialSpeed);
+					this.Particles[particlesUpdated++] = particleToUpdate;
+				}
+			}
+		}
+
+        public void UpdateParticleSystem(float dt)
+        {
+            float gravityConstant = 9.5f;
+            if (this.Particles == null)
+            {
+                return;
+            }
+            bool foundActiveParticle = false;
+
+            ParticleTimer += dt;
+            for (int i = 0; i < this.Particles.Count; i++)
+			{
+				Particle particle = this.Particles[i];
+				if (ParticleTimer >= particle.LifetimeStart &&
+					ParticleTimer <= particle.LifetimeEnd &&
+					(particle.Velocity.y < 0)
+					)
+				{					
+					Vector2 gravity = Vector2(0.0f, gravityConstant*dt);
+					particle.Velocity += gravity;
+					particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
+					this.Particles[i] = particle;
+                    foundActiveParticle = true;
+				}
+
+			}
+            if (!foundActiveParticle)
+            {
+                IsActive = false;
+            }
+        }
+
+        public void DrawParticleSystem()
+		{
+            // TODO: store some flag about if all particles are finished, so you have early return
+            // or no function call at all
+            if (!IsActive)
+            {
+                return;
+            }
+            if (this.Particles == null)
+            {
+                return;
+            }
+            
+			for (int i = 0; i < this.Particles.Count; i++)
+			{
+				Particle particle = this.Particles[i];
+				if (ParticleTimer >= particle.LifetimeStart &&
+					ParticleTimer <= particle.LifetimeEnd					
+					)
+				{					
+					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, Color.GRAY);										
+				}
+
+			}
+		}
+
+        
 
 	}
 

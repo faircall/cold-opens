@@ -387,7 +387,7 @@ namespace Game
 
         bool holstering = false;
 
-        bool gunHolstered = false; // could get the right effect by pulling out the gun to another layer and having it have its own sprite sheet, possibly
+        bool gunHolstered = true; // could get the right effect by pulling out the gun to another layer and having it have its own sprite sheet, possibly
 
 		float screenWidth;
 
@@ -404,7 +404,7 @@ namespace Game
         float interShotCooldown = 1.0f;
         float revealTimerInterp = 0.0f;
         Particle[] Particles = null;
-        float particleTimer = 0.0f;
+        float particleTimer = 0.0f; // having only one timer is an issue
         // probably think about a state machine here, to handle multiple shots in a row etc
         
 
@@ -487,7 +487,8 @@ namespace Game
             {
                 return;
             }
-            
+
+            particleTimer += dt;
             for (int i = 0; i < this.Particles.Count; i++)
 			{
 				Particle particle = this.Particles[i];
@@ -561,7 +562,7 @@ namespace Game
             revealTimerMax = 0.7f;
             revealTimerInterp = 0.0f;
 
-            
+            gunHolstered = true;
 
 			SetShaderValue(gameResources.gbShader, gameResources.gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
             SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
@@ -595,6 +596,7 @@ namespace Game
             dotGrowthTimerMax = 0.8f;
             dotCounter = 0;
             dotRad = 40.0f;
+            gunHolstered = true;
 
             rogerSpriteSheet.Reset();
 
@@ -625,17 +627,19 @@ namespace Game
 
 			rogerDirection.x = 0.0f;
 			rogerDirection.y = 0.0f;
-			
+
+            fired = false;
             if (IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
             {
                 if (!gunHolstered)
                 {
                     // play firing animation
-                    firing = true;
+                    fired = true;
                 }
             }
 
             holstering = false;
+
             if (IsMouseButtonDown(MouseButton.MOUSE_RIGHT_BUTTON))
             {
                 holstering = true;
@@ -659,6 +663,11 @@ namespace Game
                 }
                 holsteringTimer += dt;
                 holsteringTimer = Math.Min(holsteringTimer, holsteringDuration);
+
+                if (holsteringTimer >= holsteringDuration/2.0f)
+                {
+                    gunHolstered = false;
+                }
                 // if (holsteringTimer >= holsteringDuration)
                 // {
                 //     gunHolstered = false;
@@ -670,33 +679,29 @@ namespace Game
             }
             else
             {
+                
                 holsteringTimer -= dt;
                 holsteringTimer = Math.Max(holsteringTimer, 0.0f);
+                
+                if (holsteringTimer < holsteringDuration/2.0f)
+                {
+                    gunHolstered = true;
+                }
+
+                // TODO (Cooper) : buffering inputs is going to feel better here
+                // but I think we only need ot buffer them
+                // if they can't occur
+                
             }
             
             rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
-
-            if (firing)
+            if (fired)
             {
-                // if (rogerSpriteSheet.State != RogerAnimationState.SHOOTING)
-                // {
-                //     rogerSpriteSheet.SetState(RogerAnimationState.SHOOTING, false);
-                // }
-                if (!fired)
-                {
-                    AddParticleSystem(rogerPosition, 1, 7, 0.5f, 0.25f, 100.0f, 100.0f, 100);
-                    fired = true;
-                }
-                
-                firingTimer += dt;
-                if (firingTimer >= aimToFireDuration)
-                {
-                    firingTimer = aimToFireDuration - timeBetweenShots;
-                    firing = false;
-                    fired = false;
-                }
-                
+                AddParticleSystem(rogerPosition, 1, 7, 0.5f, 0.25f, 100.0f, 100.0f, 100);
+                fired = true;
             }
+
+
             // else if (rogerSpriteSheet.State == RogerAnimationState.SHOOTING)
             // {
             //     // this is going to get out of hand quickly,
@@ -715,12 +720,12 @@ namespace Game
                 }
             }
 
-			if (IsKeyDown(KeyboardKey.KEY_A) && rogerSpriteSheet.State != RogerAnimationState.UNHOLSTERING)
+			if (IsKeyDown(KeyboardKey.KEY_A) && !holstering)
 			{
 				rogerDirection.x = -1.0f;
 				persistentDirection = rogerDirection.x;
 			}
-			if (IsKeyDown(KeyboardKey.KEY_D) && rogerSpriteSheet.State != RogerAnimationState.UNHOLSTERING)
+			if (IsKeyDown(KeyboardKey.KEY_D) && !holstering)
 			{
 				rogerDirection.x = 1.0f;
 				persistentDirection = rogerDirection.x;
@@ -729,7 +734,7 @@ namespace Game
 			rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
 
 			
-			if (rogerDirection.x != 0.0f)
+			if (rogerDirection.x != 0.0f && holsteringTimer == 0.0f)
 			{
                 if (rogerSpriteSheet.State != RogerAnimationState.WALKING)
                 {
