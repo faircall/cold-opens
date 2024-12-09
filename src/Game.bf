@@ -427,6 +427,11 @@ namespace Game
 			}
 			delete rogerSpriteSheet;
 			delete m_Dots;
+            for (int i = 0; i < maxParticleSystems; i++)
+            {
+                delete ParticleSystems[i];
+            }
+            
             delete ParticleSystems;
 
 		}
