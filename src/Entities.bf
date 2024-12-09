@@ -449,6 +449,8 @@ namespace Entities
             {
                 return;
             }
+
+            // could do options in here
             
 			for (int i = 0; i < this.Particles.Count; i++)
 			{
@@ -456,8 +458,12 @@ namespace Entities
 				if (ParticleTimer >= particle.LifetimeStart &&
 					ParticleTimer <= particle.LifetimeEnd					
 					)
-				{					
-					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, Color.GRAY);										
+				{
+                    // probably want to parametrize the color, size, transparency
+                    float alphaToDraw = 255.0f*(1.0f- - (ParticleTimer - particle.LifetimeStart) / (particle.LifetimeEnd - particle.LifetimeStart));
+                    Color toDraw = Color(Color.GRAY.r, Color.GRAY.g, Color.GRAY.b, (uint8)alphaToDraw);
+
+					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, toDraw);										
 				}
 
 			}
