@@ -674,8 +674,9 @@ namespace Game
             rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
             if (fired)
             {
-                AddParticleSystem(rogerPosition, 1, 7, 0.5f, 0.25f, 100.0f, 100.0f, 100);
-                fired = true;
+                Vector2 smokePos = Vector2(rogerPosition.x, rogerPosition.y-20.0f);
+                AddParticleSystem(smokePos, 1, 50, 0.25f, 0.25f, 25.0f, 1.0f, 100);
+                // = false;
             }
 
 
@@ -771,6 +772,9 @@ namespace Game
 					dotGrowthTimer += dt;
 				}
 
+                // I think we want to start incrementing our reveal timer later than the other one
+                // since the texure is smaller
+
                 if (revealTimer < revealTimerMax)
                 {
                     revealTimer += dt;
@@ -801,6 +805,9 @@ namespace Game
 			{
                 gameResources.Reload();
 			}
+
+            BeginDrawing();
+            ClearBackground(.(0,0,0,255));
             
             if (!dotStopped)
             {
@@ -849,6 +856,13 @@ namespace Game
 								
 				
 				// check for roger's direction here
+
+                // TODO (Cooper):
+                // the fact that we're drawing separate sprites
+                // is actually making this harder, since the scales are different
+                // so instead, I think what we SHOULD do is render everything that should be revealed
+                // to a texture, and then
+                // 'reveal' THAT
 				// TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 				if (rogerDirection.x < 0.0f)
 				{
@@ -882,7 +896,9 @@ namespace Game
                 }
                 
             }
+            EndDrawing();
 		}
+
 	}
 
 	// class SkeletalEditor

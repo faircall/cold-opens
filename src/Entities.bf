@@ -370,7 +370,7 @@ namespace Entities
 					{
 						particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, -1.0f);
 					}
-					float initialSpeed = initialSpeedBase + (float)(randomScale*GetRandomValue(0, randomBound));
+					float initialSpeed = initialSpeedBase + (float)(randomScale*GetRandomValue(1, randomBound));
 					particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, initialSpeed);
 					this.Particles[particlesAdded++] = particleToAdd;
 				}
@@ -460,8 +460,8 @@ namespace Entities
 					)
 				{
                     // probably want to parametrize the color, size, transparency
-                    float alphaToDraw = 255.0f*(1.0f- - (ParticleTimer - particle.LifetimeStart) / (particle.LifetimeEnd - particle.LifetimeStart));
-                    Color toDraw = Color(Color.GRAY.r, Color.GRAY.g, Color.GRAY.b, (uint8)alphaToDraw);
+                    float alphaToDraw = 255.0f*(1.0f - (ParticleTimer - particle.LifetimeStart) / (particle.LifetimeEnd - particle.LifetimeStart));
+                    Color toDraw = Color(150, 150, 150, (uint8)alphaToDraw);
 
 					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, toDraw);										
 				}

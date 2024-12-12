@@ -1043,8 +1043,8 @@ namespace ColdOpen
 
 				Draw:
 				{
-					BeginDrawing();
-					ClearBackground(.(0, 0, 0, 255));
+					// BeginDrawing();
+					// ClearBackground(.(0, 0, 0, 255));
 					float dt = GetFrameTime();
 					switch (gGameState)
 					{
@@ -1254,7 +1254,7 @@ namespace ColdOpen
 						UpdateMGMScreen();
 						break;
 					}
-					EndDrawing();
+					// EndDrawing();
 
 				}
 				
