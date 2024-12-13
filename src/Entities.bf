@@ -313,14 +313,15 @@ namespace Entities
         // we should probably create each one as a max amount?
         // and then just track active/inactive
         float ParticleTimer = 0.0f;
+        float InitialDelay = 0.0f;
+        float TotalDuration = 0.0f;
 
         Color BaseColor = Color(255,255,255,255);
         
 
-        public this(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor)
+        public this(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor, float initialDelay)
         {
-            IsActive = true;
-            AddParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale,  randomBound, baseColor);
+            AddParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale,  randomBound, baseColor, initialDelay);
         }
 
         public ~this()
@@ -336,11 +337,13 @@ namespace Entities
             }
         }
 
-        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor)
+        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor, float initialDelay)
 		{
 			int particleCount = waves * particlesPerWave;
             ParticleTimer = 0.0f;
             BaseColor = baseColor;
+            InitialDelay = 0.0f;
+            TotalDuration = totalDuration;
 
             if (this.Particles != null)
             {
@@ -355,6 +358,7 @@ namespace Entities
                 Particles = null;                
             }
 			this.Particles = new Particle[particleCount];
+            IsActive = true;
 			
 			int particlesAdded = 0;
 			for (int i = 0; i < waves; i++)
@@ -365,9 +369,10 @@ namespace Entities
 					float lerpedTimeValue = (float)i / (float) waves;
 					float lerpedPositionValue = (float)j / (float) particlesPerWave;
 					particleToAdd.Position = Vector2(pos.x, pos.y);
-					particleToAdd.LifetimeStart = emissionSpeed * lerpedTimeValue;
-					particleToAdd.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration;
-					float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
+					particleToAdd.LifetimeStart = emissionSpeed * lerpedTimeValue + initialDelay;
+					particleToAdd.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration + initialDelay;
+					// float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
+                    float lerpedAngle = 2.0f *Math.PI_f * lerpedPositionValue + (float)(GetRandomValue(1,5));
 					particleToAdd.Velocity = Vector2(Math.Cos(lerpedAngle), Math.Sin(lerpedAngle));
 					if (particleToAdd.Velocity.y > 0.0f)
 					{
@@ -380,11 +385,14 @@ namespace Entities
 			}
 		}
 
-        public void SetExistingParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
+        public void SetExistingParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, float initialDelay)
 		{
 			int particleCount = waves * particlesPerWave;
             ParticleTimer = 0.0f;						
 			int particlesUpdated = 0;
+            InitialDelay = initialDelay;
+            IsActive = true;
+            TotalDuration = totalDuration;
 			for (int i = 0; i < waves; i++)
 			{
 				for (int j = 0; j < particlesPerWave; j++)
@@ -393,9 +401,10 @@ namespace Entities
 					float lerpedTimeValue = (float)i / (float) waves;
 					float lerpedPositionValue = (float)j / (float) particlesPerWave;
 					particleToUpdate.Position = Vector2(pos.x, pos.y);
-					particleToUpdate.LifetimeStart = emissionSpeed * lerpedTimeValue;
-					particleToUpdate.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration;
-					float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
+					particleToUpdate.LifetimeStart = emissionSpeed * lerpedTimeValue + initialDelay;
+					particleToUpdate.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration + initialDelay;
+					// float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
+                    float lerpedAngle = 2.0f *Math.PI_f * lerpedPositionValue + (float)(GetRandomValue(1,5));
 					particleToUpdate.Velocity = Vector2(Math.Cos(lerpedAngle), Math.Sin(lerpedAngle));
 					if (particleToUpdate.Velocity.y > 0.0f)
 					{
@@ -434,7 +443,7 @@ namespace Entities
 				}
 
 			}
-            if (!foundActiveParticle)
+            if (!foundActiveParticle && (ParticleTimer > (TotalDuration + InitialDelay)))
             {
                 IsActive = false;
             }
