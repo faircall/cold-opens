@@ -313,12 +313,14 @@ namespace Entities
         // we should probably create each one as a max amount?
         // and then just track active/inactive
         float ParticleTimer = 0.0f;
+
+        Color BaseColor = Color(255,255,255,255);
         
 
-        public this(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
+        public this(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor)
         {
             IsActive = true;
-            AddParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale,  randomBound);
+            AddParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale,  randomBound, baseColor);
         }
 
         public ~this()
@@ -334,10 +336,11 @@ namespace Entities
             }
         }
 
-        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
+        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor)
 		{
 			int particleCount = waves * particlesPerWave;
             ParticleTimer = 0.0f;
+            BaseColor = baseColor;
 
             if (this.Particles != null)
             {
@@ -461,7 +464,7 @@ namespace Entities
 				{
                     // probably want to parametrize the color, size, transparency
                     float alphaToDraw = 255.0f*(1.0f - (ParticleTimer - particle.LifetimeStart) / (particle.LifetimeEnd - particle.LifetimeStart));
-                    Color toDraw = Color(150, 150, 150, (uint8)alphaToDraw);
+                    Color toDraw = Color(BaseColor.r, BaseColor.g, BaseColor.b, (uint8)alphaToDraw);
 
 					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, toDraw);										
 				}

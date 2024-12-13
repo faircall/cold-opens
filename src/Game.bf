@@ -436,7 +436,7 @@ namespace Game
 
 		}
 
-        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound)
+        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor)
 		{
             // if (this.ParticleSystems != null)
             // {
@@ -458,13 +458,13 @@ namespace Game
                 if ((ParticleSystems[i] != null && !ParticleSystems[i].IsActive)) 
                 {
                     delete ParticleSystems[i]; // we will remove this step soon
-                    ParticleSystem psToAdd = new ParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale, randomBound);
+                    ParticleSystem psToAdd = new ParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale, randomBound, baseColor);
                     ParticleSystems[i] = psToAdd;
                     break;
                 }
                 else if (ParticleSystems[i] == null)
                 {
-                    ParticleSystem psToAdd = new ParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale, randomBound);
+                    ParticleSystem psToAdd = new ParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale, randomBound, baseColor);
                     ParticleSystems[i] = psToAdd;
                     break;
                 }
@@ -674,8 +674,8 @@ namespace Game
             rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
             if (fired)
             {
-                Vector2 smokePos = Vector2(rogerPosition.x, rogerPosition.y-20.0f);
-                AddParticleSystem(smokePos, 1, 50, 0.25f, 0.25f, 25.0f, 1.0f, 100);
+                Vector2 smokePos = Vector2(rogerPosition.x-4.0f, rogerPosition.y-30.0f);
+                AddParticleSystem(smokePos, 1, 50, 0.25f, 0.25f, 25.0f, 1.0f, 100, Color(150,150,150,255));
                 // = false;
             }
 
