@@ -23,10 +23,11 @@ namespace Game
     public enum RogerAnimationState
         {
             STATIONARY,
+            TURNING,
             WALKING,
             UNHOLSTERING,
             AIMING, 
-            SHOOTING, 
+            SHOOTING,            
         }
     
 	class GameUpdateAndRender
@@ -135,6 +136,9 @@ namespace Game
         int32 WalkingFrameStart = 1;
         int32 WalkingFrameEnd = 17;
 
+        int32 TurningFrameStart = 25;
+        int32 TurningFrameEnd = 28;
+
         int32 ShootingFrameStart = 18;
         int32 ShootingFrameEnd = 24;
         
@@ -175,6 +179,12 @@ namespace Game
                 SectionStart = IdleFrameStart;
                 SectionEnd = IdleFrameEnd;
                 
+            }
+            else if (State == RogerAnimationState.TURNING)
+            {
+                SectionStart = TurningFrameStart;
+                SectionEnd = TurningFrameEnd;
+
             }
             else if (State == RogerAnimationState.WALKING)
             {
@@ -394,6 +404,8 @@ namespace Game
         bool firing = false;
         bool fired = false;
 
+        float turnAroundTimer = 0.0f;
+
         float firingTimer = 0.0f;
         float aimingTimer = 0.0f;
         float aimToFireDuration = 0.5f;
@@ -566,7 +578,7 @@ namespace Game
             // when you stop and aren't on a 'stop' frame,
             // it finds the nearest one
 
-
+            float prevDirectionX = persistentDirection;
 			rogerDirection.x = 0.0f;
 			rogerDirection.y = 0.0f;
 
@@ -617,7 +629,7 @@ namespace Game
                 //     rogerSpriteSheet.SetState(RogerAnimationState.UNHOLSTERING, false);
                 // }
                 String holsterFrameText = scope  $"holster time is {holsteringTimer}";
-                DrawText(holsterFrameText, 10, 10, 12, Color.WHITE);
+                //DrawText(holsterFrameText, 10, 10, 12, Color.WHITE);
             }
             else
             {
@@ -678,13 +690,20 @@ namespace Game
 			float rogerSpeed = 120.0f;
 			rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
 
+            
+
 			
 			if (rogerDirection.x != 0.0f && holsteringTimer == 0.0f)
 			{
-                if (rogerSpriteSheet.State != RogerAnimationState.WALKING)
+                if (prevDirectionX != 0.0f && persistentDirection != prevDirectionX && rogerSpriteSheet.State != RogerAnimationState.TURNING)
+                {
+                    rogerSpriteSheet.SetState(RogerAnimationState.TURNING, false, true);
+                }
+                else if (rogerSpriteSheet.State != RogerAnimationState.WALKING)
                 {
                     rogerSpriteSheet.SetState(RogerAnimationState.WALKING);
-                }
+                } // also think about a transition state when changing direction!
+                
                 
 				//TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
 			}
