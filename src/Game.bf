@@ -436,21 +436,8 @@ namespace Game
 
 		}
 
-        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor, float initialDelay)
+        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor, Color endColor, float initialDelay)
 		{
-            // if (this.ParticleSystems != null)
-            // {
-            //     // will have to immediately change this
-            //     // to support multiple particle systems
-            //     // we could just do a flat array of them
-            //     for (var particle in Particles)
-            //     {
-            //         delete particle;
-            //     }
-            //     delete Particles;
-            //     Particles = null;                
-            // }
-
             
 
             for (int i = 0; i < maxParticleSystems; i++)
@@ -458,13 +445,13 @@ namespace Game
                 if ((ParticleSystems[i] != null && !ParticleSystems[i].IsActive)) 
                 {
                     delete ParticleSystems[i]; // we will remove this step soon
-                    ParticleSystem psToAdd = new ParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale, randomBound, baseColor, initialDelay);
+                    ParticleSystem psToAdd = new ParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale, randomBound, baseColor, endColor, initialDelay);
                     ParticleSystems[i] = psToAdd;
                     break;
                 }
                 else if (ParticleSystems[i] == null)
                 {
-                    ParticleSystem psToAdd = new ParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale, randomBound, baseColor, initialDelay);
+                    ParticleSystem psToAdd = new ParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale, randomBound, baseColor, endColor, initialDelay);
                     ParticleSystems[i] = psToAdd;
                     break;
                 }
@@ -472,28 +459,6 @@ namespace Game
             }
                                                             
 			
-			// int particlesAdded = 0;
-			// for (int i = 0; i < waves; i++)
-			// {
-			// 	for (int j = 0; j < particlesPerWave; j++)
-			// 	{
-			// 		Particle particleToAdd = new Particle();
-			// 		float lerpedTimeValue = (float)i / (float) waves;
-			// 		float lerpedPositionValue = (float)j / (float) particlesPerWave;
-			// 		particleToAdd.Position = Vector2(pos.x, pos.y);
-			// 		particleToAdd.LifetimeStart = emissionSpeed * lerpedTimeValue;
-			// 		particleToAdd.LifetimeEnd = emissionSpeed * lerpedTimeValue + totalDuration;
-			// 		float lerpedAngle = Math.PI_f * lerpedPositionValue + Math.PI_f + (float)(GetRandomValue(1,5));
-			// 		particleToAdd.Velocity = Vector2(Math.Cos(lerpedAngle), Math.Sin(lerpedAngle));
-			// 		if (particleToAdd.Velocity.y > 0.0f)
-			// 		{
-			// 			particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, -1.0f);
-			// 		}
-			// 		float initialSpeed = initialSpeedBase + (float)(randomScale*GetRandomValue(0, randomBound));
-			// 		particleToAdd.Velocity = Matrix2.Vector2Scale(particleToAdd.Velocity, initialSpeed);
-			// 		this.Particles[particlesAdded++] = particleToAdd;
-			// 	}
-			// }
 		}
 
 
@@ -676,8 +641,8 @@ namespace Game
             {
                 Vector2 smokePos = Vector2(rogerPosition.x-4.0f, rogerPosition.y-30.0f);
                 // need to add an ability to  delay in
-                AddParticleSystem(smokePos, 1, 25, 0.125f, 0.25f, 1.0f, 1.0f, 100, Color(255,150,0,255), 0.0f);
-                AddParticleSystem(smokePos, 1, 50, 0.25f, 0.25f, 25.0f, 1.0f, 100, Color(150,150,150,255), 0.1f);
+                AddParticleSystem(smokePos, 1, 25, 0.125f, 0.25f, 1.0f, 1.0f, 100, Color(255,74,0,255), Color(255,180,0,50), 0.0f);
+                AddParticleSystem(smokePos, 1, 50, 0.25f, 0.25f, 25.0f, 1.0f, 100, Color(50,50,50,200), Color(150,150,150,0), 0.1f);
                 // = false;
             }
 

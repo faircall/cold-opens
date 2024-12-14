@@ -317,11 +317,13 @@ namespace Entities
         float TotalDuration = 0.0f;
 
         Color BaseColor = Color(255,255,255,255);
+        Color EndColor = Color(255,255,255,255);
+        
         
 
-        public this(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor, float initialDelay)
+        public this(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor, Color endColor, float initialDelay)
         {
-            AddParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale,  randomBound, baseColor, initialDelay);
+            AddParticleSystem(pos, waves, particlesPerWave, totalDuration, emissionSpeed, initialSpeedBase, randomScale,  randomBound, baseColor, endColor, initialDelay);
         }
 
         public ~this()
@@ -337,11 +339,12 @@ namespace Entities
             }
         }
 
-        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor, float initialDelay)
+        public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor, Color endColor, float initialDelay)
 		{
 			int particleCount = waves * particlesPerWave;
             ParticleTimer = 0.0f;
             BaseColor = baseColor;
+            EndColor = endColor;
             InitialDelay = 0.0f;
             TotalDuration = totalDuration;
 
@@ -472,8 +475,22 @@ namespace Entities
 					)
 				{
                     // probably want to parametrize the color, size, transparency
-                    float alphaToDraw = 255.0f*(1.0f - (ParticleTimer - particle.LifetimeStart) / (particle.LifetimeEnd - particle.LifetimeStart));
-                    Color toDraw = Color(BaseColor.r, BaseColor.g, BaseColor.b, (uint8)alphaToDraw);
+                    float lerpValue = (1.0f - (ParticleTimer - particle.LifetimeStart) / (particle.LifetimeEnd - particle.LifetimeStart));
+                    float lerpInc = (ParticleTimer - particle.LifetimeStart) / (particle.LifetimeEnd - particle.LifetimeStart);
+                    //float alphaToDraw = 255.0f*lerpValue; // (TODO): introduce an initial alpha value too, or just use
+                    // base color too
+                    // need to be careful about direction of lerp I think
+                    float redToLerp =  lerpInc*(EndColor.r - BaseColor.r);
+                    float greenToLerp =  lerpInc*(EndColor.g - BaseColor.g);
+                    float blueToLerp =  lerpInc*(EndColor.b - BaseColor.b);
+                    float alphaToLerp =  lerpInc*(EndColor.a - BaseColor.a);
+
+                    uint8 redToDraw = (uint8)(BaseColor.r + redToLerp);
+                    uint8 greenToDraw = (uint8)(BaseColor.g + greenToLerp);
+                    uint8 blueToDraw = (uint8)(BaseColor.b + blueToLerp);
+                    uint8 alphaToDraw = (uint8)(BaseColor.a + alphaToLerp);
+                    
+                    Color toDraw = Color(redToDraw, greenToDraw, blueToDraw, alphaToDraw);
 
 					DrawCircle((int32)(particle.Position.x), (int32)(particle.Position.y), 3.0f, toDraw);										
 				}
@@ -487,11 +504,11 @@ namespace Entities
 
 	class Particle
 	{
-		public Vector2 Position {get;set;}
-		public Vector2 Velocity {get;set;}
-		public Vector2 Acceleration {get;set;}
-		public float LifetimeStart {get;set;}
-		public float LifetimeEnd {get;set;}
+		public Vector2 Position;
+		public Vector2 Velocity;
+		public Vector2 Acceleration;
+		public float LifetimeStart;
+		public float LifetimeEnd ;
 
 		public this()
 		{
