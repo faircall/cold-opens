@@ -404,8 +404,13 @@ namespace Game
         bool firing = false;
         bool fired = false;
 
+        float turningAcceleration = 0.025f;
+        float turningSpeed = 1.0f;
         float turningTimer = 0.0f;
         float turningDuration = 0.25f;
+        float turningSpeedLimit = 0.0f;
+
+        float rogerSpeedBase = 120.0f;
 
         float firingTimer = 0.0f;
         float aimingTimer = 0.0f;
@@ -583,7 +588,7 @@ namespace Game
             float prevDirectionX = persistentDirection;
 			rogerDirection.x = 0.0f;
 			rogerDirection.y = 0.0f;
-            float turningSpeedLimit = 10.0f;
+            
 
             fired = false;
             if (IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
@@ -651,19 +656,7 @@ namespace Game
                 
             }
 
-            if (rogerSpriteSheet.State == RogerAnimationState.TURNING)
-            {
-                String holsterFrameText = scope  $"holster time is {holsteringTimer}";
-                DrawText(holsterFrameText, 10, 10, 12, Color.WHITE);
-                turningTimer += dt;
-                turningTimer = Math.Min(turningDuration, turningTimer);
-                rogerSpriteSheet.AnimLerp = turningTimer / turningDuration;
-            }
-            else
-            {
-                turningTimer = 0;
-                rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
-            }
+            
             
             
             if (fired)
@@ -731,10 +724,39 @@ namespace Game
                 rogerSpriteSheet.SetState(RogerAnimationState.STATIONARY);
             }
 
-            float rogerSpeed = 120.0f;
             if (rogerSpriteSheet.State == RogerAnimationState.TURNING)
             {
-                rogerSpeed = 60.0f;
+                String holsterFrameText = scope  $"holster time is {holsteringTimer}";
+                DrawText(holsterFrameText, 10, 10, 12, Color.WHITE);
+                
+                turningTimer += (dt * turningSpeed);
+                turningTimer = Math.Min(turningDuration, turningTimer);
+                rogerSpriteSheet.AnimLerp = turningTimer / turningDuration;
+                if (rogerDirection.x != 0.0f)
+                {
+                    
+                    turningSpeed += (turningAcceleration*0.1f);
+                    turningSpeedLimit += turningAcceleration*50.0f;
+                    //turningSpeedLimit = rogerSpeedBase;
+                    turningSpeedLimit = Math.Min(turningSpeedLimit, rogerSpeedBase);
+                }
+            }
+            else
+            {
+                
+                turningTimer = 0;
+                turningSpeed = 1.0f;
+                turningSpeedLimit = rogerSpeedBase/4.0f;
+                
+                rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
+            }
+
+            float rogerSpeed = rogerSpeedBase;
+            if (rogerSpriteSheet.State == RogerAnimationState.TURNING)
+            {
+                rogerSpeed = turningSpeedLimit; // we should increase this limit over time
+                // or introduce momentum/velocity etc, and also speed up the animation accordingly
+                // if you're attempting to keep moving
             }
 			rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
 
