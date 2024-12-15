@@ -405,7 +405,7 @@ namespace Game
         bool fired = false;
 
         float turningTimer = 0.0f;
-        float turningDuration = 0.5f;
+        float turningDuration = 0.125f;
 
         float firingTimer = 0.0f;
         float aimingTimer = 0.0f;
@@ -552,6 +552,7 @@ namespace Game
             dotCounter = 0;
             dotRad = 40.0f;
             gunHolstered = true;
+            turningDuration = 0.25f;
 
             rogerSpriteSheet.Reset();
 
@@ -582,6 +583,7 @@ namespace Game
             float prevDirectionX = persistentDirection;
 			rogerDirection.x = 0.0f;
 			rogerDirection.y = 0.0f;
+            float turningSpeedLimit = 10.0f;
 
             fired = false;
             if (IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
@@ -702,8 +704,7 @@ namespace Game
 				rogerDirection.x = 1.0f;
 				persistentDirection = rogerDirection.x;
 			}
-			float rogerSpeed = 120.0f;
-			rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
+			
 
             
 
@@ -729,6 +730,13 @@ namespace Game
             {
                 rogerSpriteSheet.SetState(RogerAnimationState.STATIONARY);
             }
+
+            float rogerSpeed = 120.0f;
+            if (rogerSpriteSheet.State == RogerAnimationState.TURNING)
+            {
+                rogerSpeed = 60.0f;
+            }
+			rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
 
             
             
@@ -871,7 +879,7 @@ namespace Game
 				// TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 
                 int debugText = 0;
-				if (rogerDirection.x < 0.0f || (rogerDirection.x > 0.0f && rogerSpriteSheet.State == RogerAnimationState.TURNING))
+				if (rogerDirection.x < 0.0f)
 				{
                                         
 					TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
