@@ -229,7 +229,7 @@ namespace Game
                 }
                 
                 String currentFrameText = scope $"current frame is {CurrentFrameSection}";
-                DrawText(currentFrameText, 10, 10, 16, Color.RED);
+                //DrawText(currentFrameText, 10, 10, 16, Color.RED);
                 // then map it to a region
                 CurrentRect = Rectangle(CurrentFrameSection * FrameWidth, 0.0f, FrameWidth, FrameHeight);
             }
@@ -404,7 +404,8 @@ namespace Game
         bool firing = false;
         bool fired = false;
 
-        float turnAroundTimer = 0.0f;
+        float turningTimer = 0.0f;
+        float turningDuration = 0.5f;
 
         float firingTimer = 0.0f;
         float aimingTimer = 0.0f;
@@ -647,8 +648,22 @@ namespace Game
                 // if they can't occur
                 
             }
+
+            if (rogerSpriteSheet.State == RogerAnimationState.TURNING)
+            {
+                String holsterFrameText = scope  $"holster time is {holsteringTimer}";
+                DrawText(holsterFrameText, 10, 10, 12, Color.WHITE);
+                turningTimer += dt;
+                turningTimer = Math.Min(turningDuration, turningTimer);
+                rogerSpriteSheet.AnimLerp = turningTimer / turningDuration;
+            }
+            else
+            {
+                turningTimer = 0;
+                rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
+            }
             
-            rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
+            
             if (fired)
             {
                 Vector2 smokePos = Vector2(rogerPosition.x-4.0f, rogerPosition.y-30.0f);
@@ -699,7 +714,7 @@ namespace Game
                 {
                     rogerSpriteSheet.SetState(RogerAnimationState.TURNING, false, true);
                 }
-                else if (rogerSpriteSheet.State != RogerAnimationState.WALKING)
+                else if (rogerSpriteSheet.State != RogerAnimationState.WALKING && (rogerSpriteSheet.State != RogerAnimationState.TURNING || turningTimer >= turningDuration))
                 {
                     rogerSpriteSheet.SetState(RogerAnimationState.WALKING);
                 } // also think about a transition state when changing direction!
@@ -708,11 +723,15 @@ namespace Game
 				//TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
 			}
             else if (rogerSpriteSheet.State == RogerAnimationState.WALKING ||
-                     (rogerSpriteSheet.State == RogerAnimationState.UNHOLSTERING && !holstering && holsteringTimer == 0.0f)
+                     (rogerSpriteSheet.State == RogerAnimationState.UNHOLSTERING && !holstering && holsteringTimer == 0.0f ||
+                         rogerSpriteSheet.State == RogerAnimationState.TURNING && turningTimer >= turningDuration)
                 )
             {
                 rogerSpriteSheet.SetState(RogerAnimationState.STATIONARY);
             }
+
+            
+            
             rogerSpriteSheet.Update(dt*1.5f);
             // else if (!rogerSpriteSheet.CurrentFrame = 4)
             // {
@@ -850,19 +869,43 @@ namespace Game
                 // to a texture, and then
                 // 'reveal' THAT
 				// TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
-				if (rogerDirection.x < 0.0f)
+
+                int debugText = 0;
+				if (rogerDirection.x < 0.0f || (rogerDirection.x > 0.0f && rogerSpriteSheet.State == RogerAnimationState.TURNING))
 				{
+                                        
 					TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 				}
-				else if (rogerDirection.x > 0.0f || persistentDirection > 0.0f)
+				else if ((rogerDirection.x > 0.0f || persistentDirection > 0.0f) || (rogerDirection.x < 0.0f && rogerSpriteSheet.State == RogerAnimationState.TURNING))
 				{
+
+                    debugText = 1;
 					TextureDrawing.DrawPartialTextureCenteredFlipped(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x , rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 				}
 				else
 				{
+                    debugText = 2;
 					TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 				}
                 EndShaderMode();
+
+                if (debugText == 0)
+                {
+                    String currentFrameText = scope $"drawing normal anim";                
+                    DrawText(currentFrameText, 10, 10, 16, Color.RED);
+                }
+                else if (debugText == 1)
+                {
+                    String currentFrameText = scope $"drawing flipped anim";                
+                    DrawText(currentFrameText, 10, 10, 16, Color.RED);
+                }
+                else if (debugText == 2)
+                {
+                    String currentFrameText = scope $"drawing default anim";                
+                    DrawText(currentFrameText, 10, 10, 16, Color.RED);
+                }
+
+                
 
                 // String animFrameText = scope  $"anim frame is {rogerSpriteSheet.CurrentFrame}";
             
