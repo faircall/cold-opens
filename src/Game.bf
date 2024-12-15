@@ -405,7 +405,7 @@ namespace Game
         bool fired = false;
 
         float turningTimer = 0.0f;
-        float turningDuration = 0.125f;
+        float turningDuration = 0.25f;
 
         float firingTimer = 0.0f;
         float aimingTimer = 0.0f;
@@ -573,7 +573,7 @@ namespace Game
 
 		public void Update(float _dt)
 		{
-            // float dt = _dt / 5.0f; // for slowmo
+            //float dt = _dt / 5.0f; // for slowmo
             float dt = _dt;
 
             // let's do a system where
