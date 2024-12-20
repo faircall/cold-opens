@@ -258,10 +258,11 @@ namespace Game
 
 		public Texture2D henchmanTexture;
 
-		public Sound air_loop_sound;
-		public Sound ground_hit_sound;
-		public Sound gunshot_sound;
-		public Sound gunshot_hit_sound;
+		public Sound airLoopSound;
+		public Sound groundHitSound;
+        public Sound gunbarrelGunshotSound;
+		public Sound gunshotSound;
+		public Sound gunshotHitSound;
 
 		// why not include shaders here?
 
@@ -323,10 +324,10 @@ namespace Game
 			planeTexture = LoadTexture("plane_at_scale.png");
 			henchmanTexture = LoadTexture("enemy_basic.png");
 
-			air_loop_sound = LoadSound("sounds/air_loop.wav");
-			ground_hit_sound = LoadSound("sounds/ground_hit.wav");
-			gunshot_sound = LoadSound("sounds/pistol_shot.wav");
-			gunshot_hit_sound = LoadSound("sounds/gun_hit.wav");
+			airLoopSound = LoadSound("sounds/air_loop.wav");
+			groundHitSound = LoadSound("sounds/ground_hit.wav");
+			gunshotSound = LoadSound("sounds/pistol_shot.wav");
+			gunshotHitSound = LoadSound("sounds/gun_hit.wav");
 
 			gbShader = LoadShader("base.vs", "gunbarrel_transparent.fs");
 			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
@@ -376,7 +377,7 @@ namespace Game
 		GunbarrelDot nextDot;
 		float dotTimeout = 0.7f;
 		float dotSpeed = 350.0f;
-		float dotRad = 40.0f;
+		float dotRad = 40.0f; // 40
 
 		bool dotStopped = false;
 		float dotGrowthTimerMax = 0.5f;
@@ -421,6 +422,9 @@ namespace Game
         float interShotTimer = 0.0f;
         float interShotCooldown = 1.0f;
         float revealTimerInterp = 0.0f;
+
+        float rogerVelocityX = 0.0f;
+        float rogerAccelerationX = 0.0f;
         ParticleSystem[] ParticleSystems = null; // why not a list?
         
         int maxParticleSystems = 16;
@@ -509,7 +513,7 @@ namespace Game
 			// SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 			// SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			dotStopped = false;
-            dotRad = 40.0f;
+            dotRad = 80.0f;//40.0f;
 
             revealTimer = 0.0f;
             revealTimerMax = 0.7f;
@@ -549,13 +553,14 @@ namespace Game
 			rogerPosition = Vector2(circLoc.x, circLoc.y);
 			rogerDirection = Vector2(0.0f, 0.0f);
             persistentDirection = 0.0f;
+            rogerVelocityX = 0.0f;
 			dotStopped = false;
             circTimer = 0.0f;
             fasterCircTimer = 0.0f;
             dotGrowthTimer = 0.0f;
             dotGrowthTimerMax = 0.8f;
             dotCounter = 0;
-            dotRad = 40.0f;
+            dotRad = 80.0f;//40.0f;
             gunHolstered = true;
             turningDuration = 0.25f;
 
@@ -729,16 +734,16 @@ namespace Game
                 String holsterFrameText = scope  $"holster time is {holsteringTimer}";
                 DrawText(holsterFrameText, 10, 10, 12, Color.WHITE);
                 
-                turningTimer += (dt * turningSpeed);
+                turningTimer += (dt * turningSpeed*0.5f);
                 turningTimer = Math.Min(turningDuration, turningTimer);
                 rogerSpriteSheet.AnimLerp = turningTimer / turningDuration;
                 if (rogerDirection.x != 0.0f)
                 {
                     
-                    turningSpeed += (turningAcceleration*0.1f);
-                    turningSpeedLimit += turningAcceleration*50.0f;
+                    //turningSpeed += (turningAcceleration*0.1f);
+                    //turningSpeedLimit += turningAcceleration*50.0f;
                     //turningSpeedLimit = rogerSpeedBase;
-                    turningSpeedLimit = Math.Min(turningSpeedLimit, rogerSpeedBase);
+                    //turningSpeedLimit = Math.Min(turningSpeedLimit, rogerSpeedBase);
                 }
             }
             else
@@ -758,7 +763,9 @@ namespace Game
                 // or introduce momentum/velocity etc, and also speed up the animation accordingly
                 // if you're attempting to keep moving
             }
-			rogerPosition.x += rogerDirection.x * dt * rogerSpeed;
+            rogerVelocityX += rogerDirection.x * dt * rogerSpeed;
+            
+			rogerPosition.x += rogerVelocityX * dt ;
 
             
             
