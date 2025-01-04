@@ -762,8 +762,27 @@ namespace Game
                 rogerSpeed = turningSpeedLimit; // we should increase this limit over time
                 // or introduce momentum/velocity etc, and also speed up the animation accordingly
                 // if you're attempting to keep moving
+
+                
             }
-            rogerVelocityX += rogerDirection.x * dt * rogerSpeed;
+            
+            float forceX = rogerDirection.x * dt * rogerSpeed;
+            float rogerFrictionX = 0.0f;
+
+            if (rogerDirection.x == 0.0f && (rogerVelocityX * rogerVelocityX) > 10.0f)
+            {
+                rogerFrictionX = -1.0f*rogerVelocityX*3.0f*dt;
+                if ((rogerVelocityX * rogerVelocityX) < 15.0f)
+                {
+                    rogerVelocityX = 0.0f;
+                }
+            }
+            
+            
+            rogerVelocityX += (forceX + rogerFrictionX);
+            
+
+            
             
 			rogerPosition.x += rogerVelocityX * dt ;
 
