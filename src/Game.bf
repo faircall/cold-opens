@@ -787,8 +787,16 @@ namespace Game
 			rogerPosition.x += rogerVelocityX * dt ;
 
             
-            
-            rogerSpriteSheet.Update(dt*1.5f);
+            // rather than decreasing the frame time, we should just INCREASE the input time
+
+			float rogerAnimSpeedModifier = 1.0f;
+			float animSpeed = Math.Abs(rogerVelocityX);
+			float animMax = 10000.0f; // or whatever it is
+			animSpeed = Math.Min(animSpeed, animMax);
+			float animSpeedNormal = animSpeed / animMax;
+			float speedModifier = 2.0f;
+			
+            rogerSpriteSheet.Update(dt*rogerAnimSpeedModifier + speedModifier*animSpeedNormal);
             // else if (!rogerSpriteSheet.CurrentFrame = 4)
             // {
             //     TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
