@@ -904,7 +904,7 @@ namespace Game
 				BeginShaderMode(gameResources.gbShader);
 				SetShaderValue(gameResources.gbShader, gameResources.gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
                 
-				DrawTextureEx(gameResources.gunbarrelTexture, Vector2(-560.0f + rogerPosition.x, 200.0f), 0.0f, 10.0f, Color.WHITE);
+				DrawTextureEx(gameResources.gunbarrelTexture, Vector2((int)(-560.0f + rogerPosition.x), 200.0f), 0.0f, 10.0f, Color.WHITE);
 				EndShaderMode();
                 
                 // rather than a straight circle, what we actually want here is to draw
