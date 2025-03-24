@@ -721,7 +721,7 @@ namespace Game
                 
 				//TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
 			}
-            else if (rogerSpriteSheet.State == RogerAnimationState.WALKING ||
+            else if ((rogerSpriteSheet.State == RogerAnimationState.WALKING && rogerVelocityX == 0.0f) ||
                      (rogerSpriteSheet.State == RogerAnimationState.UNHOLSTERING && !holstering && holsteringTimer == 0.0f ||
                          rogerSpriteSheet.State == RogerAnimationState.TURNING && turningTimer >= turningDuration)
                 )
@@ -786,8 +786,12 @@ namespace Game
 			{
 				rogerVelocityX = Math.Sign(rogerVelocityX) * maxSpeed;
 			}
-            
+            float stopDelta = 1.0f;
+			if (Math.Abs(rogerVelocityX) < stopDelta)
+			{
 
+				rogerVelocityX = 0.0f;
+			}
             
             
 			rogerPosition.x += rogerVelocityX * dt ;
@@ -974,6 +978,9 @@ namespace Game
                     String currentFrameText = scope $"drawing default anim";                
                     DrawText(currentFrameText, 10, 10, 16, Color.RED);
                 }
+
+				String rogerCurrent = scope $"roger current pos is {rogerPosition.x} with velocity {rogerVelocityX}";
+				DrawText(rogerCurrent, 10,30,16, Color.RED);
 
                 
 
