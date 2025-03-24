@@ -786,10 +786,10 @@ namespace Game
 			{
 				rogerVelocityX = Math.Sign(rogerVelocityX) * maxSpeed;
 			}
-            float stopDelta = 1.0f;
-			if (Math.Abs(rogerVelocityX) < stopDelta)
+            float stopDelta = 20.0f;
+			if (Math.Abs(rogerVelocityX) < stopDelta && rogerDirection.x == 0.0f)
 			{
-
+				// we could actually use the animation frame to set the stop frame, so to speak, which might look better.
 				rogerVelocityX = 0.0f;
 			}
             
@@ -805,8 +805,22 @@ namespace Game
 			animSpeed = Math.Min(animSpeed, animMax);
 			float animSpeedNormal = animSpeed / animMax;
 			float speedModifier = 1.0f;
+			if (rogerSpriteSheet.State == RogerAnimationState.WALKING && rogerDirection.x == 0.0f)
+			{
+				// issue here is that we're sort of fixing 2 different states and one of them is velocity dependent
+				speedModifier = 2.2f;
+				rogerSpriteSheet.Update(dt*rogerAnimSpeedModifier*speedModifier);
+				// honestly a smarter thing to do here is to continue to play the animation until he ACTUALLY should stop,
+				// which would be a little animation driven but should work well.
+				// see above
+			}
+			else
+			{
+
+				rogerSpriteSheet.Update(dt*rogerAnimSpeedModifier + speedModifier*animSpeedNormal);
+			}
 			
-            rogerSpriteSheet.Update(dt*rogerAnimSpeedModifier + speedModifier*animSpeedNormal);
+            //rogerSpriteSheet.Update(dt*rogerAnimSpeedModifier + speedModifier*animSpeedNormal);
             // else if (!rogerSpriteSheet.CurrentFrame = 4)
             // {
             //     TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
