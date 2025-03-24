@@ -780,6 +780,12 @@ namespace Game
             
             
             rogerVelocityX += (forceX + rogerFrictionX);
+			float currentSpeed = Math.Abs(rogerVelocityX);
+			float maxSpeed = 100.0f;
+			if (currentSpeed > maxSpeed)
+			{
+				rogerVelocityX = Math.Sign(rogerVelocityX) * maxSpeed;
+			}
             
 
             
@@ -794,7 +800,7 @@ namespace Game
 			float animMax = 10000.0f; // or whatever it is
 			animSpeed = Math.Min(animSpeed, animMax);
 			float animSpeedNormal = animSpeed / animMax;
-			float speedModifier = 2.0f;
+			float speedModifier = 1.0f;
 			
             rogerSpriteSheet.Update(dt*rogerAnimSpeedModifier + speedModifier*animSpeedNormal);
             // else if (!rogerSpriteSheet.CurrentFrame = 4)
