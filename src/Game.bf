@@ -134,7 +134,7 @@ namespace Game
         int32 SectionEnd = 0;
 
         int32 WalkingFrameStart = 1;
-        int32 WalkingFrameEnd = 17;
+        public int32 WalkingFrameEnd = 17;
 
         int32 TurningFrameStart = 25;
         int32 TurningFrameEnd = 28;
@@ -756,7 +756,7 @@ namespace Game
                 rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
             }
 
-            float rogerSpeed = rogerSpeedBase;
+            float rogerSpeed = 360.0f;//rogerSpeedBase;
             if (rogerSpriteSheet.State == RogerAnimationState.TURNING)
             {
                 rogerSpeed = turningSpeedLimit; // we should increase this limit over time
@@ -769,10 +769,11 @@ namespace Game
             float forceX = rogerDirection.x * dt * rogerSpeed;
             float rogerFrictionX = 0.0f;
 
+
             if (rogerDirection.x == 0.0f && (rogerVelocityX * rogerVelocityX) > 10.0f)
             {
                 rogerFrictionX = -1.0f*rogerVelocityX*3.0f*dt;
-                if ((rogerVelocityX * rogerVelocityX) < 15.0f)
+                if ((rogerVelocityX * rogerVelocityX) < 15.0f && (rogerSpriteSheet.CurrentFrameSection == rogerSpriteSheet.WalkingFrameEnd-1))
                 {
                     rogerVelocityX = 0.0f;
                 }
@@ -997,6 +998,8 @@ namespace Game
 				DrawText(rogerCurrent, 10,30,16, Color.RED);
 
                 
+				String currentFrameText = scope $"current frame is {rogerSpriteSheet.CurrentFrameSection} against {rogerSpriteSheet.WalkingFrameEnd}";
+				DrawText(currentFrameText, 10, 60, 14, Color.RED);
 
                 // String animFrameText = scope  $"anim frame is {rogerSpriteSheet.CurrentFrame}";
             
