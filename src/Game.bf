@@ -423,6 +423,9 @@ namespace Game
         float interShotCooldown = 1.0f;
         float revealTimerInterp = 0.0f;
 
+		int enemyHealth = 100;
+		float enemyDeathTimer = 0.0f;
+
         float rogerVelocityX = 0.0f;
         float rogerAccelerationX = 0.0f;
         ParticleSystem[] ParticleSystems = null; // why not a list?
@@ -670,8 +673,16 @@ namespace Game
                 // need to add an ability to  delay in
                 AddParticleSystem(smokePos, 1, 25, 0.125f, 0.25f, 1.0f, 1.0f, 100, Color(255,74,0,255), Color(255,180,0,50), 0.0f);
                 AddParticleSystem(smokePos, 1, 50, 0.25f, 0.25f, 25.0f, 1.0f, 100, Color(50,50,50,200), Color(150,150,150,0), 0.1f);
+
+				enemyHealth -= 100; // or whatever
                 // = false;
             }
+
+			if (enemyHealth <= 0)
+			{
+
+				enemyDeathTimer += dt;
+			}
 
 
             // else if (rogerSpriteSheet.State == RogerAnimationState.SHOOTING)
@@ -1000,6 +1011,12 @@ namespace Game
                 
 				String currentFrameText = scope $"current frame is {rogerSpriteSheet.CurrentFrameSection} against {rogerSpriteSheet.WalkingFrameEnd}";
 				DrawText(currentFrameText, 10, 60, 14, Color.RED);
+
+				Color bloodScreenColor = Color(200,0,0,90);
+				float screenDuration = 4.0f;
+				float lerpedBloodScreen = Math.Min((enemyDeathTimer / screenDuration), 1.0f);
+				int32 bloodScreenHeight = (int32)(lerpedBloodScreen * GetScreenHeight());
+				DrawRectangle(0, 0, (int32)screenWidth, bloodScreenHeight, bloodScreenColor);
 
                 // String animFrameText = scope  $"anim frame is {rogerSpriteSheet.CurrentFrame}";
             
