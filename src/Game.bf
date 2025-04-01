@@ -256,6 +256,8 @@ namespace Game
 		public Texture2D rogerLowerLegTexture;
 		public Texture2D planeTexture;
 
+		public RenderTexture2D renderTarget;
+
 		public Texture2D henchmanTexture;
 
 		public Sound airLoopSound;
@@ -269,6 +271,7 @@ namespace Game
 		public Shader gbShader;
         public Shader gbBackgroundShader;
 		public Shader slShader;
+		public Shader bloodShader;
 
         
 		public int32 gbTexLoc;
@@ -283,6 +286,10 @@ namespace Game
 
 		public int32 slTimerLoc;
 		public int32 slCircLoc;
+
+		public int screenWidth = 1280;
+		public int screenHeight = 720;
+
         
 
 
@@ -294,10 +301,10 @@ namespace Game
 		// SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 		// SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 
-		public this()
+		public this(int screenWidth, int screenHeight)
 		{
 
-            Reload();
+            Reload(screenWidth, screenHeight);
 			
 		}
 
@@ -305,8 +312,10 @@ namespace Game
 		{
 		}
 
-        public void Reload()
+        public void Reload(int _screenWidth, int _screenHeight)
         {
+			screenWidth = _screenWidth;
+			screenHeight = _screenHeight;
             gunbarrelBGTexture = LoadTexture("gunbarrel.png");
 			gunbarrelTexture = LoadTexture("better_gunbarrel.png");
 			rogerTexture = LoadTexture("adjusted_roger_resized.png");
@@ -333,6 +342,8 @@ namespace Game
 			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
 
             gbBackgroundShader = LoadShader("base.vs", "gunbarrel.fs");
+
+			bloodShader = LoadShader("base.vs", "bloodScreen.fs");
 			
             
 			gbTexLoc = GetShaderLocation(gbShader, "tex");
@@ -346,9 +357,13 @@ namespace Game
 
 			slTimerLoc = GetShaderLocation(slShader, "timer");
 			slCircLoc = GetShaderLocation(slShader, "circCent");
+			
             SetShaderValueTexture(gbBackgroundShader, gbBackgroundTexLoc, gunbarrelBGTexture);
 			SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
 			SetShaderValueTexture(slShader, slTexLoc, rogerTexture);
+
+			renderTarget = LoadRenderTexture((int32)screenWidth, (int32)screenHeight);
+
 
         }
 
@@ -908,14 +923,15 @@ namespace Game
 			}
             if (IsKeyPressed(KeyboardKey.KEY_F10))
 			{
-                gameResources.Reload();
+                gameResources.Reload(gameResources.screenWidth, gameResources.screenHeight);
 			}
 
-            BeginDrawing();
-            ClearBackground(.(0,0,0,255));
+           
             
             if (!dotStopped)
             {
+				BeginDrawing();
+				ClearBackground(.(0,0,0,255));
                 for (var dot in m_Dots)
                 {
                     //DrawCircle((int32)dot.Position.x, (int32)dot.Position.y, dotRad, Color.WHITE);
@@ -924,6 +940,7 @@ namespace Game
                         DrawCircle((int32)dot.Position.x, (int32)dot.Position.y, dotRad, Color.WHITE);
                     }
                 }
+				
             }
 
 			if (dotStopped)
@@ -932,6 +949,8 @@ namespace Game
                 // either we figure  out how to do 2 shaders at once
                 // or we switch out one large texture for the split version
                 fasterCircTimer = circTimer;
+				BeginTextureMode(gameResources.renderTarget);
+
                 SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
                 BeginShaderMode(gameResources.gbBackgroundShader);                
                 DrawTextureEx(gameResources.gunbarrelBGTexture, Vector2(0.0f, 0.0f), 0.0f, 10.0f, Color.WHITE);
@@ -988,6 +1007,7 @@ namespace Game
 					TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 				}
                 EndShaderMode();
+				EndTextureMode();
 
                 if (debugText == 0)
                 {
@@ -1016,7 +1036,16 @@ namespace Game
 				float screenDuration = 4.0f;
 				float lerpedBloodScreen = Math.Min((enemyDeathTimer / screenDuration), 1.0f);
 				int32 bloodScreenHeight = (int32)(lerpedBloodScreen * GetScreenHeight());
-				DrawRectangle(0, 0, (int32)screenWidth, bloodScreenHeight, bloodScreenColor);
+				BeginDrawing();
+				ClearBackground(.(0,0,0,255));
+				BeginShaderMode(gameResources.bloodShader);
+				DrawTextureRec(gameResources.renderTarget.texture, Rectangle(0.0f, 0.0f, gameResources.screenWidth, -1.0f*gameResources.screenHeight), Vector2(0.0f, 0.0f), Color(255,255,255,255));
+				EndShaderMode();
+				
+				//DrawRectangle(0, 0, (int32)screenWidth, bloodScreenHeight, bloodScreenColor);
+				// there's a simple way to achieve the effect I'm after using an animated sprite
+				// and then making it transparent. Should I just use that?
+				// the 'hard' way is to do it via a shader
 
                 // String animFrameText = scope  $"anim frame is {rogerSpriteSheet.CurrentFrame}";
             
@@ -1036,7 +1065,8 @@ namespace Game
                 }
                 
             }
-            EndDrawing();
+			EndDrawing();
+            
 		}
 
 	}

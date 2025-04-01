@@ -5,6 +5,8 @@ in vec2 texCoord;
 in vec4 fragColor;
 
 uniform float timer;
+uniform float deathTimer;
+uniform int deathFlag;
 uniform vec2 circCent;
 uniform sampler2D tex;
 
@@ -21,8 +23,6 @@ void main()
     if (distance(texCoord, circCentNorm) < timer) {
         fragOut = texture(tex, texCoord);
     } else {
-        fragOut = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    }
-    
-    
+        fragOut = vec4(1.0f, 1.0f, 1.0f, 1.0f);	  
+    }        
 }

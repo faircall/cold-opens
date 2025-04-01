@@ -811,7 +811,9 @@ namespace ColdOpen
 			
 			ProjectileManager projectileManager = new ProjectileManager(maxBullets);
 			AudioManager audioManager = new AudioManager();
-			GameResources gameResources = new GameResources();
+			// is it wise to pass the screen dimensions to the game resources?
+			// I think so since the shaders and stuff wanna know about that stuff
+			GameResources gameResources = new GameResources(screenWidth, screenHeight);
 			
 
 			// Rectangle cloudRect = Rectangle(0, 0, cloudTexture.width, cloudTexture.height);
