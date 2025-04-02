@@ -19,9 +19,9 @@ void main()
     vec4 sourceColor = texture(tex, texCoord);
     float xCoord = texCoord.x;
     float yCoord = 1.0 - texCoord.y;
-    float sinVal = 0.5 + 0.5*sin(xCoord*deathTimer*30.0); // 0
+    float sinVal = deathTimer*0.5*sin(xCoord*yCoord*deathTimer*20.0) + 0.5*sin(xCoord*deathTimer*30.0); // 0
     float sinScaled = 0.10 * sinVal;
-    if (deathTimer <= 0.00001)
+    if (deathTimer <= 0.00000000001)
     {
 	sinScaled = 0.0;
     }

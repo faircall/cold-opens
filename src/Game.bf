@@ -1036,7 +1036,7 @@ namespace Game
 
 				Color bloodScreenColor = Color(200,0,0,90);
 				float screenDuration = 4.0f;
-				float lerpedBloodScreen = Math.Min((enemyDeathTimer / screenDuration), 1.0f);
+				float lerpedBloodScreen = Math.Min((enemyDeathTimer / screenDuration), 2.0f);
 				int32 bloodScreenHeight = (int32)(lerpedBloodScreen * GetScreenHeight());
 				BeginDrawing();
 				ClearBackground(.(0,0,0,255));
