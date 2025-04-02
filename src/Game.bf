@@ -286,6 +286,7 @@ namespace Game
 
 		public int32 slTimerLoc;
 		public int32 slCircLoc;
+		public int32 deathTimerLoc;
 
 		public int screenWidth = 1280;
 		public int screenHeight = 720;
@@ -357,6 +358,7 @@ namespace Game
 
 			slTimerLoc = GetShaderLocation(slShader, "timer");
 			slCircLoc = GetShaderLocation(slShader, "circCent");
+			deathTimerLoc = GetShaderLocation(bloodShader, "deathTimer");
 			
             SetShaderValueTexture(gbBackgroundShader, gbBackgroundTexLoc, gunbarrelBGTexture);
 			SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
@@ -1039,6 +1041,7 @@ namespace Game
 				BeginDrawing();
 				ClearBackground(.(0,0,0,255));
 				BeginShaderMode(gameResources.bloodShader);
+				SetShaderValue(gameResources.bloodShader, gameResources.deathTimerLoc, (void*)&lerpedBloodScreen, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 				DrawTextureRec(gameResources.renderTarget.texture, Rectangle(0.0f, 0.0f, gameResources.screenWidth, -1.0f*gameResources.screenHeight), Vector2(0.0f, 0.0f), Color(255,255,255,255));
 				EndShaderMode();
 				

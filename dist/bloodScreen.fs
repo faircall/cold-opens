@@ -4,10 +4,8 @@ in vec2 texCoord;
 
 in vec4 fragColor;
 
-uniform float timer;
 uniform float deathTimer;
-uniform int deathFlag;
-uniform vec2 circCent;
+
 uniform sampler2D tex;
 
 out vec4 fragOut;
@@ -19,6 +17,20 @@ float screenHeight = 720.0f;
 void main()
 {
     vec4 sourceColor = texture(tex, texCoord);
-    sourceColor.r = 1.0f;
+    float xCoord = texCoord.x;
+    float yCoord = 1.0 - texCoord.y;
+    float sinVal = 0.5 + 0.5*sin(xCoord*deathTimer*30.0); // 0
+    float sinScaled = 0.10 * sinVal;
+    if (deathTimer <= 0.00001)
+    {
+	sinScaled = 0.0;
+    }
+    float yValToTest =  sinScaled + deathTimer;
+    
+    if (yCoord < yValToTest)
+    {
+	sourceColor.r = 1.0f;
+    }
+    
     fragOut = sourceColor;
 }
