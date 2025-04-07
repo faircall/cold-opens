@@ -393,7 +393,7 @@ namespace Game
 		GunbarrelDot dotStart;
 		GunbarrelDot nextDot;
 		float dotTimeout = 0.7f;
-		float dotSpeed = 350.0f;
+		float dotSpeed = 400.0f;
 		float dotRad = 40.0f; // 40
 
 		bool dotStopped = false;
@@ -423,18 +423,18 @@ namespace Game
         bool fired = false;
 
         float turningAcceleration = 0.025f;
-        float turningSpeed = 1.0f;
+        float turningSpeed = 3.0f;
         float turningTimer = 0.0f;
-        float turningDuration = 0.25f;
+        float turningDuration = 0.125f;
         float turningSpeedLimit = 0.0f;
 
-        float rogerSpeedBase = 120.0f;
+        float rogerSpeedBase = 1000.0f;
 
         float firingTimer = 0.0f;
         float aimingTimer = 0.0f;
         float aimToFireDuration = 0.5f;
         float holsteringTimer = 0.0f;
-        float holsteringDuration = 0.5f;
+        float holsteringDuration = 0.35f;
         float timeBetweenShots = 0.1f;
         float interShotTimer = 0.0f;
         float interShotCooldown = 1.0f;
@@ -582,7 +582,7 @@ namespace Game
             dotCounter = 0;
             dotRad = 80.0f;//40.0f;
             gunHolstered = true;
-            turningDuration = 0.25f;
+            turningDuration = 0.125f;
 
             rogerSpriteSheet.Reset();
 
@@ -784,7 +784,7 @@ namespace Game
                 rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
             }
 
-            float rogerSpeed = 360.0f;//rogerSpeedBase;
+            float rogerSpeed = 1000.0f;//rogerSpeedBase;
             if (rogerSpriteSheet.State == RogerAnimationState.TURNING)
             {
                 rogerSpeed = turningSpeedLimit; // we should increase this limit over time
@@ -810,7 +810,7 @@ namespace Game
             
             rogerVelocityX += (forceX + rogerFrictionX);
 			float currentSpeed = Math.Abs(rogerVelocityX);
-			float maxSpeed = 100.0f;
+			float maxSpeed = 200.0f;
 			if (currentSpeed > maxSpeed)
 			{
 				rogerVelocityX = Math.Sign(rogerVelocityX) * maxSpeed;
@@ -830,7 +830,7 @@ namespace Game
 
 			float rogerAnimSpeedModifier = 1.0f;
 			float animSpeed = Math.Abs(rogerVelocityX);
-			float animMax = 10000.0f; // or whatever it is
+			float animMax = 15000.0f; // or whatever it is
 			animSpeed = Math.Min(animSpeed, animMax);
 			float animSpeedNormal = animSpeed / animMax;
 			float speedModifier = 1.0f;
@@ -1035,8 +1035,8 @@ namespace Game
 				DrawText(currentFrameText, 10, 60, 14, Color.RED);
 
 				Color bloodScreenColor = Color(200,0,0,90);
-				float screenDuration = 4.0f;
-				float lerpedBloodScreen = Math.Min((enemyDeathTimer / screenDuration), 2.0f);
+				float screenDuration = 8.0f;
+				float lerpedBloodScreen = Math.Min((enemyDeathTimer / (screenDuration/2.0f)), 2.0f);
 				int32 bloodScreenHeight = (int32)(lerpedBloodScreen * GetScreenHeight());
 				BeginDrawing();
 				ClearBackground(.(0,0,0,255));
