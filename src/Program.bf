@@ -1009,7 +1009,7 @@ namespace ColdOpen
 					// 	{
 					// 		PlaySound(air_loop_sound);		
 					// 	}
-					// 	skydivingState = UpdateSkydivingScene(ref clouds, rogerInPlane, henchman, dt, gameCamera, projectileManager, audioManager, groundStart);
+					//skydivingState = UpdateSkydivingScene(ref clouds, rogerInPlane, henchman, dt, gameCamera, projectileManager, audioManager, groundStart);
 
 					// 	// do audio stuff
 					// 	if (audioManager.SoundsToPlay.Count > 0) {

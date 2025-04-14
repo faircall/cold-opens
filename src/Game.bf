@@ -1074,127 +1074,6 @@ namespace Game
 
 	}
 
-	// class SkeletalEditor
-	// {
-
-	// 	public void Update() {
-
-	// 	       Vector2 toAdd = Vector2(0.0f, 0.0f);
-
-	// 		if (IsKeyPressed(KeyboardKey.KEY_F1))
-	// 		{
-	// 			skeletalEditorState--;
-	// 			skeletalEditorState = Math.Max(0, skeletalEditorState);
-	// 		}
-	// 		if (IsKeyPressed(KeyboardKey.KEY_F2))
-	// 		{
-	// 			skeletalEditorState++;
-	// 			skeletalEditorState = Math.Min(skeletalEditorState, SkeletalEditorState.NUM_STATES-1);
-	// 		}
-	// 		if (IsKeyPressed(KeyboardKey.KEY_F5))
-	// 		{
-	// 			needSave = true;
-	// 		}
-	// 		if (IsKeyPressed(KeyboardKey.KEY_F6))
-	// 		{
-	// 			needLoad = true;
-	// 		}
-	// 		if (IsKeyDown(KeyboardKey.KEY_LEFT))
-	// 		{
-	// 			toAdd.x = -1.0f;
-	// 		}
-	// 		if (IsKeyDown(KeyboardKey.KEY_RIGHT))
-	// 		{
-	// 			toAdd.x = 1.0f;
-	// 		}
-	// 		if (IsKeyDown(KeyboardKey.KEY_UP))
-	// 		{
-	// 			toAdd.y = -1.0f;
-	// 		}
-	// 		if (IsKeyDown(KeyboardKey.KEY_DOWN))
-	// 		{
-	// 			toAdd.y = 1.0f;
-	// 		}
-	// 		toAdd = Matrix2.Vector2Scale(toAdd, dt * 40.0f);
-	// 		switch (skeletalEditorState)
-	// 		{
-	// 		case SkeletalEditorState.WHOLE_BODY:
-	// 			rogerPosition = Matrix2.Vector2Add(rogerPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.HEAD:
-	// 			rogerHeadPosition = Matrix2.Vector2Add(rogerHeadPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.TORSO:
-	// 			rogerTorsoPosition = Matrix2.Vector2Add(rogerTorsoPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.UPPER_ARM:
-	// 			rogerUpperArmPosition = Matrix2.Vector2Add(rogerUpperArmPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.LOWER_ARM:
-	// 			rogerLowerArmPosition = Matrix2.Vector2Add(rogerLowerArmPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.UPPER_LEG:
-	// 			rogerUpperLegPosition = Matrix2.Vector2Add(rogerUpperLegPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.LOWER_LEG:
-	// 			rogerLowerLegPosition = Matrix2.Vector2Add(rogerLowerLegPosition, toAdd);
-	// 			break;
-	// 		default:
-	// 			break;
-	// 		}
-	// 		if (needSave)
-	// 		{
-	// 			System.IO.BufferedFileStream bufferedStream = new System.IO.BufferedFileStream();
-	// 			bufferedStream.Create("skeleton.bin");
-	// 			Skeleton skeleton = new Skeleton();
-	// 			skeleton.Head = rogerHeadPosition;
-	// 			skeleton.Torso = rogerTorsoPosition;
-	// 			skeleton.UpperArm = rogerUpperArmPosition;
-	// 			skeleton.LowerArm = rogerLowerArmPosition;
-	// 			skeleton.UpperLeg = rogerUpperLegPosition;
-	// 			skeleton.LowerLeg = rogerLowerLegPosition;
-
-	// 			bufferedStream.Write(skeleton.Head);
-	// 			bufferedStream.Write(skeleton.Torso);
-	// 			bufferedStream.Write(skeleton.UpperArm);
-	// 			bufferedStream.Write(skeleton.LowerArm);
-	// 			bufferedStream.Write(skeleton.UpperLeg);
-	// 			bufferedStream.Write(skeleton.LowerLeg);
-	// 			bufferedStream.Close();
-	// 			delete skeleton;
-	// 			delete bufferedStream;
-	// 			needSave = false;
-	// 		}
-
-	// 		if (needLoad)
-	// 		{
-	// 			System.IO.BufferedFileStream bufferedStream = new System.IO.BufferedFileStream();
-	// 			bufferedStream.Open("skeleton.bin");
-	// 			Skeleton skeleton = new Skeleton();
-
-
-	// 			skeleton.Head = bufferedStream.Read<Vector2>();
-	// 			skeleton.Torso = bufferedStream.Read<Vector2>();
-	// 			skeleton.UpperArm = bufferedStream.Read<Vector2>();
-
-	// 			skeleton.LowerArm = bufferedStream.Read<Vector2>();
-	// 			skeleton.UpperLeg = bufferedStream.Read<Vector2>();
-	// 			skeleton.LowerLeg = bufferedStream.Read<Vector2>();
-
-	// 			bufferedStream.Close();
-
-	// 			rogerHeadPosition = skeleton.Head ;
-	// 			rogerTorsoPosition = skeleton.Torso;
-	// 			rogerUpperArmPosition = skeleton.UpperArm;
-	// 			rogerLowerArmPosition = skeleton.LowerArm;
-	// 			rogerUpperLegPosition = skeleton.UpperLeg;
-	// 			rogerLowerLegPosition = skeleton.LowerLeg;
-	// 			delete skeleton;
-	// 			delete bufferedStream;
-	// 			needLoad = false;
-	// 		}
-	// 	}
-	// }
 
 	class SkyScene
 	{
@@ -1259,5 +1138,291 @@ namespace Game
 
 
 
-	
+	class SkydivingScene
+	{
+
+		Vector2[] clouds;
+		Person roger;
+		Person henchman;
+		float dt;
+		GameCamera camera;
+		ProjectileManager projectileManager;
+		AudioManager audioManager;
+		float groundStart;
+
+
+		public this(int maxClouds, int maxBullets)
+		{
+			InitScene(maxClouds, maxBullets);
+		}
+
+		public ~this()
+		{
+
+		}
+
+		public void InitScene(int maxClouds, int maxBullets)
+		{
+			clouds = new Vector2[maxClouds];
+			projectileManager = new ProjectileManager(maxBullets);
+			roger = new Person(Vector2(100.0f, 400.0f), 100);
+			henchman = new Person(Vector2(30.0f, 30.0f), 50);
+			groundStart = 50000.0f;
+			audioManager = new AudioManager();
+		}
+
+
+		public int Update()
+		{
+			// have weapons fall from the sky that you can pick up?
+			// or at least, have weapons able to be knocked out of people's hands mid air
+			// and you can 'catch'/regather them. yeah, love that idea
+			int switchScene = 0;
+			//float groundStart = 5000.0f;
+
+			for (int i = 0; i < clouds.Count; i++)
+			{
+				Vector2 cloudPos = clouds[i];
+				
+				if (cloudPos.y <= roger.Position.y - camera.ScreenHeight)
+				{
+					cloudPos.y = roger.Position.y + camera.ScreenHeight;
+					cloudPos.x = (float)GetRandomValue(int32(roger.Position.x - camera.ScreenWidth), int32(roger.Position.x + camera.ScreenWidth));
+				}
+				clouds[i] = cloudPos;
+			}
+			float terminalVelocity = 1000.0f; // what was I thinking here?
+			roger.Direction.x = 0.0f;
+			roger.Direction.y = 0.0f;
+			float rogerSpeedAir = 500.0f;
+
+			float enemySpeedAir = 1000.0f;
+
+			if (henchman.TimerStarted)
+			{
+				henchman.DeathTimer += dt;
+			}
+
+			if (henchman.Position.y < groundStart)
+			{
+				henchman.Velocity.y = (enemySpeedAir * dt);
+				*henchman.Position += *henchman.Velocity;
+			}
+			else if (henchman.Health > 0)
+			{
+				henchman.Health = 0;
+				if (!henchman.TimerStarted)
+				{
+					henchman.TimerStarted = true;
+					henchman.AddParticleSystem(5, 50, 3.0f, 0.4f);
+					audioManager.SoundsToPlay.Add("splat");
+				}
+			}
+			
+
+
+			
+
+
+			// enemy choose direction
+
+			//rogerAirRotation = 0.0f;
+			if (IsKeyDown(KeyboardKey.KEY_A))
+			{
+				roger.Direction.x = -1.0f;
+				//rogerAirRotation = -45.0f;
+			}
+			if (IsKeyDown(KeyboardKey.KEY_D))
+			{
+				roger.Direction.x = 1.0f;
+				//rogerAirRotation = 45.0f;
+			}
+
+			if (IsKeyDown(KeyboardKey.KEY_W))
+			{
+				//rogerSpeedAir = 500.0f;
+				roger.Direction.y = -1.0f;
+			}
+			if (IsKeyDown(KeyboardKey.KEY_S))
+			{
+				roger.Direction.y = 1.0f;
+			}
+
+			if (IsKeyDown(KeyboardKey.KEY_LEFT_SHIFT) && roger.Direction.x != 0.0f)
+			{
+				roger.IsRolling = true;
+			}
+			else
+			{
+				roger.IsRolling = false;
+			}
+
+			roger.IsShooting = false;
+			if (IsKeyPressed(KeyboardKey.KEY_SPACE))
+			{
+				roger.IsShooting = true;
+				audioManager.SoundsToPlay.Add("pistol_shot");
+			}
+
+			
+
+			Matrix2.Vector2Normalize(ref *roger.Direction, 0.001f);
+			if (roger.IsShooting)
+			{
+				// apply an impluse to the wrists that hold the gun
+				// the wrists have a homeostatic thing where they want to return to a netural orientation
+				// also spawn a projectile into the projectile manager
+				DrawText("bang!", 10, 40, 16, Color.RED);
+				// instead make a vector fr
+				
+				Vector2 spawnVel =  Matrix2.Vector2Scale(Vector2(Math.Cos(Trig.DegToRad((int)roger.AirRotation % 360)), Math.Sin(Trig.DegToRad((int)roger.AirRotation % 360))), -3000.0f);
+				Vector2 spawnDirection = Matrix2.Vector2Normalized(spawnVel,0.001f);
+				Vector2 spawnPos = *roger.Position + Matrix2.Vector2Scale(spawnDirection, 100.0f);
+				// draw something at the spawn position to figure out why it's behaving weird
+				//DrawCircle((int32)(spawnPos.x - camera.Position.x), (int32)(spawnPos.y - camera.Position.y), 5.0f, Color.GOLD);
+				projectileManager.AddProjectile(spawnPos, spawnVel, 50, 50.0f);
+			}
+			float rotationSpeed = 75.0f;
+			// this hsould have some acceleration to it too
+			
+			float rogerAirMotion = Math.Sin(Trig.DegToRad((int)roger.AirRotation % 360));
+			float rogerAirMotionUp = Math.Cos(Trig.DegToRad((int)roger.AirRotation % 360));
+			String airMotionText = scope $"AirMotion = {rogerAirMotion}";
+			String airRotationText = scope $"From air rotation = {roger.AirRotation}";
+			DrawText(airMotionText, 10, 10, 16, Color.RED);
+			DrawText(airRotationText, 10, 20, 16, Color.RED);	
+			
+
+			// need to apply some friction
+			Vector2 rogerFriction = Matrix2.Vector2Scale(*roger.Velocity, -0.8f);
+			//float armPerSecond = 10.0f;
+			//armOscilator += dt;
+			//armAngleToOscilate = Math.Sin(armOscilator*2*Math.PI_f / armPerSecond) * 10.0f;
+			float armAngleToOscilate = 5.0f;
+
+			
+			
+			if (roger.TimerStarted)
+			{
+				roger.DeathTimer += dt;
+			}
+			// (TODO) : use force vectors
+			if (roger.Position.y < groundStart) // i.e we are in the air
+				// there is such thing as terminal velocity
+				// the maximum speed attainable in the air
+			{
+				roger.Position.y += terminalVelocity * dt; // this is our base falling rate
+				if (!roger.IsRolling)
+				{
+					roger.AirRotation += roger.Direction.x * dt * rotationSpeed;
+					roger.Velocity.x += rogerAirMotion * dt * rogerSpeedAir;
+					// this shouldn't be active when he's on the ground
+					//roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
+
+					//roger.Velocity.y += (10.0f * dt * rogerAirMotionUp);
+
+					roger.Velocity.x += rogerFriction.x*dt;
+					//roger.Velocity.y += rogerFriction.y*dt;
+					roger.Position.x += (roger.Velocity.x) * dt;
+					roger.Position.y += (roger.Velocity.y) * dt;
+					//roger.Position.y += terminalVelocity * dt;
+				}
+				else
+				{
+					roger.AirRotation += roger.Direction.x * dt * rotationSpeed * 10.0f;
+					//roger.Velocity.x += rogerAirMotion * dt * rogerSpeedAir;
+					// this shouldn't be active when he's on the ground
+					roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
+
+					roger.Velocity.y += (10.0f * dt * rogerAirMotionUp);
+
+					roger.Velocity.x += rogerFriction.x*dt;
+					roger.Velocity.y += rogerFriction.y*dt;
+					roger.Position.x += (roger.Velocity.x) * dt;
+					roger.Position.y += (roger.Velocity.y) * dt;
+					//roger.Position.y += terminalVelocity * dt;
+				}
+				
+			}
+			else if (roger.Health > 0)
+			{
+				roger.Health = 0;
+				if (!roger.TimerStarted)
+				{
+					roger.TimerStarted = true;
+					// and spawn particles
+					roger.AddParticleSystem(10, 50, 3.0f, 0.2f);
+					audioManager.SoundsToPlay.Add("splat");
+				}
+			}
+
+			
+
+			/*// come back to this later once more of the game is done
+			(*roger.BaseSkeleton).Torso = *roger.Position;
+			// this will need work to take into account the rotation
+			CenterSkeleton(roger.BaseSkeleton, roger.OffsetSkeleton, roger.AirRotation);
+			RotateLowerArm(roger.BaseSkeleton, roger.AirRotation, armAngleToOscilate);
+			RotateUpperArm(roger.BaseSkeleton, roger.AirRotation, armAngleToOscilate);
+			RotateLowerLeg(roger.BaseSkeleton, roger.AirRotation, armAngleToOscilate);
+			//CenterSkeletonAdditional(&baseSkeleton, offsetSkeleton, rogerAirRotation, armAngleToOscilate);*/
+
+
+			
+
+			float cameraSpeed = Math.Min(Math.Abs(roger.Position.x - camera.Position.x), terminalVelocity);
+			// would it be better to have a velocity for the camera?
+			float rogerSpeed = roger.Velocity.Length();
+			// maybe we need to CENTER him
+			// might explain why it's less of an issue
+
+			// camera code needs redoing
+
+			// the issue I think is that he's moving faster than the camera
+			// just have a unified system here where the camera has a velocity
+			// and will adjust dynamically, including jumping (?) if totally out of bounds
+			// for sufficient time
+			if (roger.Position.x < (camera.Position.x + 300.0f))
+			{
+				// do we actually want abs?
+				cameraSpeed = roger.Position.x - (camera.Position.x + 300.0f);
+				camera.Position.x += (cameraSpeed * dt);
+			} 
+			else if (roger.Position.x >= (camera.Position.x + camera.ScreenWidth - 400.0f))
+			{
+				cameraSpeed = Math.Min(Math.Abs(roger.Position.x - (camera.Position.x + camera.ScreenWidth - 400.0f)), terminalVelocity);
+				camera.Position.x += cameraSpeed * dt;
+			}
+			//cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 100.0f));
+			if (roger.Position.y < (camera.Position.y + 100.0f))
+			{
+				cameraSpeed = Math.Min(Math.Abs(roger.Position.y - (camera.Position.y + 100.0f)), terminalVelocity);
+				String camSpeedString = scope $"roger behind camera, setting to {cameraSpeed}";
+				//DrawText(camSpeedString, 10, 10, 10, Color.GOLD);
+				camera.Position.y -= cameraSpeed*dt;
+			} 
+			else if (roger.Position.y > (camera.Position.y + 3.0f*camera.ScreenHeight/4.0f ))
+			{
+				cameraSpeed = Math.Max(Math.Abs(roger.Position.y - (camera.Position.y + 3.0f*camera.ScreenHeight/4.0f )), terminalVelocity);
+				String camSpeedString = scope $"roger ahead camera, setting to {cameraSpeed}";
+				DrawText(camSpeedString, 10, 10, 10, Color.GOLD);
+				camera.Position.y +=  cameraSpeed*dt;//(rogerSpeed + terminalVelocity)* dt;
+			}
+
+			projectileManager.UpdateProjectiles(dt, henchman, audioManager.SoundsToPlay);
+
+			if (henchman.Health <= 0 && !henchman.TimerStarted)
+			{
+				henchman.TimerStarted = true;
+				henchman.AddParticleSystem(5, 50, 3.0f, 0.4f);
+			}
+			
+
+			
+
+			return switchScene;
+
+
+		}
+	}
 }
