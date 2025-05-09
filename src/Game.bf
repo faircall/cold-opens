@@ -458,7 +458,7 @@ namespace Game
 
 		public void Render(GameResources gameResources)
 		{
-
+			BeginDrawing();
 			ClearBackground(.(50, 120, 250, 255));
 			float planeLoc = 5.0f;
 			Color slightlyTransparent = Color(255, 255, 255, 180);
@@ -485,6 +485,7 @@ namespace Game
 					//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
 				}
 			}
+			EndDrawing();
 		}
 
 	}
@@ -1003,16 +1004,15 @@ namespace Game
 
                 // I think we want to start incrementing our reveal timer later than the other one
                 // since the texure is smaller
-
+				
                 if (revealTimer < revealTimerMax)
                 {
-                    revealTimer += dt;
+					revealTimer += dt;
                     revealTimerInterp = Math.Min(revealTimer / revealTimerMax, 1.0f);
-                }
+                } 
 
-				if (revealTimer >= revealTimerFinish)
+				if (enemyDeathTimer >= 5.0f)
 				{
-
 					result = GameState.PLANE_SCREEN;
 				}
                 

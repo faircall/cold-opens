@@ -992,10 +992,10 @@ namespace ColdOpen
 						break;
 					case (GameState.PLANE_SCREEN):
 						bool switchScene = planeScene.Update(dt, (float)screenWidth);
-						if (switchScene)
-						{
-							gGameState = GameState.PLANE_INTERIOR_SCREEN;
-						}
+						//if (switchScene)
+						//{
+							//gGameState = GameState.PLANE_INTERIOR_SCREEN;
+						//}
 						break;
 					 //case (GameState.PLANE_INTERIOR_SCREEN):
 					 //	int planeInteriorState = UpdatePlaneInteriorScene(rogerInPlane, doorInPlane, doorWidth, doorHeight, dt, (float)screenWidth, ref planeClouds, planeCloudDistances);
@@ -1037,7 +1037,7 @@ namespace ColdOpen
 
 					default:
 						// UpdateMGMScreen();
-						gunbarrelScene.Update(dt, gGameState);
+						gGameState = gunbarrelScene.Update(dt, gGameState);
 						break;
 					}
 
