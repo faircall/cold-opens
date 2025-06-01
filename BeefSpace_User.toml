@@ -1,7 +1,7 @@
 FileVersion = 1
 LastConfig = "Debug"
 LastPlatform = "Win64"
-RecentFilesList = ["src\\Game.bf", "src\\Entities.bf", "src\\Program.bf", "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\String.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Core\\Drawing.bf", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Types\\NPatchInfo.bf"]
+RecentFilesList = ["src\\Game.bf", "src\\Program.bf", "src\\BondMath.bf", "src\\Entities.bf", "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\String.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Core\\Drawing.bf", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Types\\NPatchInfo.bf"]
 
 [MainWindow]
 X = 60
@@ -55,7 +55,8 @@ TabLabel = "Entities.bf"
 TabWidth = 86.0
 Type = "SourceViewPanel"
 FilePath = "src\\Entities.bf"
-CursorPos = 198
+CursorPos = 17647
+VertPos = 10746.0
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
@@ -63,7 +64,8 @@ TabLabel = "Program.bf"
 TabWidth = 96.0
 Type = "SourceViewPanel"
 FilePath = "src\\Program.bf"
-CursorPos = 168
+CursorPos = 30245
+VertPos = 17540.0
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
@@ -72,8 +74,8 @@ TabLabel = "Game.bf"
 TabWidth = 79.0
 Type = "SourceViewPanel"
 FilePath = "src\\Game.bf"
-CursorPos = 27053
-VertPos = 15320.0
+CursorPos = 39996
+VertPos = 22746.0
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets]]
@@ -85,7 +87,7 @@ SplitType = 1
 [[MainDockingFrame.DockedWidgets.DockedWidgets]]
 RequestedWidth = 250.0
 RequestedHeight = 250.0
-SizePriority = 0.1528538
+SizePriority = 0.2943706
 Type = "TabbedView"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
@@ -101,7 +103,7 @@ TabLabel = "Watch"
 TabWidth = 86.0
 Type = "WatchPanel"
 Columns = [{Width = 200.0}, {Width = 200.0}, {Width = 200.0}]
-Items = ["ParticleTimer", ""]
+Items = ["ParticleTimer", "slTimerLoc", "deathTimerLoc", "bloodShader", "gbBackgroundShader", ""]
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
 TabLabel = "Auto"
@@ -112,7 +114,7 @@ Columns = [{Width = 200.0}, {Width = 200.0}, {Width = 200.0}]
 [[MainDockingFrame.DockedWidgets.DockedWidgets]]
 RequestedWidth = 250.0
 RequestedHeight = 250.0
-SizePriority = 0.8471462
+SizePriority = 0.7056294
 Type = "TabbedView"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]

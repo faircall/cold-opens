@@ -1143,17 +1143,21 @@ namespace Game
 
 		Vector2[] clouds;
 		Person roger;
+		//Person rogerInPlane;
 		Person henchman;
 		float dt;
 		GameCamera camera;
 		ProjectileManager projectileManager;
 		AudioManager audioManager;
 		float groundStart;
+		GameCamera gameCamera;
+		int32 screenWidth;
+		int32 screenHeight;
 
 
-		public this(int maxClouds, int maxBullets)
+		public this(int maxClouds, int maxBullets, int32 _screenWidth, int32 _screenHeight, Vector2 cameraPosition)
 		{
-			InitScene(maxClouds, maxBullets);
+			InitScene(maxClouds, maxBullets, _screenWidth, _screenHeight, cameraPosition);
 		}
 
 		public ~this()
@@ -1161,7 +1165,7 @@ namespace Game
 
 		}
 
-		public void InitScene(int maxClouds, int maxBullets)
+		public void InitScene(int maxClouds, int maxBullets, int32 _screenWidth, int32 _screenHeight, Vector2 cameraPosition)
 		{
 			clouds = new Vector2[maxClouds];
 			projectileManager = new ProjectileManager(maxBullets);
@@ -1169,6 +1173,27 @@ namespace Game
 			henchman = new Person(Vector2(30.0f, 30.0f), 50);
 			groundStart = 50000.0f;
 			audioManager = new AudioManager();
+			screenWidth = _screenWidth;
+			screenHeight = _screenHeight;
+			gameCamera =new GameCamera(cameraPosition, _screenWidth, _screenHeight);
+		}
+
+		void DrawBloodExplosion(Vector2 originPosition, float timer)
+		{
+			// how should we handle their trajectories?
+			int particleCount = 30;
+			for (int i = 0; i < particleCount; i++)
+			{
+				// create a radius effect and shoot particles
+				float angle = (float)i / (float)(particleCount - 1);
+				float radius = timer;
+				float radiusScale = 600.0f; // make this based on impact velocity
+				radius *= radiusScale;
+				float angleToUse = angle*Math.PI_f + Math.PI_f;
+				// we need a fall-off I think...?
+				// or can make them physical chunks
+				DrawCircle((int32)(originPosition.x + radius*Math.Cos(angleToUse) - camera.Position.x), (int32)(originPosition.y + radius*Math.Sin(angleToUse) - camera.Position.y), 5.0f + 20*(1.0f/(1.0f+timer)), Color.RED);
+			}
 		}
 
 
@@ -1422,6 +1447,91 @@ namespace Game
 
 			return switchScene;
 
+
+		}
+
+		public void DrawParticleSystemPerson(Person person, GameCamera gameCamera, float dt)
+		{
+			for (int i = 0; i < person.Particles.Count; i++)
+			{
+				Particle particle = person.Particles[i];
+				if (person.DeathTimer >= particle.LifetimeStart &&
+					person.DeathTimer <= particle.LifetimeEnd)
+				{
+					// add gravity
+					Vector2 gravity = Vector2(0.0f, 2200.0f*dt);
+					particle.Velocity += gravity;
+					particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
+					DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+					person.Particles[i] = particle;
+				}
+			}
+		}
+
+		public void Render(GameResources gameResources)
+		{
+
+
+			ClearBackground(.(50, 120, 250, 255));
+			for (Vector2 cloud in clouds)
+			{
+			 		//cloud.x = cloud.x - cameraPosition.x;
+			 		DrawTextureEx(gameResources.cloudTexture, Matrix2.Vector2Subtract(cloud, *gameCamera.Position), 0.0f, 5.0f, Color.WHITE);
+			 }
+
+			// 	draw the ground when it's in frame, or just draw it offscreen constantly
+			// start by the dumb way
+			DrawRectangle(0, (int32)(groundStart - gameCamera.Position.y), screenWidth, screenHeight, Color.DARKBROWN);
+
+			DrawTextureEx(gameResources.rogerSkyDiveTexture, Matrix2.Vector2Subtract(*roger.Position, *gameCamera.Position), roger.AirRotation, 3.0f, Color.WHITE);
+			if (roger.Health > 0)
+			{
+			 		DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - gameCamera.Position.x, roger.Position.y - gameCamera.Position.y, 1.5f*128.0f, 1.5f*128.0f),Vector2(1.5f*64.0f, 1.5f*64.0f), roger.AirRotation, Color.WHITE);
+			}
+			else
+			{
+					// prototype one
+					DrawBloodExplosion(*roger.Position, roger.DeathTimer);
+					DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - gameCamera.Position.x, roger.Position.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), roger.AirRotation, Color.WHITE);
+					for (int i = 0; i < roger.Particles.Count; i++)
+					{
+						Particle particle = roger.Particles[i];
+						if (roger.DeathTimer >= particle.LifetimeStart &&
+							roger.DeathTimer <= particle.LifetimeEnd)
+						{
+							// add gravity
+							Vector2 gravity = Vector2(0.0f, 2200.0f*dt);
+							particle.Velocity += gravity;
+							particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
+							DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+							roger.Particles[i] = particle;
+						}
+					}
+					roger.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
+					DrawParticleSystemPerson(roger, gameCamera, dt);
+				}
+
+
+				
+
+            	//	think about the rotation point
+				//	but also think like, actual skeletal system
+
+
+            	//	TODO: make these centered
+				if (henchman.Health > 0)
+				{
+					DrawTextureEx(gameResources.henchmanTexture, *henchman.Position - *gameCamera.Position, 0.0f, 2.0f, Color.WHITE);
+				}
+				else
+				{
+					// we haven't made the particle system yet
+					//henchman.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
+					//DrawParticleSystemPerson(henchman, gameCamera, dt);
+					DrawBloodExplosion(*henchman.Position, henchman.DeathTimer);
+				}
+				projectileManager.RenderProjectiles(gameCamera, dt);
+				
 
 		}
 	}

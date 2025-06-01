@@ -134,7 +134,7 @@ namespace Game
         int32 SectionEnd = 0;
 
         int32 WalkingFrameStart = 1;
-        int32 WalkingFrameEnd = 17;
+        public int32 WalkingFrameEnd = 17;
 
         int32 TurningFrameStart = 25;
         int32 TurningFrameEnd = 28;
@@ -256,6 +256,8 @@ namespace Game
 		public Texture2D rogerLowerLegTexture;
 		public Texture2D planeTexture;
 
+		public RenderTexture2D renderTarget;
+
 		public Texture2D henchmanTexture;
 
 		public Sound airLoopSound;
@@ -269,6 +271,7 @@ namespace Game
 		public Shader gbShader;
         public Shader gbBackgroundShader;
 		public Shader slShader;
+		public Shader bloodShader;
 
         
 		public int32 gbTexLoc;
@@ -283,6 +286,11 @@ namespace Game
 
 		public int32 slTimerLoc;
 		public int32 slCircLoc;
+		public int32 deathTimerLoc;
+
+		public int screenWidth = 1280;
+		public int screenHeight = 720;
+
         
 
 
@@ -294,10 +302,10 @@ namespace Game
 		// SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
 		// SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 
-		public this()
+		public this(int screenWidth, int screenHeight)
 		{
 
-            Reload();
+            Reload(screenWidth, screenHeight);
 			
 		}
 
@@ -305,8 +313,10 @@ namespace Game
 		{
 		}
 
-        public void Reload()
+        public void Reload(int _screenWidth, int _screenHeight)
         {
+			screenWidth = _screenWidth;
+			screenHeight = _screenHeight;
             gunbarrelBGTexture = LoadTexture("gunbarrel.png");
 			gunbarrelTexture = LoadTexture("better_gunbarrel.png");
 			rogerTexture = LoadTexture("adjusted_roger_resized.png");
@@ -333,6 +343,8 @@ namespace Game
 			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
 
             gbBackgroundShader = LoadShader("base.vs", "gunbarrel.fs");
+
+			bloodShader = LoadShader("base.vs", "bloodScreen.fs");
 			
             
 			gbTexLoc = GetShaderLocation(gbShader, "tex");
@@ -346,9 +358,14 @@ namespace Game
 
 			slTimerLoc = GetShaderLocation(slShader, "timer");
 			slCircLoc = GetShaderLocation(slShader, "circCent");
+			deathTimerLoc = GetShaderLocation(bloodShader, "deathTimer");
+			
             SetShaderValueTexture(gbBackgroundShader, gbBackgroundTexLoc, gunbarrelBGTexture);
 			SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
 			SetShaderValueTexture(slShader, slTexLoc, rogerTexture);
+
+			renderTarget = LoadRenderTexture((int32)screenWidth, (int32)screenHeight);
+
 
         }
 
@@ -376,7 +393,7 @@ namespace Game
 		GunbarrelDot dotStart;
 		GunbarrelDot nextDot;
 		float dotTimeout = 0.7f;
-		float dotSpeed = 350.0f;
+		float dotSpeed = 400.0f;
 		float dotRad = 40.0f; // 40
 
 		bool dotStopped = false;
@@ -406,22 +423,25 @@ namespace Game
         bool fired = false;
 
         float turningAcceleration = 0.025f;
-        float turningSpeed = 1.0f;
+        float turningSpeed = 3.0f;
         float turningTimer = 0.0f;
-        float turningDuration = 0.25f;
+        float turningDuration = 0.125f;
         float turningSpeedLimit = 0.0f;
 
-        float rogerSpeedBase = 120.0f;
+        float rogerSpeedBase = 1000.0f;
 
         float firingTimer = 0.0f;
         float aimingTimer = 0.0f;
         float aimToFireDuration = 0.5f;
         float holsteringTimer = 0.0f;
-        float holsteringDuration = 0.5f;
+        float holsteringDuration = 0.35f;
         float timeBetweenShots = 0.1f;
         float interShotTimer = 0.0f;
         float interShotCooldown = 1.0f;
         float revealTimerInterp = 0.0f;
+
+		int enemyHealth = 100;
+		float enemyDeathTimer = 0.0f;
 
         float rogerVelocityX = 0.0f;
         float rogerAccelerationX = 0.0f;
@@ -562,7 +582,7 @@ namespace Game
             dotCounter = 0;
             dotRad = 80.0f;//40.0f;
             gunHolstered = true;
-            turningDuration = 0.25f;
+            turningDuration = 0.125f;
 
             rogerSpriteSheet.Reset();
 
@@ -670,8 +690,16 @@ namespace Game
                 // need to add an ability to  delay in
                 AddParticleSystem(smokePos, 1, 25, 0.125f, 0.25f, 1.0f, 1.0f, 100, Color(255,74,0,255), Color(255,180,0,50), 0.0f);
                 AddParticleSystem(smokePos, 1, 50, 0.25f, 0.25f, 25.0f, 1.0f, 100, Color(50,50,50,200), Color(150,150,150,0), 0.1f);
+
+				enemyHealth -= 100; // or whatever
                 // = false;
             }
+
+			if (enemyHealth <= 0)
+			{
+
+				enemyDeathTimer += dt;
+			}
 
 
             // else if (rogerSpriteSheet.State == RogerAnimationState.SHOOTING)
@@ -721,7 +749,7 @@ namespace Game
                 
 				//TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
 			}
-            else if (rogerSpriteSheet.State == RogerAnimationState.WALKING ||
+            else if ((rogerSpriteSheet.State == RogerAnimationState.WALKING && rogerVelocityX == 0.0f) ||
                      (rogerSpriteSheet.State == RogerAnimationState.UNHOLSTERING && !holstering && holsteringTimer == 0.0f ||
                          rogerSpriteSheet.State == RogerAnimationState.TURNING && turningTimer >= turningDuration)
                 )
@@ -756,7 +784,7 @@ namespace Game
                 rogerSpriteSheet.AnimLerp = holsteringTimer / holsteringDuration;
             }
 
-            float rogerSpeed = rogerSpeedBase;
+            float rogerSpeed = 1000.0f;//rogerSpeedBase;
             if (rogerSpriteSheet.State == RogerAnimationState.TURNING)
             {
                 rogerSpeed = turningSpeedLimit; // we should increase this limit over time
@@ -769,10 +797,11 @@ namespace Game
             float forceX = rogerDirection.x * dt * rogerSpeed;
             float rogerFrictionX = 0.0f;
 
+
             if (rogerDirection.x == 0.0f && (rogerVelocityX * rogerVelocityX) > 10.0f)
             {
                 rogerFrictionX = -1.0f*rogerVelocityX*3.0f*dt;
-                if ((rogerVelocityX * rogerVelocityX) < 15.0f)
+                if ((rogerVelocityX * rogerVelocityX) < 15.0f && (rogerSpriteSheet.CurrentFrameSection == rogerSpriteSheet.WalkingFrameEnd-1))
                 {
                     rogerVelocityX = 0.0f;
                 }
@@ -780,8 +809,18 @@ namespace Game
             
             
             rogerVelocityX += (forceX + rogerFrictionX);
-            
-
+			float currentSpeed = Math.Abs(rogerVelocityX);
+			float maxSpeed = 200.0f;
+			if (currentSpeed > maxSpeed)
+			{
+				rogerVelocityX = Math.Sign(rogerVelocityX) * maxSpeed;
+			}
+            float stopDelta = 20.0f;
+			if (Math.Abs(rogerVelocityX) < stopDelta && rogerDirection.x == 0.0f)
+			{
+				// we could actually use the animation frame to set the stop frame, so to speak, which might look better.
+				rogerVelocityX = 0.0f;
+			}
             
             
 			rogerPosition.x += rogerVelocityX * dt ;
@@ -791,12 +830,26 @@ namespace Game
 
 			float rogerAnimSpeedModifier = 1.0f;
 			float animSpeed = Math.Abs(rogerVelocityX);
-			float animMax = 10000.0f; // or whatever it is
+			float animMax = 15000.0f; // or whatever it is
 			animSpeed = Math.Min(animSpeed, animMax);
 			float animSpeedNormal = animSpeed / animMax;
-			float speedModifier = 2.0f;
+			float speedModifier = 1.0f;
+			if (rogerSpriteSheet.State == RogerAnimationState.WALKING && rogerDirection.x == 0.0f)
+			{
+				// issue here is that we're sort of fixing 2 different states and one of them is velocity dependent
+				speedModifier = 2.2f;
+				rogerSpriteSheet.Update(dt*rogerAnimSpeedModifier*speedModifier);
+				// honestly a smarter thing to do here is to continue to play the animation until he ACTUALLY should stop,
+				// which would be a little animation driven but should work well.
+				// see above
+			}
+			else
+			{
+
+				rogerSpriteSheet.Update(dt*rogerAnimSpeedModifier + speedModifier*animSpeedNormal);
+			}
 			
-            rogerSpriteSheet.Update(dt*rogerAnimSpeedModifier + speedModifier*animSpeedNormal);
+            //rogerSpriteSheet.Update(dt*rogerAnimSpeedModifier + speedModifier*animSpeedNormal);
             // else if (!rogerSpriteSheet.CurrentFrame = 4)
             // {
             //     TextureDrawing.UpdateSpriteSheet(ref rogerSpriteSheet, dt*1.5f);
@@ -872,14 +925,15 @@ namespace Game
 			}
             if (IsKeyPressed(KeyboardKey.KEY_F10))
 			{
-                gameResources.Reload();
+                gameResources.Reload(gameResources.screenWidth, gameResources.screenHeight);
 			}
 
-            BeginDrawing();
-            ClearBackground(.(0,0,0,255));
+           
             
             if (!dotStopped)
             {
+				BeginDrawing();
+				ClearBackground(.(0,0,0,255));
                 for (var dot in m_Dots)
                 {
                     //DrawCircle((int32)dot.Position.x, (int32)dot.Position.y, dotRad, Color.WHITE);
@@ -888,6 +942,7 @@ namespace Game
                         DrawCircle((int32)dot.Position.x, (int32)dot.Position.y, dotRad, Color.WHITE);
                     }
                 }
+				
             }
 
 			if (dotStopped)
@@ -896,6 +951,8 @@ namespace Game
                 // either we figure  out how to do 2 shaders at once
                 // or we switch out one large texture for the split version
                 fasterCircTimer = circTimer;
+				BeginTextureMode(gameResources.renderTarget);
+
                 SetShaderValue(gameResources.gbBackgroundShader, gameResources.gbBackgroundTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
                 BeginShaderMode(gameResources.gbBackgroundShader);                
                 DrawTextureEx(gameResources.gunbarrelBGTexture, Vector2(0.0f, 0.0f), 0.0f, 10.0f, Color.WHITE);
@@ -952,6 +1009,7 @@ namespace Game
 					TextureDrawing.DrawPartialTextureCentered(gameResources.rogerTexture, rogerSpriteSheet.CurrentRect, rogerPosition.x - 16.0f, rogerPosition.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 2.0f, Color.WHITE);
 				}
                 EndShaderMode();
+				EndTextureMode();
 
                 if (debugText == 0)
                 {
@@ -969,7 +1027,28 @@ namespace Game
                     DrawText(currentFrameText, 10, 10, 16, Color.RED);
                 }
 
+				String rogerCurrent = scope $"roger current pos is {rogerPosition.x} with velocity {rogerVelocityX}";
+				DrawText(rogerCurrent, 10,30,16, Color.RED);
+
                 
+				String currentFrameText = scope $"current frame is {rogerSpriteSheet.CurrentFrameSection} against {rogerSpriteSheet.WalkingFrameEnd}";
+				DrawText(currentFrameText, 10, 60, 14, Color.RED);
+
+				Color bloodScreenColor = Color(200,0,0,90);
+				float screenDuration = 8.0f;
+				float lerpedBloodScreen = Math.Min((enemyDeathTimer / (screenDuration/2.0f)), 2.0f);
+				int32 bloodScreenHeight = (int32)(lerpedBloodScreen * GetScreenHeight());
+				BeginDrawing();
+				ClearBackground(.(0,0,0,255));
+				BeginShaderMode(gameResources.bloodShader);
+				SetShaderValue(gameResources.bloodShader, gameResources.deathTimerLoc, (void*)&lerpedBloodScreen, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+				DrawTextureRec(gameResources.renderTarget.texture, Rectangle(0.0f, 0.0f, gameResources.screenWidth, -1.0f*gameResources.screenHeight), Vector2(0.0f, 0.0f), Color(255,255,255,255));
+				EndShaderMode();
+				
+				//DrawRectangle(0, 0, (int32)screenWidth, bloodScreenHeight, bloodScreenColor);
+				// there's a simple way to achieve the effect I'm after using an animated sprite
+				// and then making it transparent. Should I just use that?
+				// the 'hard' way is to do it via a shader
 
                 // String animFrameText = scope  $"anim frame is {rogerSpriteSheet.CurrentFrame}";
             
@@ -989,132 +1068,12 @@ namespace Game
                 }
                 
             }
-            EndDrawing();
+			EndDrawing();
+            
 		}
 
 	}
 
-	// class SkeletalEditor
-	// {
-
-	// 	public void Update() {
-
-	// 	       Vector2 toAdd = Vector2(0.0f, 0.0f);
-
-	// 		if (IsKeyPressed(KeyboardKey.KEY_F1))
-	// 		{
-	// 			skeletalEditorState--;
-	// 			skeletalEditorState = Math.Max(0, skeletalEditorState);
-	// 		}
-	// 		if (IsKeyPressed(KeyboardKey.KEY_F2))
-	// 		{
-	// 			skeletalEditorState++;
-	// 			skeletalEditorState = Math.Min(skeletalEditorState, SkeletalEditorState.NUM_STATES-1);
-	// 		}
-	// 		if (IsKeyPressed(KeyboardKey.KEY_F5))
-	// 		{
-	// 			needSave = true;
-	// 		}
-	// 		if (IsKeyPressed(KeyboardKey.KEY_F6))
-	// 		{
-	// 			needLoad = true;
-	// 		}
-	// 		if (IsKeyDown(KeyboardKey.KEY_LEFT))
-	// 		{
-	// 			toAdd.x = -1.0f;
-	// 		}
-	// 		if (IsKeyDown(KeyboardKey.KEY_RIGHT))
-	// 		{
-	// 			toAdd.x = 1.0f;
-	// 		}
-	// 		if (IsKeyDown(KeyboardKey.KEY_UP))
-	// 		{
-	// 			toAdd.y = -1.0f;
-	// 		}
-	// 		if (IsKeyDown(KeyboardKey.KEY_DOWN))
-	// 		{
-	// 			toAdd.y = 1.0f;
-	// 		}
-	// 		toAdd = Matrix2.Vector2Scale(toAdd, dt * 40.0f);
-	// 		switch (skeletalEditorState)
-	// 		{
-	// 		case SkeletalEditorState.WHOLE_BODY:
-	// 			rogerPosition = Matrix2.Vector2Add(rogerPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.HEAD:
-	// 			rogerHeadPosition = Matrix2.Vector2Add(rogerHeadPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.TORSO:
-	// 			rogerTorsoPosition = Matrix2.Vector2Add(rogerTorsoPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.UPPER_ARM:
-	// 			rogerUpperArmPosition = Matrix2.Vector2Add(rogerUpperArmPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.LOWER_ARM:
-	// 			rogerLowerArmPosition = Matrix2.Vector2Add(rogerLowerArmPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.UPPER_LEG:
-	// 			rogerUpperLegPosition = Matrix2.Vector2Add(rogerUpperLegPosition, toAdd);
-	// 			break;
-	// 		case SkeletalEditorState.LOWER_LEG:
-	// 			rogerLowerLegPosition = Matrix2.Vector2Add(rogerLowerLegPosition, toAdd);
-	// 			break;
-	// 		default:
-	// 			break;
-	// 		}
-	// 		if (needSave)
-	// 		{
-	// 			System.IO.BufferedFileStream bufferedStream = new System.IO.BufferedFileStream();
-	// 			bufferedStream.Create("skeleton.bin");
-	// 			Skeleton skeleton = new Skeleton();
-	// 			skeleton.Head = rogerHeadPosition;
-	// 			skeleton.Torso = rogerTorsoPosition;
-	// 			skeleton.UpperArm = rogerUpperArmPosition;
-	// 			skeleton.LowerArm = rogerLowerArmPosition;
-	// 			skeleton.UpperLeg = rogerUpperLegPosition;
-	// 			skeleton.LowerLeg = rogerLowerLegPosition;
-
-	// 			bufferedStream.Write(skeleton.Head);
-	// 			bufferedStream.Write(skeleton.Torso);
-	// 			bufferedStream.Write(skeleton.UpperArm);
-	// 			bufferedStream.Write(skeleton.LowerArm);
-	// 			bufferedStream.Write(skeleton.UpperLeg);
-	// 			bufferedStream.Write(skeleton.LowerLeg);
-	// 			bufferedStream.Close();
-	// 			delete skeleton;
-	// 			delete bufferedStream;
-	// 			needSave = false;
-	// 		}
-
-	// 		if (needLoad)
-	// 		{
-	// 			System.IO.BufferedFileStream bufferedStream = new System.IO.BufferedFileStream();
-	// 			bufferedStream.Open("skeleton.bin");
-	// 			Skeleton skeleton = new Skeleton();
-
-
-	// 			skeleton.Head = bufferedStream.Read<Vector2>();
-	// 			skeleton.Torso = bufferedStream.Read<Vector2>();
-	// 			skeleton.UpperArm = bufferedStream.Read<Vector2>();
-
-	// 			skeleton.LowerArm = bufferedStream.Read<Vector2>();
-	// 			skeleton.UpperLeg = bufferedStream.Read<Vector2>();
-	// 			skeleton.LowerLeg = bufferedStream.Read<Vector2>();
-
-	// 			bufferedStream.Close();
-
-	// 			rogerHeadPosition = skeleton.Head ;
-	// 			rogerTorsoPosition = skeleton.Torso;
-	// 			rogerUpperArmPosition = skeleton.UpperArm;
-	// 			rogerLowerArmPosition = skeleton.LowerArm;
-	// 			rogerUpperLegPosition = skeleton.UpperLeg;
-	// 			rogerLowerLegPosition = skeleton.LowerLeg;
-	// 			delete skeleton;
-	// 			delete bufferedStream;
-	// 			needLoad = false;
-	// 		}
-	// 	}
-	// }
 
 	class SkyScene
 	{
@@ -1179,5 +1138,401 @@ namespace Game
 
 
 
-	
+	class SkydivingScene
+	{
+
+		Vector2[] clouds;
+		Person roger;
+		//Person rogerInPlane;
+		Person henchman;
+		float dt;
+		GameCamera camera;
+		ProjectileManager projectileManager;
+		AudioManager audioManager;
+		float groundStart;
+		GameCamera gameCamera;
+		int32 screenWidth;
+		int32 screenHeight;
+
+
+		public this(int maxClouds, int maxBullets, int32 _screenWidth, int32 _screenHeight, Vector2 cameraPosition)
+		{
+			InitScene(maxClouds, maxBullets, _screenWidth, _screenHeight, cameraPosition);
+		}
+
+		public ~this()
+		{
+
+		}
+
+		public void InitScene(int maxClouds, int maxBullets, int32 _screenWidth, int32 _screenHeight, Vector2 cameraPosition)
+		{
+			clouds = new Vector2[maxClouds];
+			projectileManager = new ProjectileManager(maxBullets);
+			roger = new Person(Vector2(100.0f, 400.0f), 100);
+			henchman = new Person(Vector2(30.0f, 30.0f), 50);
+			groundStart = 50000.0f;
+			audioManager = new AudioManager();
+			screenWidth = _screenWidth;
+			screenHeight = _screenHeight;
+			gameCamera =new GameCamera(cameraPosition, _screenWidth, _screenHeight);
+		}
+
+		void DrawBloodExplosion(Vector2 originPosition, float timer)
+		{
+			// how should we handle their trajectories?
+			int particleCount = 30;
+			for (int i = 0; i < particleCount; i++)
+			{
+				// create a radius effect and shoot particles
+				float angle = (float)i / (float)(particleCount - 1);
+				float radius = timer;
+				float radiusScale = 600.0f; // make this based on impact velocity
+				radius *= radiusScale;
+				float angleToUse = angle*Math.PI_f + Math.PI_f;
+				// we need a fall-off I think...?
+				// or can make them physical chunks
+				DrawCircle((int32)(originPosition.x + radius*Math.Cos(angleToUse) - camera.Position.x), (int32)(originPosition.y + radius*Math.Sin(angleToUse) - camera.Position.y), 5.0f + 20*(1.0f/(1.0f+timer)), Color.RED);
+			}
+		}
+
+
+		public int Update()
+		{
+			// have weapons fall from the sky that you can pick up?
+			// or at least, have weapons able to be knocked out of people's hands mid air
+			// and you can 'catch'/regather them. yeah, love that idea
+			int switchScene = 0;
+			//float groundStart = 5000.0f;
+
+			for (int i = 0; i < clouds.Count; i++)
+			{
+				Vector2 cloudPos = clouds[i];
+				
+				if (cloudPos.y <= roger.Position.y - camera.ScreenHeight)
+				{
+					cloudPos.y = roger.Position.y + camera.ScreenHeight;
+					cloudPos.x = (float)GetRandomValue(int32(roger.Position.x - camera.ScreenWidth), int32(roger.Position.x + camera.ScreenWidth));
+				}
+				clouds[i] = cloudPos;
+			}
+			float terminalVelocity = 1000.0f; // what was I thinking here?
+			roger.Direction.x = 0.0f;
+			roger.Direction.y = 0.0f;
+			float rogerSpeedAir = 500.0f;
+
+			float enemySpeedAir = 1000.0f;
+
+			if (henchman.TimerStarted)
+			{
+				henchman.DeathTimer += dt;
+			}
+
+			if (henchman.Position.y < groundStart)
+			{
+				henchman.Velocity.y = (enemySpeedAir * dt);
+				*henchman.Position += *henchman.Velocity;
+			}
+			else if (henchman.Health > 0)
+			{
+				henchman.Health = 0;
+				if (!henchman.TimerStarted)
+				{
+					henchman.TimerStarted = true;
+					henchman.AddParticleSystem(5, 50, 3.0f, 0.4f);
+					audioManager.SoundsToPlay.Add("splat");
+				}
+			}
+			
+
+
+			
+
+
+			// enemy choose direction
+
+			//rogerAirRotation = 0.0f;
+			if (IsKeyDown(KeyboardKey.KEY_A))
+			{
+				roger.Direction.x = -1.0f;
+				//rogerAirRotation = -45.0f;
+			}
+			if (IsKeyDown(KeyboardKey.KEY_D))
+			{
+				roger.Direction.x = 1.0f;
+				//rogerAirRotation = 45.0f;
+			}
+
+			if (IsKeyDown(KeyboardKey.KEY_W))
+			{
+				//rogerSpeedAir = 500.0f;
+				roger.Direction.y = -1.0f;
+			}
+			if (IsKeyDown(KeyboardKey.KEY_S))
+			{
+				roger.Direction.y = 1.0f;
+			}
+
+			if (IsKeyDown(KeyboardKey.KEY_LEFT_SHIFT) && roger.Direction.x != 0.0f)
+			{
+				roger.IsRolling = true;
+			}
+			else
+			{
+				roger.IsRolling = false;
+			}
+
+			roger.IsShooting = false;
+			if (IsKeyPressed(KeyboardKey.KEY_SPACE))
+			{
+				roger.IsShooting = true;
+				audioManager.SoundsToPlay.Add("pistol_shot");
+			}
+
+			
+
+			Matrix2.Vector2Normalize(ref *roger.Direction, 0.001f);
+			if (roger.IsShooting)
+			{
+				// apply an impluse to the wrists that hold the gun
+				// the wrists have a homeostatic thing where they want to return to a netural orientation
+				// also spawn a projectile into the projectile manager
+				DrawText("bang!", 10, 40, 16, Color.RED);
+				// instead make a vector fr
+				
+				Vector2 spawnVel =  Matrix2.Vector2Scale(Vector2(Math.Cos(Trig.DegToRad((int)roger.AirRotation % 360)), Math.Sin(Trig.DegToRad((int)roger.AirRotation % 360))), -3000.0f);
+				Vector2 spawnDirection = Matrix2.Vector2Normalized(spawnVel,0.001f);
+				Vector2 spawnPos = *roger.Position + Matrix2.Vector2Scale(spawnDirection, 100.0f);
+				// draw something at the spawn position to figure out why it's behaving weird
+				//DrawCircle((int32)(spawnPos.x - camera.Position.x), (int32)(spawnPos.y - camera.Position.y), 5.0f, Color.GOLD);
+				projectileManager.AddProjectile(spawnPos, spawnVel, 50, 50.0f);
+			}
+			float rotationSpeed = 75.0f;
+			// this hsould have some acceleration to it too
+			
+			float rogerAirMotion = Math.Sin(Trig.DegToRad((int)roger.AirRotation % 360));
+			float rogerAirMotionUp = Math.Cos(Trig.DegToRad((int)roger.AirRotation % 360));
+			String airMotionText = scope $"AirMotion = {rogerAirMotion}";
+			String airRotationText = scope $"From air rotation = {roger.AirRotation}";
+			DrawText(airMotionText, 10, 10, 16, Color.RED);
+			DrawText(airRotationText, 10, 20, 16, Color.RED);	
+			
+
+			// need to apply some friction
+			Vector2 rogerFriction = Matrix2.Vector2Scale(*roger.Velocity, -0.8f);
+			//float armPerSecond = 10.0f;
+			//armOscilator += dt;
+			//armAngleToOscilate = Math.Sin(armOscilator*2*Math.PI_f / armPerSecond) * 10.0f;
+			float armAngleToOscilate = 5.0f;
+
+			
+			
+			if (roger.TimerStarted)
+			{
+				roger.DeathTimer += dt;
+			}
+			// (TODO) : use force vectors
+			if (roger.Position.y < groundStart) // i.e we are in the air
+				// there is such thing as terminal velocity
+				// the maximum speed attainable in the air
+			{
+				roger.Position.y += terminalVelocity * dt; // this is our base falling rate
+				if (!roger.IsRolling)
+				{
+					roger.AirRotation += roger.Direction.x * dt * rotationSpeed;
+					roger.Velocity.x += rogerAirMotion * dt * rogerSpeedAir;
+					// this shouldn't be active when he's on the ground
+					//roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
+
+					//roger.Velocity.y += (10.0f * dt * rogerAirMotionUp);
+
+					roger.Velocity.x += rogerFriction.x*dt;
+					//roger.Velocity.y += rogerFriction.y*dt;
+					roger.Position.x += (roger.Velocity.x) * dt;
+					roger.Position.y += (roger.Velocity.y) * dt;
+					//roger.Position.y += terminalVelocity * dt;
+				}
+				else
+				{
+					roger.AirRotation += roger.Direction.x * dt * rotationSpeed * 10.0f;
+					//roger.Velocity.x += rogerAirMotion * dt * rogerSpeedAir;
+					// this shouldn't be active when he's on the ground
+					roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
+
+					roger.Velocity.y += (10.0f * dt * rogerAirMotionUp);
+
+					roger.Velocity.x += rogerFriction.x*dt;
+					roger.Velocity.y += rogerFriction.y*dt;
+					roger.Position.x += (roger.Velocity.x) * dt;
+					roger.Position.y += (roger.Velocity.y) * dt;
+					//roger.Position.y += terminalVelocity * dt;
+				}
+				
+			}
+			else if (roger.Health > 0)
+			{
+				roger.Health = 0;
+				if (!roger.TimerStarted)
+				{
+					roger.TimerStarted = true;
+					// and spawn particles
+					roger.AddParticleSystem(10, 50, 3.0f, 0.2f);
+					audioManager.SoundsToPlay.Add("splat");
+				}
+			}
+
+			
+
+			/*// come back to this later once more of the game is done
+			(*roger.BaseSkeleton).Torso = *roger.Position;
+			// this will need work to take into account the rotation
+			CenterSkeleton(roger.BaseSkeleton, roger.OffsetSkeleton, roger.AirRotation);
+			RotateLowerArm(roger.BaseSkeleton, roger.AirRotation, armAngleToOscilate);
+			RotateUpperArm(roger.BaseSkeleton, roger.AirRotation, armAngleToOscilate);
+			RotateLowerLeg(roger.BaseSkeleton, roger.AirRotation, armAngleToOscilate);
+			//CenterSkeletonAdditional(&baseSkeleton, offsetSkeleton, rogerAirRotation, armAngleToOscilate);*/
+
+
+			
+
+			float cameraSpeed = Math.Min(Math.Abs(roger.Position.x - camera.Position.x), terminalVelocity);
+			// would it be better to have a velocity for the camera?
+			float rogerSpeed = roger.Velocity.Length();
+			// maybe we need to CENTER him
+			// might explain why it's less of an issue
+
+			// camera code needs redoing
+
+			// the issue I think is that he's moving faster than the camera
+			// just have a unified system here where the camera has a velocity
+			// and will adjust dynamically, including jumping (?) if totally out of bounds
+			// for sufficient time
+			if (roger.Position.x < (camera.Position.x + 300.0f))
+			{
+				// do we actually want abs?
+				cameraSpeed = roger.Position.x - (camera.Position.x + 300.0f);
+				camera.Position.x += (cameraSpeed * dt);
+			} 
+			else if (roger.Position.x >= (camera.Position.x + camera.ScreenWidth - 400.0f))
+			{
+				cameraSpeed = Math.Min(Math.Abs(roger.Position.x - (camera.Position.x + camera.ScreenWidth - 400.0f)), terminalVelocity);
+				camera.Position.x += cameraSpeed * dt;
+			}
+			//cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 100.0f));
+			if (roger.Position.y < (camera.Position.y + 100.0f))
+			{
+				cameraSpeed = Math.Min(Math.Abs(roger.Position.y - (camera.Position.y + 100.0f)), terminalVelocity);
+				String camSpeedString = scope $"roger behind camera, setting to {cameraSpeed}";
+				//DrawText(camSpeedString, 10, 10, 10, Color.GOLD);
+				camera.Position.y -= cameraSpeed*dt;
+			} 
+			else if (roger.Position.y > (camera.Position.y + 3.0f*camera.ScreenHeight/4.0f ))
+			{
+				cameraSpeed = Math.Max(Math.Abs(roger.Position.y - (camera.Position.y + 3.0f*camera.ScreenHeight/4.0f )), terminalVelocity);
+				String camSpeedString = scope $"roger ahead camera, setting to {cameraSpeed}";
+				DrawText(camSpeedString, 10, 10, 10, Color.GOLD);
+				camera.Position.y +=  cameraSpeed*dt;//(rogerSpeed + terminalVelocity)* dt;
+			}
+
+			projectileManager.UpdateProjectiles(dt, henchman, audioManager.SoundsToPlay);
+
+			if (henchman.Health <= 0 && !henchman.TimerStarted)
+			{
+				henchman.TimerStarted = true;
+				henchman.AddParticleSystem(5, 50, 3.0f, 0.4f);
+			}
+			
+
+			
+
+			return switchScene;
+
+
+		}
+
+		public void DrawParticleSystemPerson(Person person, GameCamera gameCamera, float dt)
+		{
+			for (int i = 0; i < person.Particles.Count; i++)
+			{
+				Particle particle = person.Particles[i];
+				if (person.DeathTimer >= particle.LifetimeStart &&
+					person.DeathTimer <= particle.LifetimeEnd)
+				{
+					// add gravity
+					Vector2 gravity = Vector2(0.0f, 2200.0f*dt);
+					particle.Velocity += gravity;
+					particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
+					DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+					person.Particles[i] = particle;
+				}
+			}
+		}
+
+		public void Render(GameResources gameResources)
+		{
+
+
+			ClearBackground(.(50, 120, 250, 255));
+			for (Vector2 cloud in clouds)
+			{
+			 		//cloud.x = cloud.x - cameraPosition.x;
+			 		DrawTextureEx(gameResources.cloudTexture, Matrix2.Vector2Subtract(cloud, *gameCamera.Position), 0.0f, 5.0f, Color.WHITE);
+			 }
+
+			// 	draw the ground when it's in frame, or just draw it offscreen constantly
+			// start by the dumb way
+			DrawRectangle(0, (int32)(groundStart - gameCamera.Position.y), screenWidth, screenHeight, Color.DARKBROWN);
+
+			DrawTextureEx(gameResources.rogerSkyDiveTexture, Matrix2.Vector2Subtract(*roger.Position, *gameCamera.Position), roger.AirRotation, 3.0f, Color.WHITE);
+			if (roger.Health > 0)
+			{
+			 		DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - gameCamera.Position.x, roger.Position.y - gameCamera.Position.y, 1.5f*128.0f, 1.5f*128.0f),Vector2(1.5f*64.0f, 1.5f*64.0f), roger.AirRotation, Color.WHITE);
+			}
+			else
+			{
+					// prototype one
+					DrawBloodExplosion(*roger.Position, roger.DeathTimer);
+					DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - gameCamera.Position.x, roger.Position.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), roger.AirRotation, Color.WHITE);
+					for (int i = 0; i < roger.Particles.Count; i++)
+					{
+						Particle particle = roger.Particles[i];
+						if (roger.DeathTimer >= particle.LifetimeStart &&
+							roger.DeathTimer <= particle.LifetimeEnd)
+						{
+							// add gravity
+							Vector2 gravity = Vector2(0.0f, 2200.0f*dt);
+							particle.Velocity += gravity;
+							particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
+							DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+							roger.Particles[i] = particle;
+						}
+					}
+					roger.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
+					DrawParticleSystemPerson(roger, gameCamera, dt);
+				}
+
+
+				
+
+            	//	think about the rotation point
+				//	but also think like, actual skeletal system
+
+
+            	//	TODO: make these centered
+				if (henchman.Health > 0)
+				{
+					DrawTextureEx(gameResources.henchmanTexture, *henchman.Position - *gameCamera.Position, 0.0f, 2.0f, Color.WHITE);
+				}
+				else
+				{
+					// we haven't made the particle system yet
+					//henchman.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
+					//DrawParticleSystemPerson(henchman, gameCamera, dt);
+					DrawBloodExplosion(*henchman.Position, henchman.DeathTimer);
+				}
+				projectileManager.RenderProjectiles(gameCamera, dt);
+				
+
+		}
+	}
 }
