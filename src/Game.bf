@@ -384,6 +384,112 @@ namespace Game
 
 	}
 
+	class PlaneScene
+	{
+		Vector2[] m_planeClouds;
+		float[] m_planeCloudDistances;
+		Vector2 m_planePos;
+		float m_planeTimer;
+		float m_screenWidth;
+		int[] m_planeCloudWidths;
+		Rectangle m_cloudRect;// = Rectangle(0, 0, cloudTexture.width, cloudTexture.height);
+
+		public this(GameResources gameResources, int32 screenWidth, int32 screenHeight)
+		{
+			Reload(gameResources, screenWidth, screenHeight);
+		}
+
+		public ~this()
+		{
+
+		}
+
+		public void Reload(GameResources gameResources, int32 screenWidth, int32 screenHeight)
+		{
+			int maxClouds = 64;
+			m_planeClouds = new Vector2[maxClouds];
+			m_planeCloudDistances = new float[maxClouds];
+			m_planeCloudWidths = new int[maxClouds];
+			m_cloudRect = Rectangle(0, 0, gameResources.cloudTexture.width, gameResources.cloudTexture.height);
+
+			for (int i = 0; i < maxClouds; i++)
+			{
+			 	int32 randPos = GetRandomValue(0, screenWidth);
+			 	int32 randHeight = GetRandomValue(0, screenHeight);
+			 	float dist = ((float)(maxClouds - i) / (float)maxClouds) * 10.0f + 1.0f;
+			 	m_planeCloudDistances[i] = dist;
+			 	m_planeClouds[i] = Vector2(randPos, randHeight);
+			 	m_planeCloudWidths[i] = GetRandomValue(30, 150);
+			}
+
+		}	
+
+		public bool Update(float dt, float screenWidth)
+		{
+			bool switchScene = false;
+			m_planeTimer += dt;
+
+			UpdateClouds(dt, screenWidth);
+			
+			
+			float planeSpeed = 130.0f;
+			m_planePos.x -= planeSpeed * dt;
+
+			if (m_planePos.x < 0.0f || IsKeyPressed(KeyboardKey.KEY_SPACE))
+			{
+				switchScene = true;
+			}
+
+			return switchScene;
+		}
+
+		public void UpdateClouds(float dt, float screenWidth)
+		{
+			for (int i = 0; i < m_planeClouds.Count; i++)
+			{
+				float cloudSpeed = 100.0f * 1.0f/m_planeCloudDistances[i];
+				m_planeClouds[i].x += dt * cloudSpeed;
+				if (m_planeClouds[i].x > screenWidth+50.0f)
+				{
+					m_planeClouds[i].x = -150.0f;
+				}
+			}
+		}
+
+		public void Render(GameResources gameResources)
+		{
+			BeginDrawing();
+			ClearBackground(.(50, 120, 250, 255));
+			float planeLoc = 5.0f;
+			Color slightlyTransparent = Color(255, 255, 255, 180);
+			for (int i = 0; i < m_planeClouds.Count; i++)
+			{
+				Vector2 cloud = m_planeClouds[i];
+				if (m_planeCloudDistances[i] >= planeLoc)
+				{
+					float scaleToDraw = (1.0f/m_planeCloudDistances[i]) * 10.0f; // .01 to 1.0
+					Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, m_planeCloudWidths[i]*scaleToDraw, gameResources.cloudTexture.height*scaleToDraw);
+					DrawTexturePro(gameResources.cloudTexture, m_cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f, Color.WHITE);
+					//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
+				}
+			}
+			DrawTextureEx(gameResources.planeTexture, m_planePos, 0.0f, 1.0f, Color.RAYWHITE);
+			for (int i = 0; i < m_planeClouds.Count; i++)
+			{
+				Vector2 cloud = m_planeClouds[i];
+				if (m_planeCloudDistances[i] < planeLoc)
+				{
+					float scaleToDraw = (1.0f/m_planeCloudDistances[i]) * 10.0f; // .01 to 1.0
+					Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, m_planeCloudWidths[i]*scaleToDraw, gameResources.cloudTexture.height*scaleToDraw);
+					DrawTexturePro(gameResources.cloudTexture, m_cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f,slightlyTransparent);
+					//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
+				}
+			}
+			EndDrawing();
+		}
+
+	}
+
 	class GunbarrelScene
 	{
 		int maxDots = 6;
@@ -402,6 +508,7 @@ namespace Game
 
         float revealTimer = 0.0f;
         float revealTimerMax = 1.5f; // btw we're gonna start to need functions that are less linear
+		float revealTimerFinish = 3.0f;
 
 
 		float circTimer = 0.0f;
@@ -601,8 +708,9 @@ namespace Game
 
 		
 
-		public void Update(float _dt)
+		public GameState Update(float _dt, GameState gameState)
 		{
+			GameState result = gameState;
             //float dt = _dt / 5.0f; // for slowmo
             float dt = _dt;
 
@@ -896,12 +1004,17 @@ namespace Game
 
                 // I think we want to start incrementing our reveal timer later than the other one
                 // since the texure is smaller
-
+				
                 if (revealTimer < revealTimerMax)
                 {
-                    revealTimer += dt;
+					revealTimer += dt;
                     revealTimerInterp = Math.Min(revealTimer / revealTimerMax, 1.0f);
-                }
+                } 
+
+				if (enemyDeathTimer >= 5.0f)
+				{
+					result = GameState.PLANE_SCREEN;
+				}
                 
 			}
             
@@ -914,6 +1027,8 @@ namespace Game
                 }
                 
             }
+
+			return result;
             
 		}
 

@@ -909,6 +909,7 @@ namespace ColdOpen
 			//float rogerAirRotation = 0.0f;
 
 			GunbarrelScene gunbarrelScene = new GunbarrelScene(6, gameResources); // 6 max dots
+			PlaneScene planeScene = new PlaneScene(gameResources, screenWidth, screenHeight);
 
 			
 
@@ -983,26 +984,26 @@ namespace ColdOpen
 						UpdateMGMScreen();
 						break;
 					case (GameState.GUNBARREL_SCREEN):
-						gunbarrelScene.Update(dt);
+						gGameState = gunbarrelScene.Update(dt, gGameState);
 						// UpdateGunbarrel(ref dotStart, ref nextDot, dots, ref dotCounter, ref circTimer, ref dotGrowthTimer, dotGrowthTimerMax, dotSpeed, ref dotStopped, dotTimeout, maxDots, dt);
 						// UpdateGunbarrelControls(dotStopped, ref rogerDirection, ref rogerPosition, ref persistentDirection, ref rogerSpriteSheet, dt);
 
 
 						break;
-					// case (GameState.PLANE_SCREEN):
-					// 	bool switchScene = UpdatePlaneScene(ref planeClouds, planeCloudDistances, ref planePosition, ref planeTimer, dt, (float)screenWidth);
-					// 	if (switchScene)
-					// 	{
-					// 		gGameState = GameState.PLANE_INTERIOR_SCREEN;
-					// 	}
-					// 	break;
-					// case (GameState.PLANE_INTERIOR_SCREEN):
-					// 	planeInteriorState = UpdatePlaneInteriorScene(rogerInPlane, doorInPlane, doorWidth, doorHeight, dt, (float)screenWidth, ref planeClouds, planeCloudDistances);
-					// 	if (planeInteriorState == 2)
-					// 	{
-					// 		gGameState = GameState.SKYDIVING_SCREEN;
-					// 	}
-					// 	break;
+					case (GameState.PLANE_SCREEN):
+						bool switchScene = planeScene.Update(dt, (float)screenWidth);
+						//if (switchScene)
+						//{
+							//gGameState = GameState.PLANE_INTERIOR_SCREEN;
+						//}
+						break;
+					 //case (GameState.PLANE_INTERIOR_SCREEN):
+					 //	int planeInteriorState = UpdatePlaneInteriorScene(rogerInPlane, doorInPlane, doorWidth, doorHeight, dt, (float)screenWidth, ref planeClouds, planeCloudDistances);
+					 //	if (planeInteriorState == 2)
+					 //	{
+					 //		gGameState = GameState.SKYDIVING_SCREEN;
+					 //	}
+					 //	break;
 					// case (GameState.SKYDIVING_SCREEN):
 					// 	// set blue sky background
 					// 	if (!IsSoundPlaying(air_loop_sound))
@@ -1036,7 +1037,7 @@ namespace ColdOpen
 
 					default:
 						// UpdateMGMScreen();
-						gunbarrelScene.Update(dt);
+						gGameState = gunbarrelScene.Update(dt, gGameState);
 						break;
 					}
 
@@ -1060,33 +1061,37 @@ namespace ColdOpen
 							gunbarrelScene.Render(gameResources);
 						}
 						break;
-					// case (GameState.PLANE_SCREEN):
-					// 	ClearBackground(.(50, 120, 250, 255));
-					// 	float planeLoc = 5.0f;
-					// 	Color slightlyTransparent = Color(255, 255, 255, 180);
-					// 	for (int i = 0; i < planeClouds.Count; i++)
-					// 	{
-					// 		Vector2 cloud = planeClouds[i];
-					// 		if (planeCloudDistances[i] >= planeLoc)
-					// 		{
-					// 			float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
-					// 			Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
-					// 			DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f, Color.WHITE);
-					// 			//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
-					// 		}
-					// 	}
-					// 	DrawTextureEx(planeTexture, planePosition, planeRotation, 1.0f, Color.RAYWHITE);
-					// 	for (int i = 0; i < planeClouds.Count; i++)
-					// 	{
-					// 		Vector2 cloud = planeClouds[i];
-					// 		if (planeCloudDistances[i] < planeLoc)
-					// 		{
-					// 			float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
-					// 			Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
-					// 			DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f,slightlyTransparent);
-					// 			//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
-					// 		}
-					// 	}
+					case (GameState.PLANE_SCREEN):
+						{
+							planeScene.Render(gameResources);
+						}
+						break;
+					 	//ClearBackground(.(50, 120, 250, 255));
+					 	//float planeLoc = 5.0f;
+					 	//Color slightlyTransparent = Color(255, 255, 255, 180);
+					 	//for (int i = 0; i < planeClouds.Count; i++)
+					 	//{
+					 	//	Vector2 cloud = planeClouds[i];
+					 	//	if (planeCloudDistances[i] >= planeLoc)
+					 	//	{
+					 	//		float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
+					 	//		Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
+					 	//		DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f, Color.WHITE);
+					 	//		//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
+					 	//	}
+					 	//}
+					 	//DrawTextureEx(planeTexture, planePosition, planeRotation, 1.0f, Color.RAYWHITE);
+					 	//for (int i = 0; i < planeClouds.Count; i++)
+					 	//{
+					 	//	Vector2 cloud = planeClouds[i];
+					 	//	if (planeCloudDistances[i] < planeLoc)
+					 	//	{
+					 	//		float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
+					 	//		Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
+					 	//		DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f,slightlyTransparent);
+					 	//		//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
+					 	//	}
+					 	//}
 						
 						
 					// 	break;
