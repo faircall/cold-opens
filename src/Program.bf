@@ -1291,6 +1291,7 @@ namespace ColdOpen
 			//delete offsetSkeleton;
 
 			delete gunbarrelScene;
+			delete planeScene;
 
 			delete gameCamera.Position;
 			delete gameCamera;

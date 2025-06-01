@@ -401,7 +401,9 @@ namespace Game
 
 		public ~this()
 		{
-
+			delete m_planeClouds;
+			delete m_planeCloudDistances;
+			delete m_planeCloudWidths;
 		}
 
 		public void Reload(GameResources gameResources, int32 screenWidth, int32 screenHeight)
