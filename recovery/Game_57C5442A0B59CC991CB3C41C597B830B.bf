@@ -408,7 +408,7 @@ namespace Game
 
 		public void Reload(GameResources gameResources, int32 screenWidth, int32 screenHeight)
 		{
-			m_planePos = Vector2((float)screenWidth, 10.0f);
+			m_planePos = Vector2((float)screenWidth, 50.0f);
 			int maxClouds = 64;
 			m_planeClouds = new Vector2[maxClouds];
 			m_planeCloudDistances = new float[maxClouds];
@@ -1545,7 +1545,7 @@ namespace Game
 
 		public void Render(GameResources gameResources)
 		{
-
+			BeginDrawing();
 
 			ClearBackground(.(50, 120, 250, 255));
 			for (Vector2 cloud in clouds)
@@ -1606,6 +1606,7 @@ namespace Game
 					DrawBloodExplosion(*henchman.Position, henchman.DeathTimer);
 				}
 				projectileManager.RenderProjectiles(camera, dt);
+				EndDrawing();
 				
 
 		}

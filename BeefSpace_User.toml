@@ -1,7 +1,7 @@
 FileVersion = 1
 LastConfig = "Debug"
 LastPlatform = "Win64"
-RecentFilesList = ["src\\Game.bf", "Disassembly", "src\\Entities.bf", "src\\Program.bf", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Textures.bf", "src\\BondMath.bf", "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\String.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Core\\Drawing.bf", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Types\\NPatchInfo.bf"]
+RecentFilesList = ["src\\Game.bf", "src\\Entities.bf", "src\\Program.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Textures.bf", "src\\BondMath.bf", "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\String.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Core\\Drawing.bf", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Types\\NPatchInfo.bf"]
 
 [MainWindow]
 X = 60
@@ -59,8 +59,8 @@ TabLabel = "Entities.bf"
 TabWidth = 86.0
 Type = "SourceViewPanel"
 FilePath = "src\\Entities.bf"
-CursorPos = 16561
-VertPos = 10320.0
+CursorPos = 16723
+VertPos = 10260.0
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
@@ -68,8 +68,8 @@ TabLabel = "Program.bf"
 TabWidth = 96.0
 Type = "SourceViewPanel"
 FilePath = "src\\Program.bf"
-CursorPos = 51166
-VertPos = 25426.0
+CursorPos = 25930
+VertPos = 15400.0
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
@@ -78,8 +78,8 @@ TabLabel = "Game.bf"
 TabWidth = 79.0
 Type = "SourceViewPanel"
 FilePath = "src\\Game.bf"
-CursorPos = 42466
-VertPos = 24891.96
+CursorPos = 53393
+VertPos = 30720.0
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets]]
