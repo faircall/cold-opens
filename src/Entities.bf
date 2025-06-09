@@ -545,6 +545,12 @@ namespace Entities
 			ScreenHeight = screenHeight;
 
 		}
+
+		public ~this()
+		{
+			//delete Position;
+		}
+		
 	}
 
 	class Skeleton

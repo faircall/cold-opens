@@ -10,13 +10,6 @@ using Game;
 
 
 
-// dots should only disappear when new one is spawning
-// check this on other handware to make sure
-// grapple/punch system, make fun combat
-// make the speed more physics-y
-// make the animation more code driven
-
-// start on a plane
 
 
 namespace ColdOpen
@@ -761,7 +754,6 @@ namespace ColdOpen
 
 		public static int Main()
 		{
-			// opening block
 			
 			int32 screenWidth = 1920;
 			int32 screenHeight = 1080;
@@ -771,42 +763,7 @@ namespace ColdOpen
 			InitAudioDevice();
 			SetTargetFPS(60);
 
-			// Texture2D gunbarrelTexture = LoadTexture("gunbarrel.png");
-			// Texture2D rogerTexture = LoadTexture("adjusted_roger_resized.png");
-			// Texture2D cloudTexture = LoadTexture("cloud.png");
-			// Texture2D rogerSkyDiveTexture = LoadTexture("rogerskydive.png");
-			// Texture2D planeInteriorTexture = LoadTexture("planeInterior.png");
-
-			// Texture2D rogerHeadTexture = LoadTexture("head.png");
-			// Texture2D rogerTorsoTexture = LoadTexture("torso.png");
-			// Texture2D rogerUpperArmTexture = LoadTexture("upperarm.png");
-			// Texture2D rogerLowerArmTexture = LoadTexture("lowerarm.png");
-			// Texture2D rogerUpperLegTexture = LoadTexture("upperleg.png");
-			// Texture2D rogerLowerLegTexture = LoadTexture("lowerleg.png");
-
-			// Texture2D planeTexture = LoadTexture("plane_at_scale.png");
-
-			// Texture2D henchmanTexture = LoadTexture("enemy_basic.png");
-
-			
-
-			// int maxDots = 6;
-			// int maxClouds = 12;
-
-			// int maxPlaneClouds = 64;
-			// GunbarrelDot[] dots = new GunbarrelDot[maxDots];
-			// for (int i = 0; i < maxDots; i++)
-			// {
-			// 	dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 300.0f), 0.0f, false);
-			// }
-
-			// Vector2[] clouds = new Vector2[maxClouds];
-
-			// Vector2[] planeClouds = new Vector2[maxPlaneClouds];
-			// float[] planeCloudDistances = new float[maxPlaneClouds];
-			// int[] planeCloudWidths = new int[maxPlaneClouds];
-
-			//
+		
 			int maxBullets = 8096;
 			
 			ProjectileManager projectileManager = new ProjectileManager(maxBullets);
@@ -816,82 +773,11 @@ namespace ColdOpen
 			GameResources gameResources = new GameResources(screenWidth, screenHeight);
 			
 
-			// Rectangle cloudRect = Rectangle(0, 0, cloudTexture.width, cloudTexture.height);
-
-			// for (int i = 0; i < maxPlaneClouds; i++)
-			// {
-			// 	int32 randPos = GetRandomValue(0, screenWidth);
-			// 	int32 randHeight = GetRandomValue(0, screenHeight);
-			// 	float dist = ((float)(maxPlaneClouds - i) / (float)maxPlaneClouds) * 10.0f + 1.0f;
-			// 	planeCloudDistances[i] = dist;
-			// 	planeClouds[i] = Vector2(randPos, randHeight);
-			// 	planeCloudWidths[i] = GetRandomValue(30, 150);
-
-
-			// }
 			
-			// for (int i = 0; i < maxClouds; i++)
-			// {
-			// 	int32 randPos = GetRandomValue(0, screenWidth);
-			// 	clouds[i] = Vector2(randPos, screenHeight * (i ) / ( maxClouds));
-			// }
-
-			// int dotCounter = 0;
-			// GunbarrelDot dotStart = dots[dotCounter];
-			// GunbarrelDot nextDot = dots[dotCounter];
-			// float dotTimeout = 0.7f;
-			// float dotSpeed = 350.0f;
-			// float dotRad = 40.0f;
-
-			// bool dotStopped = false;
-			// float dotGrowthTimerMax = 0.5f;
-			// float dotGrowthTimer = 0.0f;
-
-			// we need some sounds
-			// Sound air_loop_sound = LoadSound("sounds/air_loop.wav");
-			// Sound ground_hit_sound = LoadSound("sounds/ground_hit.wav");
-			// Sound gunshot_sound = LoadSound("sounds/pistol_shot.wav");
-			// Sound gunshot_hit_sound = LoadSound("sounds/gun_hit.wav");
-
 
 			
 			// emacs comment
 			GameState gGameState = GameState.GUNBARREL_SCREEN;
-			// GameState gGameState = GameState.SKELETAL_EDITOR;
-			//GameState gGameState = GameState.SKYDIVING_SCREEN;
-			//GameState gGameState = GameState.PLANE_SCREEN;
-
-			// plane interior stuff
-			// Person rogerInPlane = new Person(Vector2(100.0f, 400.0f), 100);
-
-			// Person henchman = new Person(Vector2(30.0f, 30.0f), 50);
-
-			// float doorWidth = 30.0f;
-			// float doorHeight = 30.0f;
-			// Person doorInPlane = new Person(Vector2(935.0f - doorWidth, 304.0f - doorHeight) , 100);
-
-
-			// Shader gbShader = LoadShader("base.vs", "gunbarrel.fs");
-			// Shader slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
-			// int32 gbTexLoc = GetShaderLocation(gbShader, "tex");
-			// int32 slTexLoc = GetShaderLocation(slShader, "tex");
-			// SetShaderValueTexture(gbShader, gbTexLoc, gunbarrelTexture);
-			// SetShaderValueTexture(slShader, slTexLoc, rogerTexture);
-
-			// int32 gbTimerLoc = GetShaderLocation(gbShader, "timer");
-			// int32 gbCircLoc = GetShaderLocation(gbShader, "circCent");
-
-			// int32 slTimerLoc = GetShaderLocation(slShader, "timer");
-			// int32 slCircLoc = GetShaderLocation(slShader, "circCent");
-			// float circTimer = 0.0f;
-			// float planeTimer = 0.0f;
-			// Vector2 circLoc = *dots[maxDots - 1].Position;
-			// Vector2 rogerPosition = Vector2(circLoc.x, circLoc.y);
-			// Vector2 planePosition = Vector2((float)screenWidth, 150.0f);
-			// float planeRotation = 0.0f;			
-			// SetShaderValue(gbShader, gbCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
-			// SetShaderValue(gbShader, gbTimerLoc, (void*)&circTimer, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
-			// SetShaderValue(slShader, slCircLoc, (void*)&circLoc, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
 			
 
 			float groundStart = 50000.0f;
@@ -902,70 +788,15 @@ namespace ColdOpen
 			GameCamera gameCamera = new GameCamera(cameraPosition, screenWidth, screenHeight);
 			Vector2 rogerVelocity = Vector2(0.0f, 0.0f);
 
-			//SpriteSheet rogerSpriteSheet = new SpriteSheet(0, 16, 0.0f, 0.125f, 128.0f, 128.0f);
-
-			//SpriteSheet rogerSpriteSheetSkyDive = new SpriteSheet(0, 1, 0.0f, 0.125f, 128.0f, 128.0f);
-
-			//float rogerAirRotation = 0.0f;
+			
 
 			GunbarrelScene gunbarrelScene = new GunbarrelScene(6, gameResources); // 6 max dots
 			PlaneScene planeScene = new PlaneScene(gameResources, screenWidth, screenHeight);
+			SkydivingScene skydivingScene = new SkydivingScene(100, 100, screenWidth, screenHeight, cameraPosition);
 
 			
 
-			// float armOscilator = 0.0f;
-			// float armAngleToOscilate = Math.Sin(armOscilator*2*Math.PI_f / 2.0f) * 10.0f;
-
-			// Vector2 rogerTorsoPosition = Vector2(rogerPosition.x, rogerPosition.y);
-			// Vector2 rogerHeadPosition = Vector2(rogerPosition.x, rogerPosition.y);
-			// Vector2 rogerUpperArmPosition = Vector2(rogerPosition.x, rogerPosition.y);
-			// Vector2 rogerLowerArmPosition = Vector2(rogerPosition.x, rogerPosition.y);
-			// Vector2 rogerUpperLegPosition = Vector2(rogerPosition.x, rogerPosition.y);
-			// Vector2 rogerLowerLegPosition = Vector2(rogerPosition.x, rogerPosition.y);
-
-			// load the new skeleton and set, if it exists
-			// System.IO.BufferedFileStream vbufferedStream = new System.IO.BufferedFileStream();
-			// vbufferedStream.Open("skeleton.bin");
-			// Skeleton baseSkeleton = new Skeleton();
-			// Skeleton offsetSkeleton = new Skeleton();
-
-
-			// baseSkeleton.Head = vbufferedStream.Read<Vector2>();
-			// baseSkeleton.Torso = vbufferedStream.Read<Vector2>();
-			// baseSkeleton.UpperArm = vbufferedStream.Read<Vector2>();
-
-			// baseSkeleton.LowerArm = vbufferedStream.Read<Vector2>();
-			// baseSkeleton.UpperLeg = vbufferedStream.Read<Vector2>();
-			// baseSkeleton.LowerLeg = vbufferedStream.Read<Vector2>();
-
-			// // check ordering on that subtract
-			// offsetSkeleton.Head = Matrix2.Vector2Subtract(baseSkeleton.Head, baseSkeleton.Torso);
-			// offsetSkeleton.UpperArm = Matrix2.Vector2Subtract(baseSkeleton.UpperArm, baseSkeleton.Torso);
-			// offsetSkeleton.LowerArm = Matrix2.Vector2Subtract(baseSkeleton.LowerArm, baseSkeleton.Torso);
-			// offsetSkeleton.UpperLeg = Matrix2.Vector2Subtract(baseSkeleton.UpperLeg, baseSkeleton.Torso);
-			// offsetSkeleton.LowerLeg = Matrix2.Vector2Subtract(baseSkeleton.LowerLeg, baseSkeleton.Torso);
-
-			// vbufferedStream.Close();
-			// delete vbufferedStream;
-
-			// rogerInPlane.BaseSkeleton = &baseSkeleton;
-			// rogerInPlane.OffsetSkeleton = offsetSkeleton;
-			// //delete rogerInPlane.BaseSkeleton;
-			// // move the torso to be at roger position
-			// // and then move everything else by that amount?
 			
-			// // just use these actually
-			// //delete baseSkeleton;
-			// // then also write an update position function for each thing in it
-
-			// SkeletalEditorState skeletalEditorState = SkeletalEditorState.TORSO;
-
-			// bool needSave = false;
-			// bool needLoad = false;
-
-			// int planeInteriorState = 0;
-			// int skydivingState = 0;
-			// float persistentDirection = 0.0f;
 			
 			MainWhileLoop:
 			while (!WindowShouldClose())
@@ -985,9 +816,6 @@ namespace ColdOpen
 						break;
 					case (GameState.GUNBARREL_SCREEN):
 						gGameState = gunbarrelScene.Update(dt, gGameState);
-						// UpdateGunbarrel(ref dotStart, ref nextDot, dots, ref dotCounter, ref circTimer, ref dotGrowthTimer, dotGrowthTimerMax, dotSpeed, ref dotStopped, dotTimeout, maxDots, dt);
-						// UpdateGunbarrelControls(dotStopped, ref rogerDirection, ref rogerPosition, ref persistentDirection, ref rogerSpriteSheet, dt);
-
 
 						break;
 					case (GameState.PLANE_SCREEN):
@@ -997,44 +825,7 @@ namespace ColdOpen
 							//gGameState = GameState.PLANE_INTERIOR_SCREEN;
 						//}
 						break;
-					 //case (GameState.PLANE_INTERIOR_SCREEN):
-					 //	int planeInteriorState = UpdatePlaneInteriorScene(rogerInPlane, doorInPlane, doorWidth, doorHeight, dt, (float)screenWidth, ref planeClouds, planeCloudDistances);
-					 //	if (planeInteriorState == 2)
-					 //	{
-					 //		gGameState = GameState.SKYDIVING_SCREEN;
-					 //	}
-					 //	break;
-					// case (GameState.SKYDIVING_SCREEN):
-					// 	// set blue sky background
-					// 	if (!IsSoundPlaying(air_loop_sound))
-					// 	{
-					// 		PlaySound(air_loop_sound);		
-					// 	}
-					//skydivingState = UpdateSkydivingScene(ref clouds, rogerInPlane, henchman, dt, gameCamera, projectileManager, audioManager, groundStart);
-
-					// 	// do audio stuff
-					// 	if (audioManager.SoundsToPlay.Count > 0) {
-					// 		for (var sound in audioManager.SoundsToPlay) {
-					// 			if (sound == "splat") {
-					// 				PlaySound(ground_hit_sound);
-					// 				audioManager.SoundsToPlay.Remove(sound);
-					// 			}
-					// 			if (sound == "pistol_shot") {
-					// 				PlaySound(gunshot_sound);
-					// 				audioManager.SoundsToPlay.Remove(sound);
-					// 			}
-					// 			if (sound == "gun_hit") {
-					// 				PlaySound(gunshot_hit_sound);
-					// 				audioManager.SoundsToPlay.Remove(sound);
-					// 			}
-					// 		}
-					// 	}
-						
-
-						
-						
-					// 	break;
-
+	
 					default:
 						// UpdateMGMScreen();
 						gGameState = gunbarrelScene.Update(dt, gGameState);
@@ -1066,197 +857,7 @@ namespace ColdOpen
 							planeScene.Render(gameResources);
 						}
 						break;
-					 	//ClearBackground(.(50, 120, 250, 255));
-					 	//float planeLoc = 5.0f;
-					 	//Color slightlyTransparent = Color(255, 255, 255, 180);
-					 	//for (int i = 0; i < planeClouds.Count; i++)
-					 	//{
-					 	//	Vector2 cloud = planeClouds[i];
-					 	//	if (planeCloudDistances[i] >= planeLoc)
-					 	//	{
-					 	//		float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
-					 	//		Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
-					 	//		DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f, Color.WHITE);
-					 	//		//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
-					 	//	}
-					 	//}
-					 	//DrawTextureEx(planeTexture, planePosition, planeRotation, 1.0f, Color.RAYWHITE);
-					 	//for (int i = 0; i < planeClouds.Count; i++)
-					 	//{
-					 	//	Vector2 cloud = planeClouds[i];
-					 	//	if (planeCloudDistances[i] < planeLoc)
-					 	//	{
-					 	//		float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
-					 	//		Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
-					 	//		DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f,slightlyTransparent);
-					 	//		//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
-					 	//	}
-					 	//}
-						
-						
-					// 	break;
-					// case (GameState.PLANE_INTERIOR_SCREEN):
-					// 	ClearBackground(.(50, 120, 250, 255));
-					// 	for (int i = 0; i < planeClouds.Count; i++)
-					// 	{
-					// 		Vector2 cloud = planeClouds[i];
-					// 		if (planeCloudDistances[i] <= 5.0f)
-					// 		{
-					// 			float scaleToDraw = (1.0f/planeCloudDistances[i]) * 10.0f; // .01 to 1.0
-					// 			Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, planeCloudWidths[i]*scaleToDraw, cloudTexture.height*scaleToDraw);
-					// 			DrawTexturePro(cloudTexture, cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f, Color.WHITE);
-					// 			//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
-					// 		}
-					// 	}
-					// 	DrawRectangle((int32)doorInPlane.Position.x - 150, (int32)doorInPlane.Position.y - 250, 300, 500, Color.RED);
-
-
-					// 	//DrawPartialTextureCentered(planeInteriorTexture, Rectangle(0.0f, 0.0f, 10.0f, 10.0f), doorInPlane.Position.x, doorInPlane.Position.y, doorWidth, doorHeight, 0.0f, 10.0f, Color.WHITE);
-					// 	DrawTextureEx(planeInteriorTexture, .(0.0f, 0.0f), 0.0f, 10.0f, Color.RAYWHITE);
-					// 	if (planeInteriorState == 0)
-					// 	{
-					// 		DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerInPlane.Position.x - 50.0f, rogerInPlane.Position.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 4.0f, Color.WHITE);
-					// 	}
-					// 	else
-					// 	{
-					// 		baseSkeleton.Torso = *rogerInPlane.Position;
-					// 		// this will need work to take into account the rotation
-					// 		CenterSkeleton(&baseSkeleton, offsetSkeleton, rogerAirRotation);
-					// 		RotateLowerArm(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
-					// 		RotateUpperArm(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
-					// 		RotateLowerLeg(&baseSkeleton, rogerAirRotation, armAngleToOscilate);
-
-					// 		DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Torso.x - cameraPosition.x, baseSkeleton.Torso.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-					// 		DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperArm.x - cameraPosition.x, baseSkeleton.UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
-					// 		DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerArm.x - cameraPosition.x, baseSkeleton.LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
-					// 		DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.UpperLeg.x - cameraPosition.x, baseSkeleton.UpperLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-					// 		DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.LowerLeg.x - cameraPosition.x , baseSkeleton.LowerLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
-					// 		DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(baseSkeleton.Head.x- cameraPosition.x , baseSkeleton.Head.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-					// 	}
-
-					// 	///DrawPartialTextureCentered(rogerTexture, rogerSpriteSheet.CurrentRect, rogerInPlane.Position.x - 50.0f, rogerInPlane.Position.y, rogerSpriteSheet.FrameWidth, rogerSpriteSheet.FrameHeight, 0.0f, 4.0f, Color.WHITE);
-					// 	DrawMouseDebug();
-					// 	DrawVector2Debug(*rogerInPlane.Position, 10, 30);
-					// 	//DrawCircle((int32)planePressurePoint.x, (int32)planePressurePoint.y, 15.0f, Color.PINK);
-					// 	break;
-					// case (GameState.SKYDIVING_SCREEN):
-					// 	// set blue sky background
-					// 	ClearBackground(.(50, 120, 250, 255));
-					// 	for (Vector2 cloud in clouds)
-					// 	{
-					// 		//cloud.x = cloud.x - cameraPosition.x;
-					// 		DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, *gameCamera.Position), 0.0f, 5.0f, Color.WHITE);
-					// 	}
-
-					// 	// draw the ground when it's in frame, or just draw it offscreen constantly
-					// 	// start by the dumb way
-					// 	DrawRectangle(0, (int32)(groundStart - gameCamera.Position.y), screenWidth, screenHeight, Color.DARKBROWN);
-
-					// 	//DrawTextureEx(rogerSkyDiveTexture, *rogerInPlane.Position - *gameCamera.Position, rogerInPlane.AirRotation, 3.0f, Color.WHITE);
-					// 	if (rogerInPlane.Health > 0)
-					// 	{
-					// 		DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerInPlane.Position.x - gameCamera.Position.x, rogerInPlane.Position.y - gameCamera.Position.y, 1.5f*128.0f, 1.5f*128.0f),Vector2(1.5f*64.0f, 1.5f*64.0f), rogerInPlane.AirRotation, Color.WHITE);
-					// 	}
-					// 	else
-					// 	{
-							// prototype one
-							//DrawBloodExplosion(*rogerInPlane.Position, gameCamera, rogerInPlane.DeathTimer);
-							//DrawTexturePro(rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(rogerInPlane.Position.x - gameCamera.Position.x, rogerInPlane.Position.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerInPlane.AirRotation, Color.WHITE);
-							//for (int i = 0; i < rogerInPlane.Particles.Count; i++)
-							//{
-							//	Particle particle = rogerInPlane.Particles[i];
-							//	if (rogerInPlane.DeathTimer >= particle.LifetimeStart &&
-							//		rogerInPlane.DeathTimer <= particle.LifetimeEnd)
-							//	{
-							//		// add gravity
-							//		Vector2 gravity = Vector2(0.0f, 2200.0f*dt);
-							//		particle.Velocity += gravity;
-							//		particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
-							//		DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
-							//		rogerInPlane.Particles[i] = particle;
-							//	}
-							//}
-							// rogerInPlane.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
-							//DrawParticleSystemPerson(rogerInPlane, gameCamera, dt);
-						// }
-
-
-						
-
-						// think about the rotation point
-						// but also think like, actual skeletal system
-
-
-						// TODO: make these centered
-						// if (henchman.Health > 0)
-						// {
-						// 	DrawTextureEx(henchmanTexture, *henchman.Position - *gameCamera.Position, 0.0f, 2.0f, Color.WHITE);
-						// }
-						// else
-						// {
-						// 	// we haven't made the particle system yet
-						// 	henchman.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
-						// 	//DrawParticleSystemPerson(henchman, gameCamera, dt);
-						// 	//DrawBloodExplosion(*henchman.Position, gameCamera, henchman.DeathTimer);
-						// }
-						// projectileManager.RenderProjectiles(gameCamera, dt);
-						/*DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).Torso.x - gameCamera.Position.x, (*rogerInPlane.BaseSkeleton).Torso.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).UpperArm.x - cameraPosition.x, (*rogerInPlane.BaseSkeleton).UpperArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
-						DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).LowerArm.x - cameraPosition.x, (*rogerInPlane.BaseSkeleton).LowerArm.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
-						DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).LowerLeg.x - cameraPosition.x , (*rogerInPlane.BaseSkeleton).LowerLeg.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation + armAngleToOscilate, Color.WHITE);
-						DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle((*rogerInPlane.BaseSkeleton).Head.x- cameraPosition.x , (*rogerInPlane.BaseSkeleton).Head.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);*/
-
-						//DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + headOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						//DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + torsoOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						//DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperArmOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						//DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerArmOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						//DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + upperLegOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-						//DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerPosition.x - cameraPosition.x + lowerLegOffset, rogerPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-
-						// break;
-					// case GameState.SKELETAL_EDITOR:
-					// 	ClearBackground(.(50, 120, 250, 255));
-					// 	switch (skeletalEditorState)
-					// 	{
-					// 	case SkeletalEditorState.WHOLE_BODY:
-					// 		DrawText("whole body", 10, 10, 12, Color.WHITE);
-					// 		break;
-					// 	case SkeletalEditorState.HEAD:
-					// 		DrawText("head", 10, 10, 12, Color.WHITE);
-					// 		break;
-					// 	case SkeletalEditorState.TORSO:
-					// 		DrawText("torso", 10, 10, 12, Color.WHITE);
-					// 		break;
-					// 	case SkeletalEditorState.UPPER_ARM:
-					// 		DrawText("upper arm", 10, 10, 12, Color.WHITE);
-					// 		break;
-					// 	case SkeletalEditorState.LOWER_ARM:
-					// 		DrawText("lower arm", 10, 10, 12, Color.WHITE);
-					// 		break;
-					// 	case SkeletalEditorState.UPPER_LEG:
-					// 		DrawText("upper leg", 10, 10, 12, Color.WHITE);
-					// 		break;
-					// 	case SkeletalEditorState.LOWER_LEG:
-					// 		DrawText("lower leg", 10, 10, 12, Color.WHITE);
-					// 		break;
-					// 	default:
-					// 	}
-						
-						
-
-					// 	DrawTexturePro(rogerHeadTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerHeadPosition.x- cameraPosition.x , rogerHeadPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-					// 	DrawTexturePro(rogerTorsoTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerTorsoPosition.x - cameraPosition.x, rogerTorsoPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-					// 	DrawTexturePro(rogerUpperArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerUpperArmPosition.x - cameraPosition.x, rogerUpperArmPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-					// 	DrawTexturePro(rogerLowerArmTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerLowerArmPosition.x - cameraPosition.x, rogerLowerArmPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-					// 	DrawTexturePro(rogerUpperLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerUpperLegPosition.x - cameraPosition.x, rogerUpperLegPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-					// 	DrawTexturePro(rogerLowerLegTexture, Rectangle(0.0f, 0.0f, 32.0f, 32.0f), Rectangle(rogerLowerLegPosition.x - cameraPosition.x , rogerLowerLegPosition.y - cameraPosition.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), rogerAirRotation, Color.WHITE);
-					// 	DrawCircle((int32)rogerTorsoPosition.x, (int32)rogerTorsoPosition.y, 5.0f, Color.RED);
-					// 	DrawCircle((int32)rogerHeadPosition.x, (int32)rogerHeadPosition.y, 5.0f, Color.RED);
-					// 	DrawCircle((int32)rogerUpperArmPosition.x, (int32)rogerUpperArmPosition.y, 5.0f, Color.RED);
-					// 	DrawCircle((int32)rogerLowerArmPosition.x, (int32)rogerLowerArmPosition.y, 5.0f, Color.RED);
-					// 	DrawCircle((int32)rogerUpperLegPosition.x, (int32)rogerUpperLegPosition.y, 5.0f, Color.RED);
-					// 	DrawCircle((int32)rogerLowerLegPosition.x, (int32)rogerLowerLegPosition.y, 5.0f, Color.RED);
-					// 	break;
+					 	
 					default:
 						UpdateMGMScreen();
 						break;
@@ -1267,52 +868,22 @@ namespace ColdOpen
 				
 			}
 
-			// for (var thing in dots)
-			// {
-			// 	delete thing.Position;
-			// 	delete thing;
-			// }
-			// delete dots;
-			// delete rogerSpriteSheet;
-
-			// delete rogerInPlane;
-			// delete rogerInPlane.Direction;
-			//delete rogerInPlane.Position;
-			//delete rogerInPlane.Velocity;
-			//for (var thing in rogerInPlane.Particles)
-			//{
-			//	delete thing;
-			//}
-			//delete rogerInPlane.Particles;
-			////delete rogerInPlane.BaseSkeleton;
-			////delete rogerInPlane.OffsetSkeleton;
-			//delete rogerInPlane;
-
-			//delete offsetSkeleton;
 
 			delete gunbarrelScene;
 			delete planeScene;
+			delete skydivingScene;
 
 			delete gameCamera.Position;
 			delete gameCamera;
 
-			
-			// delete doorInPlane;
-
-			
-			// delete henchman;
+		
 
 			delete projectileManager;
 
 			delete gameResources;
+			
 
-			// delete clouds;
-			// delete planeClouds;
-			// delete planeCloudDistances;
-			// delete planeCloudWidths;
-			// delete rogerSpriteSheetSkyDive;
-			// delete baseSkeleton;
-			// delete offsetSkeleton;
+		
 			delete audioManager;
 			return 0;
 		}

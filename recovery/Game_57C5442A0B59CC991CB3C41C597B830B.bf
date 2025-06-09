@@ -384,6 +384,115 @@ namespace Game
 
 	}
 
+	class PlaneScene
+	{
+		Vector2[] m_planeClouds;
+		float[] m_planeCloudDistances;
+		Vector2 m_planePos;
+		int[] m_planeCloudWidths;
+		float m_screenWidth;
+		Rectangle m_cloudRect;// = Rectangle(0, 0, cloudTexture.width, cloudTexture.height);
+		float m_planeTimer;
+
+		public this(GameResources gameResources, int32 screenWidth, int32 screenHeight)
+		{
+			Reload(gameResources, screenWidth, screenHeight);
+		}
+
+		public ~this()
+		{
+			delete m_planeClouds;
+			delete m_planeCloudDistances;
+			delete m_planeCloudWidths;
+		}
+
+		public void Reload(GameResources gameResources, int32 screenWidth, int32 screenHeight)
+		{
+			m_planePos = Vector2((float)screenWidth, 10.0f);
+			int maxClouds = 64;
+			m_planeClouds = new Vector2[maxClouds];
+			m_planeCloudDistances = new float[maxClouds];
+			m_planeCloudWidths = new int[maxClouds];
+			m_cloudRect = Rectangle(0, 0, gameResources.cloudTexture.width, gameResources.cloudTexture.height);
+
+			for (int i = 0; i < maxClouds; i++)
+			{
+			 	int32 randPos = GetRandomValue(0, screenWidth);
+			 	int32 randHeight = GetRandomValue(0, screenHeight);
+			 	float dist = ((float)(maxClouds - i) / (float)maxClouds) * 10.0f + 1.0f;
+			 	m_planeCloudDistances[i] = dist;
+			 	m_planeClouds[i] = Vector2(randPos, randHeight);
+			 	m_planeCloudWidths[i] = GetRandomValue(30, 150);
+			}
+
+		}	
+
+		public bool Update(float dt, float screenWidth)
+		{
+			bool switchScene = false;
+			m_planeTimer += dt;
+
+			UpdateClouds(dt, screenWidth);
+			
+			
+			float planeSpeed = 130.0f;
+			m_planePos.x -= planeSpeed * dt;
+
+			if (m_planePos.x < 0.0f || IsKeyPressed(KeyboardKey.KEY_SPACE))
+			{
+				switchScene = true;
+			}
+
+			return switchScene;
+		}
+
+		public void UpdateClouds(float dt, float screenWidth)
+		{
+			for (int i = 0; i < m_planeClouds.Count; i++)
+			{
+				float cloudSpeed = 100.0f * 1.0f/m_planeCloudDistances[i];
+				m_planeClouds[i].x += dt * cloudSpeed;
+				if (m_planeClouds[i].x > screenWidth+50.0f)
+				{
+					m_planeClouds[i].x = -150.0f;
+				}
+			}
+		}
+
+		public void Render(GameResources gameResources)
+		{
+			BeginDrawing();
+			ClearBackground(.(50, 120, 250, 255));
+			float planeLoc = 5.0f;
+			Color slightlyTransparent = Color(255, 255, 255, 180);
+			for (int i = 0; i < m_planeClouds.Count; i++)
+			{
+				Vector2 cloud = m_planeClouds[i];
+				if (m_planeCloudDistances[i] >= planeLoc)
+				{
+					float scaleToDraw = (1.0f/m_planeCloudDistances[i]) * 10.0f; // .01 to 1.0
+					Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, m_planeCloudWidths[i]*scaleToDraw, gameResources.cloudTexture.height*scaleToDraw);
+					DrawTexturePro(gameResources.cloudTexture, m_cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f, Color.WHITE);
+					//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
+				}
+			}
+			DrawTextureEx(gameResources.planeTexture, m_planePos, 0.0f, 1.0f, Color.RAYWHITE);
+			for (int i = 0; i < m_planeClouds.Count; i++)
+			{
+				Vector2 cloud = m_planeClouds[i];
+				if (m_planeCloudDistances[i] < planeLoc)
+				{
+					float scaleToDraw = (1.0f/m_planeCloudDistances[i]) * 10.0f; // .01 to 1.0
+					Rectangle dest = Rectangle((int)cloud.x, (int)cloud.y, m_planeCloudWidths[i]*scaleToDraw, gameResources.cloudTexture.height*scaleToDraw);
+					DrawTexturePro(gameResources.cloudTexture, m_cloudRect, dest, Vector2(0.0f, 0.0f), 0.0f,slightlyTransparent);
+					//DrawTextureEx(cloudTexture, Matrix2.Vector2Subtract(cloud, cameraPosition), 0.0f, scaleToDraw, Color.WHITE);
+				}
+			}
+			EndDrawing();
+		}
+
+	}
+
 	class GunbarrelScene
 	{
 		int maxDots = 6;
@@ -402,6 +511,7 @@ namespace Game
 
         float revealTimer = 0.0f;
         float revealTimerMax = 1.5f; // btw we're gonna start to need functions that are less linear
+		float revealTimerFinish = 3.0f;
 
 
 		float circTimer = 0.0f;
@@ -601,8 +711,9 @@ namespace Game
 
 		
 
-		public void Update(float _dt)
+		public GameState Update(float _dt, GameState gameState)
 		{
+			GameState result = gameState;
             //float dt = _dt / 5.0f; // for slowmo
             float dt = _dt;
 
@@ -896,12 +1007,17 @@ namespace Game
 
                 // I think we want to start incrementing our reveal timer later than the other one
                 // since the texure is smaller
-
+				
                 if (revealTimer < revealTimerMax)
                 {
-                    revealTimer += dt;
+					revealTimer += dt;
                     revealTimerInterp = Math.Min(revealTimer / revealTimerMax, 1.0f);
-                }
+                } 
+
+				if (enemyDeathTimer >= 5.0f)
+				{
+					result = GameState.PLANE_SCREEN;
+				}
                 
 			}
             
@@ -914,6 +1030,8 @@ namespace Game
                 }
                 
             }
+
+			return result;
             
 		}
 
@@ -1075,56 +1193,7 @@ namespace Game
 	}
 
 
-	class SkyScene
-	{
-		Rectangle cloudRect;
-		int maxClouds;
-		int screenWidth;
-		int screenHeight;
-		int maxPlaneClouds;
-		float[] planeCloudDistances;
-		int[] planeCloudWidths;
-		Vector2[] planeClouds;
-		Vector2[] clouds;
-		
-		public this(GameResources gameResources, int _maxClouds, int _maxPlaneClouds, int _screenWidth, int _screenHeight)
-		{
-			maxClouds = _maxClouds;
-			maxPlaneClouds = _maxPlaneClouds;
-			cloudRect = Rectangle(0, 0, gameResources.cloudTexture.width, gameResources.cloudTexture.height);
-
-			planeCloudDistances = new float[maxPlaneClouds];
-			planeCloudWidths = new int[maxPlaneClouds];
-			planeClouds = new Vector2[maxPlaneClouds];
-			screenWidth = _screenWidth;
-			screenHeight = _screenHeight;
-			
-
-			for (int i = 0; i < maxPlaneClouds; i++)
-			{
-				int32 randPos = GetRandomValue(0, (int32)screenWidth);
-				int32 randHeight = GetRandomValue(0, (int32)screenHeight);
-				float dist = ((float)(maxPlaneClouds - i) / (float)maxPlaneClouds) * 10.0f + 1.0f;
-				planeCloudDistances[i] = dist;
-				planeClouds[i] = Vector2(randPos, randHeight);
-				planeCloudWidths[i] = GetRandomValue(30, 150);
-
-
-			}
-
-			clouds = new Vector2[maxClouds];
-
-			
-			
-			
-
-			for (int i = 0; i < maxClouds; i++)
-			{
-				int32 randPos = GetRandomValue(0, (int32)screenWidth);
-				clouds[i] = Vector2(randPos, (int32)screenHeight * (i ) / ( maxClouds));
-			}
-		}
-	}
+	
 
 	class PlaneInteriorScene
 	{
@@ -1150,7 +1219,7 @@ namespace Game
 		ProjectileManager projectileManager;
 		AudioManager audioManager;
 		float groundStart;
-		GameCamera gameCamera;
+		//GameCamera gameCamera;
 		int32 screenWidth;
 		int32 screenHeight;
 
@@ -1162,7 +1231,13 @@ namespace Game
 
 		public ~this()
 		{
-
+			delete clouds;
+			delete projectileManager;
+			delete roger;
+			delete henchman;
+			delete audioManager;
+			delete camera.Position;
+			delete camera;
 		}
 
 		public void InitScene(int maxClouds, int maxBullets, int32 _screenWidth, int32 _screenHeight, Vector2 cameraPosition)
@@ -1175,7 +1250,7 @@ namespace Game
 			audioManager = new AudioManager();
 			screenWidth = _screenWidth;
 			screenHeight = _screenHeight;
-			gameCamera =new GameCamera(cameraPosition, _screenWidth, _screenHeight);
+			camera = new GameCamera(cameraPosition, _screenWidth, _screenHeight);
 		}
 
 		void DrawBloodExplosion(Vector2 originPosition, float timer)
@@ -1476,23 +1551,23 @@ namespace Game
 			for (Vector2 cloud in clouds)
 			{
 			 		//cloud.x = cloud.x - cameraPosition.x;
-			 		DrawTextureEx(gameResources.cloudTexture, Matrix2.Vector2Subtract(cloud, *gameCamera.Position), 0.0f, 5.0f, Color.WHITE);
+			 		DrawTextureEx(gameResources.cloudTexture, Matrix2.Vector2Subtract(cloud, *camera.Position), 0.0f, 5.0f, Color.WHITE);
 			 }
 
 			// 	draw the ground when it's in frame, or just draw it offscreen constantly
 			// start by the dumb way
-			DrawRectangle(0, (int32)(groundStart - gameCamera.Position.y), screenWidth, screenHeight, Color.DARKBROWN);
+			DrawRectangle(0, (int32)(groundStart - camera.Position.y), screenWidth, screenHeight, Color.DARKBROWN);
 
-			DrawTextureEx(gameResources.rogerSkyDiveTexture, Matrix2.Vector2Subtract(*roger.Position, *gameCamera.Position), roger.AirRotation, 3.0f, Color.WHITE);
+			DrawTextureEx(gameResources.rogerSkyDiveTexture, Matrix2.Vector2Subtract(*roger.Position, *camera.Position), roger.AirRotation, 3.0f, Color.WHITE);
 			if (roger.Health > 0)
 			{
-			 		DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - gameCamera.Position.x, roger.Position.y - gameCamera.Position.y, 1.5f*128.0f, 1.5f*128.0f),Vector2(1.5f*64.0f, 1.5f*64.0f), roger.AirRotation, Color.WHITE);
+			 		DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - camera.Position.x, roger.Position.y - camera.Position.y, 1.5f*128.0f, 1.5f*128.0f),Vector2(1.5f*64.0f, 1.5f*64.0f), roger.AirRotation, Color.WHITE);
 			}
 			else
 			{
 					// prototype one
 					DrawBloodExplosion(*roger.Position, roger.DeathTimer);
-					DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - gameCamera.Position.x, roger.Position.y - gameCamera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), roger.AirRotation, Color.WHITE);
+					DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - camera.Position.x, roger.Position.y - camera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), roger.AirRotation, Color.WHITE);
 					for (int i = 0; i < roger.Particles.Count; i++)
 					{
 						Particle particle = roger.Particles[i];
@@ -1503,12 +1578,12 @@ namespace Game
 							Vector2 gravity = Vector2(0.0f, 2200.0f*dt);
 							particle.Velocity += gravity;
 							particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
-							DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+							DrawCircle((int32)(particle.Position.x - camera.Position.x), (int32)(particle.Position.y - camera.Position.y), 3.0f, Color.RED);
 							roger.Particles[i] = particle;
 						}
 					}
-					roger.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
-					DrawParticleSystemPerson(roger, gameCamera, dt);
+					roger.DrawParticleSystem(camera, dt, 2200.0f, groundStart);
+					DrawParticleSystemPerson(roger, camera, dt);
 				}
 
 
@@ -1521,7 +1596,7 @@ namespace Game
             	//	TODO: make these centered
 				if (henchman.Health > 0)
 				{
-					DrawTextureEx(gameResources.henchmanTexture, *henchman.Position - *gameCamera.Position, 0.0f, 2.0f, Color.WHITE);
+					DrawTextureEx(gameResources.henchmanTexture, *henchman.Position - *camera.Position, 0.0f, 2.0f, Color.WHITE);
 				}
 				else
 				{
@@ -1530,7 +1605,7 @@ namespace Game
 					//DrawParticleSystemPerson(henchman, gameCamera, dt);
 					DrawBloodExplosion(*henchman.Position, henchman.DeathTimer);
 				}
-				projectileManager.RenderProjectiles(gameCamera, dt);
+				projectileManager.RenderProjectiles(camera, dt);
 				
 
 		}

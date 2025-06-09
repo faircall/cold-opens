@@ -1,7 +1,7 @@
 FileVersion = 1
 LastConfig = "Debug"
 LastPlatform = "Win64"
-RecentFilesList = ["src\\Game.bf", "src\\Program.bf", "src\\BondMath.bf", "src\\Entities.bf", "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\String.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Core\\Drawing.bf", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Types\\NPatchInfo.bf"]
+RecentFilesList = ["src\\Game.bf", "Disassembly", "src\\Entities.bf", "src\\Program.bf", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Textures.bf", "src\\BondMath.bf", "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\String.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Core\\Drawing.bf", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Types\\NPatchInfo.bf"]
 
 [MainWindow]
 X = 60
@@ -42,12 +42,16 @@ DefaultDocumentsTabbedView = true
 Type = "TabbedView"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
+TabLabel = "Disassembly"
+TabWidth = 122.0
+Type = "DisassemblyPanel"
+
+[[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
 TabLabel = "String.bf"
 TabWidth = 79.0
 Type = "SourceViewPanel"
 FilePath = "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\String.bf"
 CursorPos = 26624
-VertPos = 21360.0
 ProjectName = "corlib"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
@@ -55,8 +59,8 @@ TabLabel = "Entities.bf"
 TabWidth = 86.0
 Type = "SourceViewPanel"
 FilePath = "src\\Entities.bf"
-CursorPos = 17647
-VertPos = 10746.0
+CursorPos = 16561
+VertPos = 10320.0
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
@@ -64,8 +68,8 @@ TabLabel = "Program.bf"
 TabWidth = 96.0
 Type = "SourceViewPanel"
 FilePath = "src\\Program.bf"
-CursorPos = 30245
-VertPos = 17540.0
+CursorPos = 51166
+VertPos = 25426.0
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
@@ -74,8 +78,8 @@ TabLabel = "Game.bf"
 TabWidth = 79.0
 Type = "SourceViewPanel"
 FilePath = "src\\Game.bf"
-CursorPos = 39996
-VertPos = 22746.0
+CursorPos = 42466
+VertPos = 24891.96
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets]]
@@ -103,7 +107,7 @@ TabLabel = "Watch"
 TabWidth = 86.0
 Type = "WatchPanel"
 Columns = [{Width = 200.0}, {Width = 200.0}, {Width = 200.0}]
-Items = ["ParticleTimer", "slTimerLoc", "deathTimerLoc", "bloodShader", "gbBackgroundShader", ""]
+Items = [""]
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
 TabLabel = "Auto"
