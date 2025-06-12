@@ -1,7 +1,7 @@
 FileVersion = 1
 LastConfig = "Debug"
 LastPlatform = "Win64"
-RecentFilesList = ["src\\Game.bf", "src\\Entities.bf", "src\\Program.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Textures.bf", "src\\BondMath.bf", "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\String.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Core\\Drawing.bf", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Types\\NPatchInfo.bf"]
+RecentFilesList = ["src\\Program.bf", "src\\Game.bf", "src\\Entities.bf", "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\Array.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Textures.bf", "src\\BondMath.bf", "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\String.bf", "Disassembly", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Raylib\\Core\\Drawing.bf", "Disassembly", "Disassembly", "c:\\Program Files\\BeefLang\\BeefLibs\\raylib-beef\\src\\Types\\NPatchInfo.bf"]
 
 [MainWindow]
 X = 60
@@ -22,7 +22,7 @@ Type = "DockingFrame"
 SplitType = 1
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets]]
-RequestedWidth = 200.0
+RequestedWidth = 194.0
 RequestedHeight = 200.0
 Type = "TabbedView"
 
@@ -42,6 +42,15 @@ DefaultDocumentsTabbedView = true
 Type = "TabbedView"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
+TabLabel = "Array.bf"
+TabWidth = 86.0
+Type = "SourceViewPanel"
+FilePath = "c:\\Program Files\\BeefLang\\BeefLibs\\corlib\\src\\Array.bf"
+CursorPos = 6461
+VertPos = 4520.0
+ProjectName = "corlib"
+
+[[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
 TabLabel = "Disassembly"
 TabWidth = 122.0
 Type = "DisassemblyPanel"
@@ -59,27 +68,27 @@ TabLabel = "Entities.bf"
 TabWidth = 86.0
 Type = "SourceViewPanel"
 FilePath = "src\\Entities.bf"
-CursorPos = 16723
-VertPos = 10260.0
-ProjectName = "ColdOpen"
-
-[[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
-TabLabel = "Program.bf"
-TabWidth = 96.0
-Type = "SourceViewPanel"
-FilePath = "src\\Program.bf"
-CursorPos = 25930
-VertPos = 15400.0
+CursorPos = 3274
+VertPos = 2100.0
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
 Active = true
+TabLabel = "Program.bf"
+TabWidth = 96.0
+Type = "SourceViewPanel"
+FilePath = "src\\Program.bf"
+CursorPos = 26916
+VertPos = 16440.0
+ProjectName = "ColdOpen"
+
+[[MainDockingFrame.DockedWidgets.DockedWidgets.Tabs]]
 TabLabel = "Game.bf"
 TabWidth = 79.0
 Type = "SourceViewPanel"
 FilePath = "src\\Game.bf"
-CursorPos = 53393
-VertPos = 30720.0
+CursorPos = 55851
+VertPos = 31444.0
 ProjectName = "ColdOpen"
 
 [[MainDockingFrame.DockedWidgets]]

@@ -41,7 +41,7 @@ namespace Entities
 		{
 			for (String sound in SoundsToPlay)
 			{
-				delete sound;
+				//delete sound;
 			}
 			delete SoundsToPlay;
 		}

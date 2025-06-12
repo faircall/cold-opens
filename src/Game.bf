@@ -1214,7 +1214,7 @@ namespace Game
 		Person roger;
 		//Person rogerInPlane;
 		Person henchman;
-		float dt;
+		
 		GameCamera camera;
 		ProjectileManager projectileManager;
 		AudioManager audioManager;
@@ -1222,6 +1222,7 @@ namespace Game
 		//GameCamera gameCamera;
 		int32 screenWidth;
 		int32 screenHeight;
+		float dt;
 
 
 		public this(int maxClouds, int maxBullets, int32 _screenWidth, int32 _screenHeight, Vector2 cameraPosition)
@@ -1279,6 +1280,7 @@ namespace Game
 			// and you can 'catch'/regather them. yeah, love that idea
 			int switchScene = 0;
 			//float groundStart = 5000.0f;
+			dt = GetFrameTime();
 
 			for (int i = 0; i < clouds.Count; i++)
 			{
