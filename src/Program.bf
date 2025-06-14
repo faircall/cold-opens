@@ -777,7 +777,8 @@ namespace ColdOpen
 
 			
 			// emacs comment
-			GameState gGameState = GameState.GUNBARREL_SCREEN;
+			// GameState gGameState = GameState.GUNBARREL_SCREEN;
+			GameState gGameState = GameState.SKYDIVING_SCREEN;
 			
 
 			float groundStart = 50000.0f;

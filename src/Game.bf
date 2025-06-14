@@ -1560,7 +1560,7 @@ namespace Game
 			// start by the dumb way
 			DrawRectangle(0, (int32)(groundStart - camera.Position.y), screenWidth, screenHeight, Color.DARKBROWN);
 
-			DrawTextureEx(gameResources.rogerSkyDiveTexture, Matrix2.Vector2Subtract(*roger.Position, *camera.Position), roger.AirRotation, 3.0f, Color.WHITE);
+			//DrawTextureEx(gameResources.rogerSkyDiveTexture, Matrix2.Vector2Subtract(*roger.Position, *camera.Position), roger.AirRotation, 3.0f, Color.WHITE);
 			if (roger.Health > 0)
 			{
 			 		DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - camera.Position.x, roger.Position.y - camera.Position.y, 1.5f*128.0f, 1.5f*128.0f),Vector2(1.5f*64.0f, 1.5f*64.0f), roger.AirRotation, Color.WHITE);
@@ -1568,7 +1568,7 @@ namespace Game
 			else
 			{
 					// prototype one
-					DrawBloodExplosion(*roger.Position, roger.DeathTimer);
+					//DrawBloodExplosion(*roger.Position, roger.DeathTimer);
 					DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - camera.Position.x, roger.Position.y - camera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), roger.AirRotation, Color.WHITE);
 					for (int i = 0; i < roger.Particles.Count; i++)
 					{
@@ -1603,9 +1603,9 @@ namespace Game
 				else
 				{
 					// we haven't made the particle system yet
-					//henchman.DrawParticleSystem(gameCamera, dt, 2200.0f, groundStart);
+					henchman.DrawParticleSystem(camera, dt, 2200.0f, groundStart);
 					//DrawParticleSystemPerson(henchman, gameCamera, dt);
-					DrawBloodExplosion(*henchman.Position, henchman.DeathTimer);
+					//DrawBloodExplosion(*henchman.Position, henchman.DeathTimer);
 				}
 				projectileManager.RenderProjectiles(camera, dt);
 				EndDrawing();
