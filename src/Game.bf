@@ -332,7 +332,7 @@ namespace Game
 			rogerLowerLegTexture = LoadTexture("lowerleg.png");
 
 			planeTexture = LoadTexture("plane_at_scale.png");
-			henchmanTexture = LoadTexture("enemy_basic.png");
+			henchmanTexture = LoadTexture("enemySkydive.png");
 
 			airLoopSound = LoadSound("sounds/air_loop.wav");
 			groundHitSound = LoadSound("sounds/ground_hit.wav");
@@ -1244,14 +1244,33 @@ namespace Game
 		public void InitScene(int maxClouds, int maxBullets, int32 _screenWidth, int32 _screenHeight, Vector2 cameraPosition)
 		{
 			clouds = new Vector2[maxClouds];
+			
+
 			projectileManager = new ProjectileManager(maxBullets);
 			roger = new Person(Vector2(100.0f, 400.0f), 100);
+			for (int i = 0; i < maxClouds; i++)
+			{
+				clouds[i].x = GetRandomValue((int32)(roger.Position.x) - 200, (int32)(roger.Position.x) + 200);
+				clouds[i].y = GetRandomValue((int32)(roger.Position.y) - 200, (int32)(roger.Position.y) + 200);
+			}
+
 			henchman = new Person(Vector2(30.0f, 30.0f), 50);
-			groundStart = 50000.0f;
+			groundStart = 1000.0f;
 			audioManager = new AudioManager();
 			screenWidth = _screenWidth;
 			screenHeight = _screenHeight;
 			camera = new GameCamera(cameraPosition, _screenWidth, _screenHeight);
+		}
+
+		public void Reload()
+		{
+
+			delete henchman;
+			delete roger;
+
+			henchman = new Person(Vector2(30.0f, 30.0f), 50);
+			roger = new Person(Vector2(100.0f, 400.0f), 100);
+
 		}
 
 		void DrawBloodExplosion(Vector2 originPosition, float timer)
@@ -1327,6 +1346,11 @@ namespace Game
 
 
 			// enemy choose direction
+
+			if (IsKeyDown(KeyboardKey.KEY_F11))
+			{
+				Reload();
+			}
 
 			//rogerAirRotation = 0.0f;
 			if (IsKeyDown(KeyboardKey.KEY_A))
@@ -1549,6 +1573,8 @@ namespace Game
 		{
 			BeginDrawing();
 
+			float flattenTime = 0.05f;
+
 			ClearBackground(.(50, 120, 250, 255));
 			for (Vector2 cloud in clouds)
 			{
@@ -1569,23 +1595,18 @@ namespace Game
 			{
 					// prototype one
 					//DrawBloodExplosion(*roger.Position, roger.DeathTimer);
-					DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - camera.Position.x, roger.Position.y - camera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), roger.AirRotation, Color.WHITE);
-					for (int i = 0; i < roger.Particles.Count; i++)
-					{
-						Particle particle = roger.Particles[i];
-						if (roger.DeathTimer >= particle.LifetimeStart &&
-							roger.DeathTimer <= particle.LifetimeEnd)
-						{
-							// add gravity
-							Vector2 gravity = Vector2(0.0f, 2200.0f*dt);
-							particle.Velocity += gravity;
-							particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
-							DrawCircle((int32)(particle.Position.x - camera.Position.x), (int32)(particle.Position.y - camera.Position.y), 3.0f, Color.RED);
-							roger.Particles[i] = particle;
-						}
-					}
+					float stretchAmount = Math.Min(roger.DeathTimer / flattenTime, 1.0f);
+					float stretchDist = 80.0f;
+					float flattenAmount = 1.0f - Math.Min(roger.DeathTimer / flattenTime, 1.0f);
+					float heightToDraw = 1.5f*flattenAmount*128.0f;
+					float fullHeight = 1.5f*128.0f;
+					float offsetAmount = fullHeight - heightToDraw;
+					DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - camera.Position.x, roger.Position.y - camera.Position.y, 1.5f*128.0f + stretchAmount*stretchDist, heightToDraw),Vector2(1.5f*64.0f, heightToDraw/2.0f), roger.AirRotation, Color.RED);
+
+					//DrawTexturePro(gameResources.rogerSkyDiveTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(roger.Position.x - camera.Position.x, roger.Position.y - camera.Position.y, 128.0f, 128.0f),Vector2(64.0f, 64.0f), roger.AirRotation, Color.WHITE);
+					
 					roger.DrawParticleSystem(camera, dt, 2200.0f, groundStart);
-					DrawParticleSystemPerson(roger, camera, dt);
+					//DrawParticleSystemPerson(roger, camera, dt);
 				}
 
 
@@ -1598,11 +1619,19 @@ namespace Game
             	//	TODO: make these centered
 				if (henchman.Health > 0)
 				{
-					DrawTextureEx(gameResources.henchmanTexture, *henchman.Position - *camera.Position, 0.0f, 2.0f, Color.WHITE);
+					DrawTexturePro(gameResources.henchmanTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(henchman.Position.x - camera.Position.x, henchman.Position.y - camera.Position.y, 1.5f*128.0f, 1.5f*128.0f),Vector2(1.5f*64.0f, 1.5f*64.0f), henchman.AirRotation, Color.WHITE);
+					//DrawTexturePro(gameResources.henchmanTexture, *henchman.Position - *camera.Position, 0.0f, 2.0f, Color.WHITE);
 				}
 				else
 				{
 					// we haven't made the particle system yet
+					float stretchAmount = Math.Min(roger.DeathTimer / flattenTime, 1.0f);
+					float stretchDist = 80.0f;
+					float flattenAmount = 1.0f - Math.Min(henchman.DeathTimer / flattenTime, 1.0f);
+					float heightToDraw = 1.5f*flattenAmount*128.0f;
+					float fullHeight = 1.5f*128.0f;
+					float offsetAmount = fullHeight - heightToDraw;
+					DrawTexturePro(gameResources.henchmanTexture, Rectangle(0.0f, 0.0f, 128.0f, 128.0f), Rectangle(henchman.Position.x - camera.Position.x, henchman.Position.y - camera.Position.y, 1.5f*128.0f + stretchAmount*stretchDist, heightToDraw),Vector2(1.5f*64.0f, heightToDraw/2.0f), henchman.AirRotation, Color.RED);
 					henchman.DrawParticleSystem(camera, dt, 2200.0f, groundStart);
 					//DrawParticleSystemPerson(henchman, gameCamera, dt);
 					//DrawBloodExplosion(*henchman.Position, henchman.DeathTimer);

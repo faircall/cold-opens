@@ -279,29 +279,46 @@ namespace Entities
 			for (int i = 0; i < this.Particles.Count; i++)
 			{
 				Particle particle = this.Particles[i];
-				if (this.DeathTimer >= particle.LifetimeStart &&
+				if ((this.DeathTimer >= particle.LifetimeStart &&
 					this.DeathTimer <= particle.LifetimeEnd &&
-					(particle.Position.y <= groundLoc) || (particle.Velocity.y < 0)
+					(particle.Position.y <= groundLoc) || (particle.Velocity.y < 0))
+					||
+					(this.DeathTimer >= particle.LifetimeStart &&
+					(particle.Position.y <= groundLoc))
 					)
 				{
 					
 					Vector2 gravity = Vector2(0.0f, gravityConstant*dt);
 					particle.Velocity += gravity;
 					particle.Position += Matrix2.Vector2Scale(particle.Velocity, dt);
-					DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+					// we should make the color different for different particles, clearly.
+					// and possibly the size also
+					//int redModifier = (i % 3);
+					//uint8 redAmount = uint8(redModifier * 20);
+					//Color colorToDraw = Color(130 + redAmount, 0, 0, 1);
+					//DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
 					this.Particles[i] = particle;
 					
 					
 				}
-				else if (particle.Position.y >= groundLoc)
-				{
-					DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
-					//float poolingTime = 1.0f;
-					//float timeSinceGround  = Math.Max(Math.Min(this.DeathTimer - particle.LifetimeEnd, poolingTime), 0.1f);
-					//float lerped = timeSinceGround / poolingTime;
-					
-					//DrawEllipse((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 20.0f * lerped, 10.0f * lerped, Color.RED);
-				}
+				int redModifier = (i % 3);
+				uint8 redAmount = uint8(redModifier * 20);
+				Color colorToDraw = Color(160 + redAmount, 0, 0, 255);
+				float particleSizeModifier = float((redModifier)/2); // 0, .5, 1
+				float particleSize = 4.5f - particleSizeModifier*1.5f;
+				DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), particleSize, colorToDraw);
+				//else if (particle.Position.y >= groundLoc)
+				//{
+				//	int redModifier = (i % 3);
+				//	uint8 redAmount = uint8(redModifier * 20);
+				//	Color colorToDraw = Color(130 + redAmount, 0, 0, 1);
+				//	DrawCircle((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 3.0f, Color.RED);
+				//	//float poolingTime = 1.0f;
+				//	//float timeSinceGround  = Math.Max(Math.Min(this.DeathTimer - particle.LifetimeEnd, poolingTime), 0.1f);
+				//	//float lerped = timeSinceGround / poolingTime;
+				//	
+				//	//DrawEllipse((int32)(particle.Position.x - gameCamera.Position.x), (int32)(particle.Position.y - gameCamera.Position.y), 20.0f * lerped, 10.0f * lerped, Color.RED);
+				//}
 			}
 		}
 	}

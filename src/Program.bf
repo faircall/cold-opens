@@ -781,7 +781,7 @@ namespace ColdOpen
 			GameState gGameState = GameState.SKYDIVING_SCREEN;
 			
 
-			float groundStart = 50000.0f;
+			float groundStart = 50000.0f;  
 
 			// pull these into a singular Roger
 			Vector2 rogerDirection = Vector2(0.0f, 0.0f);
