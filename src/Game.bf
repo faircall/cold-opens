@@ -1255,7 +1255,7 @@ namespace Game
 			}
 
 			henchman = new Person(Vector2(30.0f, 30.0f), 50);
-			groundStart = 1000.0f;
+			groundStart = 50000.0f;
 			audioManager = new AudioManager();
 			screenWidth = _screenWidth;
 			screenHeight = _screenHeight;
@@ -1575,7 +1575,19 @@ namespace Game
 
 			float flattenTime = 0.05f;
 
-			ClearBackground(.(50, 120, 250, 255));
+			ClearBackground(.(50, 120, 250, 255)); // sky blue
+
+			// then draw in some mountains
+			float rogerFromGround = Math.Max(groundStart - roger.Position.y, 0.0f);
+			float horizonNorm = (1.0f - (rogerFromGround / groundStart));
+			int32 horizonHeight = (int32)(horizonNorm * 220.0f);
+			int32 horizonStart = (int32)(gameResources.screenHeight/2) + horizonHeight;
+			Color groundColor = Color(200, 100, 10, 255);
+			Color groundColorEnd = Color(150, 50, 10, 255);
+			DrawRectangleGradientV(0, horizonStart, (int32)gameResources.screenWidth, horizonHeight, groundColor, groundColorEnd);
+			// DrawRectangle(0, horizonStart, (int32)gameResources.screenWidth, (int32)gameResources.screenHeight, groundColor);
+			DrawTriangle(Vector2(30.0f, horizonStart - 20.0f), Vector2(10.0f, horizonStart), Vector2(70.0f, horizonStart), Color.BROWN);
+
 			for (Vector2 cloud in clouds)
 			{
 			 		//cloud.x = cloud.x - cameraPosition.x;
@@ -1584,7 +1596,7 @@ namespace Game
 
 			// 	draw the ground when it's in frame, or just draw it offscreen constantly
 			// start by the dumb way
-			DrawRectangle(0, (int32)(groundStart - camera.Position.y), screenWidth, screenHeight, Color.DARKBROWN);
+			DrawRectangle(0, (int32)(groundStart - camera.Position.y), screenWidth, screenHeight, groundColorEnd);
 
 			//DrawTextureEx(gameResources.rogerSkyDiveTexture, Matrix2.Vector2Subtract(*roger.Position, *camera.Position), roger.AirRotation, 3.0f, Color.WHITE);
 			if (roger.Health > 0)
