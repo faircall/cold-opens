@@ -1581,10 +1581,11 @@ namespace Game
 			float rogerFromGround = Math.Max(groundStart - roger.Position.y, 0.0f);
 			float horizonNorm = (1.0f - (rogerFromGround / groundStart));
 			int32 horizonHeight = (int32)(horizonNorm * 220.0f);
-			int32 horizonStart = (int32)(gameResources.screenHeight/2) + horizonHeight;
+			int32 horizonHeightToDraw = (int32)gameResources.screenHeight/2 - (int32)(horizonNorm * 220.0f);
+			int32 horizonStart = (int32)(gameResources.screenHeight - horizonHeight);
 			Color groundColor = Color(200, 100, 10, 255);
 			Color groundColorEnd = Color(150, 50, 10, 255);
-			DrawRectangleGradientV(0, horizonStart, (int32)gameResources.screenWidth, horizonHeight, groundColor, groundColorEnd);
+			DrawRectangleGradientV(0, horizonStart, (int32)gameResources.screenWidth, horizonHeightToDraw, groundColor, groundColorEnd);
 			// DrawRectangle(0, horizonStart, (int32)gameResources.screenWidth, (int32)gameResources.screenHeight, groundColor);
 			DrawTriangle(Vector2(30.0f, horizonStart - 20.0f), Vector2(10.0f, horizonStart), Vector2(70.0f, horizonStart), Color.BROWN);
 
