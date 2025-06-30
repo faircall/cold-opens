@@ -1587,7 +1587,10 @@ namespace Game
 			Color groundColorEnd = Color(150, 50, 10, 255);
 			DrawRectangleGradientV(0, horizonStart, (int32)gameResources.screenWidth, horizonHeightToDraw, groundColor, groundColorEnd);
 			// DrawRectangle(0, horizonStart, (int32)gameResources.screenWidth, (int32)gameResources.screenHeight, groundColor);
-			DrawTriangle(Vector2(30.0f, horizonStart - 20.0f), Vector2(10.0f, horizonStart), Vector2(70.0f, horizonStart), Color.BROWN);
+
+			// we should draw these mountains slightly parallaxed
+			float mountainParallax = camera.Position.x / 50.0f;
+			DrawTriangle(Vector2(30.0f - mountainParallax, horizonStart - 20.0f), Vector2(10.0f - mountainParallax, horizonStart), Vector2(70.0f - mountainParallax, horizonStart), Color.BROWN);
 
 			for (Vector2 cloud in clouds)
 			{
