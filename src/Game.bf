@@ -1590,7 +1590,17 @@ namespace Game
 
 			// we should draw these mountains slightly parallaxed
 			float mountainParallax = camera.Position.x / 50.0f;
+			float mountainCountOffset = 0.0f;
+			// TODO make a center of the triangle to work with so it's more mountainlike?
 			DrawTriangle(Vector2(30.0f - mountainParallax, horizonStart - 20.0f), Vector2(10.0f - mountainParallax, horizonStart), Vector2(70.0f - mountainParallax, horizonStart), Color.BROWN);
+			mountainCountOffset += 50.0f;
+			float mountainHeight = 50.0f;
+			DrawTriangle(Vector2(30.0f + mountainCountOffset - mountainParallax, horizonStart - mountainHeight), Vector2(10.0f + mountainCountOffset - mountainParallax, horizonStart), Vector2(70.0f + mountainCountOffset - mountainParallax, horizonStart), Color.BROWN);
+			mountainHeight = 40.0f;
+			mountainCountOffset += 50.0f;
+			DrawTriangle(Vector2(30.0f + mountainCountOffset - mountainParallax, horizonStart - mountainHeight), Vector2(10.0f + mountainCountOffset - mountainParallax, horizonStart), Vector2(70.0f + mountainCountOffset - mountainParallax, horizonStart), Color.BROWN);
+
+			
 
 			for (Vector2 cloud in clouds)
 			{
