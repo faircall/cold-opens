@@ -99,6 +99,25 @@ namespace BondMath
 			Vector2 result = Vector2(a.x + b.x, a.y + b.y);
 			return result;
 		}
+
+		public static float Vector2Dot(Vector2 a, Vector2 b)
+		{
+			float result = a.x*b.x + a.y*b.y;
+			return result;
+		}
+
+		public static float Vector2AngleBetween(Vector2 a, Vector2 b)
+		{
+			float magA = Vector2Length(a);
+			float magB = Vector2Length(b);
+			if (magA * magB == 0)
+			{
+				return 0.0f;
+			}
+			float cosAngle = Vector2Dot(a, b) / (magA * magB);
+			float result = Math.Acos(cosAngle);
+			return result;
+		}
 	}
 
 	public class Trig
@@ -108,6 +127,10 @@ namespace BondMath
 			return Math.PI_f * deg / 180.0f;
 		}
 
+		public static float RadToDeg(float rad)
+		{
+			return 180.0f * rad / Math.PI_f;
+		}
 		
 	}
 

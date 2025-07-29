@@ -1324,6 +1324,19 @@ namespace Game
 				henchman.DeathTimer += dt;
 			}
 
+			// how should we move him? toward where?
+			// towards the player
+			// so solve the trig problem
+
+			// this will need to be in its own function so
+			// it can be applied to each enemy
+			Vector2 directionToPlayer = BondMath.Matrix2.Vector2Subtract(*roger.Position, *henchman.Position);
+			// i'm sure there's a fast way to get angle between two vectors using dot product
+
+			float angleToPlayer = BondMath.Trig.RadToDeg(BondMath.Matrix2.Vector2AngleBetween(BondMath.Matrix2.Vector2Subtract(*roger.Position, *henchman.Position), Vector2(0, 1)));
+			// but how to get the sign of the angle?
+			DrawText(scope $"the angle to the player is {angleToPlayer}", 30, 30, 30, Color.RED);
+
 			if (henchman.Position.y < groundStart)
 			{
 				henchman.Velocity.y = (enemySpeedAir * dt);
