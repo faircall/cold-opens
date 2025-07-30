@@ -1333,8 +1333,13 @@ namespace Game
 			Vector2 directionToPlayer = BondMath.Matrix2.Vector2Subtract(*roger.Position, *henchman.Position);
 			// i'm sure there's a fast way to get angle between two vectors using dot product
 
-			float angleToPlayer = BondMath.Trig.RadToDeg(BondMath.Matrix2.Vector2AngleBetween(BondMath.Matrix2.Vector2Subtract(*roger.Position, *henchman.Position), Vector2(0, 1)));
+			float angleToPlayer = BondMath.Trig.RadToDeg(BondMath.Matrix2.Vector2AngleBetween(directionToPlayer, Vector2(0, 1)));
 			// but how to get the sign of the angle?
+
+			// dumb thing to do here is to
+			// us just the x position since that's kind of the only thing we can modify
+
+
 			DrawText(scope $"the angle to the player is {angleToPlayer}", 30, 30, 30, Color.RED);
 
 			if (henchman.Position.y < groundStart)
