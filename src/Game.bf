@@ -1517,62 +1517,52 @@ namespace Game
 			RotateLowerLeg(roger.BaseSkeleton, roger.AirRotation, armAngleToOscilate);
 			//CenterSkeletonAdditional(&baseSkeleton, offsetSkeleton, rogerAirRotation, armAngleToOscilate);*/
 
-
+						
+			// would it be better to have a velocity for the camera?			
 			
-
-			float cameraSpeed = Math.Min(Math.Abs(roger.Position.x - camera.Position.x), terminalVelocity);
-			// would it be better to have a velocity for the camera?
-			// yes it will fix the instantaneous jumping
-			float rogerSpeed = roger.Velocity.Length();
-			DrawText(scope $"rogers speed is {rogerSpeed}", 500, 10, 10, Color.GOLD);
-
-			// the issue I think is that he's moving faster than the camera
-			// just have a unified system here where the camera has a velocity
-			// and will adjust dynamically, including jumping (?) if totally out of bounds
-			// for sufficient time
-
-			// speed up or slow down to get him back in the 'cross hair' region
-
-			// camera should just move faster than roger all the time
 			float cameraAccelX = 0.0f;
 			float cameraAccelY = 0.0f;
 			float halfScreenWidth = camera.ScreenWidth* 0.5f;
-			float deadzone = camera.ScreenWidth* 0.25f;
+			float deadzoneX = camera.ScreenWidth* 0.25f;
+
+			float halfScreenHeight = camera.ScreenHeight* 0.5f;
+			float deadzoneY = camera.ScreenHeight* 0.25f;
 
 			float cameraCenterX = camera.Position.x + halfScreenWidth;
-			float delta = roger.Position.x - cameraCenterX; // distance from center
-			float stretch = 0.0f; // how stretched is the spring?
-			if (delta > deadzone) {
-				stretch = delta - deadzone;
-			} else if (delta < -deadzone) {
-				stretch = delta + deadzone;
+			float cameraCenterY = camera.Position.y + halfScreenHeight;
+			float deltaX = roger.Position.x - cameraCenterX; // distance from center
+			float deltaY = roger.Position.y - cameraCenterY; // distance from center
+			float stretchX = 0.0f; // how stretched is the spring?
+			float stretchY = 0.0f; // how stretched is the spring?
+
+			if (deltaX > deadzoneX) {
+				stretchX = deltaX - deadzoneX;
+			} else if (deltaX < -deadzoneX) {
+				stretchX = deltaX + deadzoneX;
+			}
+
+			if (deltaY > deadzoneY) {
+				stretchY = deltaY - deadzoneY;
+			} else if (deltaY < -deadzoneY) {
+				stretchY = deltaY + deadzoneY;
 			}
 
 			float k = 50.0f;
 			float c = 2.0f * Math.Sqrt(k);
 
-			cameraAccelX = (k*stretch - c * camera.Velocity.x);
+			float ky = 500.0f;
+			float cy = 2.0f * Math.Sqrt(ky);
+
+			cameraAccelX = (k*stretchX - c * camera.Velocity.x);
+
+			cameraAccelY = (ky*stretchY - cy * camera.Velocity.y);
+
+			camera.Velocity.y += cameraAccelY * dt;
+			camera.Position.y += camera.Velocity.y * dt;
+
 			camera.Velocity.x += cameraAccelX * dt;
 			camera.Position.x += camera.Velocity.x * dt;
-			
-
-			//cameraSpeed = Math.Abs(roger.Position.y - (camera.Position.y + 100.0f));
-			if (roger.Position.y < (camera.Position.y + 100.0f))
-			{
-				camera.Direction.y = -1.0f;
-				cameraSpeed = Math.Min(Math.Abs(roger.Position.y - (camera.Position.y + 100.0f)), terminalVelocity);
-				String camSpeedString = scope $"roger behind camera, setting to {cameraSpeed}";
-				//DrawText(camSpeedString, 10, 10, 10, Color.GOLD);
-				camera.Position.y -= cameraSpeed*dt;
-			} 
-			else if (roger.Position.y > (camera.Position.y + 3.0f*camera.ScreenHeight/4.0f ))
-			{
-				camera.Direction.y = 1.0f;
-				cameraSpeed = Math.Max(Math.Abs(roger.Position.y - (camera.Position.y + 3.0f*camera.ScreenHeight/4.0f )), terminalVelocity);
-				String camSpeedString = scope $"roger ahead camera, setting to {cameraSpeed}";
-				DrawText(camSpeedString, 10, 10, 10, Color.GOLD);
-				camera.Position.y +=  cameraSpeed*dt;//(rogerSpeed + terminalVelocity)* dt;
-			}
+						
 
 			projectileManager.UpdateProjectiles(dt, henchman, audioManager.SoundsToPlay);
 
