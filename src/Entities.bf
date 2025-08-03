@@ -551,6 +551,9 @@ namespace Entities
 	class GameCamera
 	{
 		public Vector2 *Position {get;set;}
+		public Vector2 *Velocity {get;set;}
+		public Vector2 *Direction {get;set;}
+		//public Vector2 *Velocity {get;set;}
 
 		public int32 ScreenWidth {get;set;}
 		public int32 ScreenHeight {get;set;}
@@ -558,6 +561,8 @@ namespace Entities
 		public this(Vector2 position, int32 screenWidth, int32 screenHeight)
 		{
 			Position = new Vector2(position.x, position.y);
+			Velocity = new Vector2(0.0f, 0.0f);
+			Direction = new Vector2(0.0f, 0.0f);
 			ScreenWidth = screenWidth;
 			ScreenHeight = screenHeight;
 

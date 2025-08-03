@@ -881,6 +881,8 @@ namespace ColdOpen
 			delete skydivingScene;
 
 			delete gameCamera.Position;
+			delete gameCamera.Direction;
+			delete gameCamera.Velocity;
 			delete gameCamera;
 
 		
