@@ -1324,7 +1324,7 @@ namespace Game
 			if (henchman.TimerStarted)
 			{
 				henchman.DeathTimer += dt;
-			}
+			}	
 
 			// how should we move him? toward where?
 			// towards the player
@@ -1386,15 +1386,19 @@ namespace Game
 				roger.Direction.x = 1.0f;
 				//rogerAirRotation = 45.0f;
 			}
-
+			// this should be an enum
+			bool goingUp = false;
+			bool goingDown = false;
 			if (IsKeyDown(KeyboardKey.KEY_W))
 			{
 				//rogerSpeedAir = 500.0f;
+				goingUp = true;
 				roger.Direction.y = -1.0f;
 			}
 			if (IsKeyDown(KeyboardKey.KEY_S))
 			{
 				roger.Direction.y = 1.0f;
+				goingDown = true;
 			}
 
 			if (IsKeyDown(KeyboardKey.KEY_LEFT_SHIFT) && roger.Direction.x != 0.0f)
@@ -1436,6 +1440,7 @@ namespace Game
 			
 			float rogerAirMotion = Math.Sin(Trig.DegToRad((int)roger.AirRotation % 360));
 			float rogerAirMotionUp = Math.Cos(Trig.DegToRad((int)roger.AirRotation % 360));
+			float rogerAirMotionDown = Math.Sin(Trig.DegToRad((int)roger.AirRotation % 360));
 			String airMotionText = scope $"AirMotion = {rogerAirMotion}";
 			String airRotationText = scope $"From air rotation = {roger.AirRotation}";
 			DrawText(airMotionText, 10, 10, 16, Color.RED);
@@ -1461,10 +1466,23 @@ namespace Game
 				// there is such thing as terminal velocity
 				// the maximum speed attainable in the air
 			{
-				roger.Position.y += terminalVelocity * dt; // this is our base falling rate
+				float offset = 0.00f;
+				if (goingUp)
+				{
+					offset = -500.0f * (rogerAirMotionUp);
+				}
+				if (goingDown)
+				{
+					offset = 500.0f * (rogerAirMotionUp);
+				}
+
+				float fallingSpeedToUse = terminalVelocity + offset;
+				DrawText(scope $"the falling speed is {fallingSpeedToUse}", 50, 200, 20, Color.RED);
+				
+				roger.Position.y += (terminalVelocity + offset) * dt; // this is our base falling rate
 				if (!roger.IsRolling)
 				{
-					roger.AirRotation += roger.Direction.x * dt * rotationSpeed;
+					roger.AirRotation += roger.Direction.x * dt * rotationSpeed;					
 					roger.Velocity.x += rogerAirMotion * dt * rogerSpeedAir;
 					// this shouldn't be active when he's on the ground
 					//roger.Velocity.y += roger.Direction.y * dt * rogerSpeedAir;
@@ -1550,7 +1568,7 @@ namespace Game
 			float k = 50.0f;
 			float c = 2.0f * Math.Sqrt(k);
 
-			float ky = 500.0f;
+			float ky = 1000.0f;
 			float cy = 2.0f * Math.Sqrt(ky);
 
 			cameraAccelX = (k*stretchX - c * camera.Velocity.x);
