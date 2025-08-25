@@ -370,7 +370,7 @@ namespace ColdOpen
 			//float armPerSecond = 10.0f;
 			//armOscilator += dt;
 			//armAngleToOscilate = Math.Sin(armOscilator*2*Math.PI_f / armPerSecond) * 10.0f;
-			float armAngleToOscilate = 5.0f;
+			//float armAngleToOscilate = 5.0f;
 
 			
 			
@@ -444,7 +444,7 @@ namespace ColdOpen
 
 			float cameraSpeed = Math.Min(Math.Abs(roger.Position.x - camera.Position.x), terminalVelocity);
 			// would it be better to have a velocity for the camera?
-			float rogerSpeed = roger.Velocity.Length();
+			//float rogerSpeed = roger.Velocity.Length();
 			// maybe we need to CENTER him
 			// might explain why it's less of an issue
 
@@ -469,7 +469,7 @@ namespace ColdOpen
 			if (roger.Position.y < (camera.Position.y + 100.0f))
 			{
 				cameraSpeed = Math.Min(Math.Abs(roger.Position.y - (camera.Position.y + 100.0f)), terminalVelocity);
-				String camSpeedString = scope $"roger behind camera, setting to {cameraSpeed}";
+				//String camSpeedString = scope $"roger behind camera, setting to {cameraSpeed}";
 				//DrawText(camSpeedString, 10, 10, 10, Color.GOLD);
 				camera.Position.y -= cameraSpeed*dt;
 			} 
@@ -781,13 +781,13 @@ namespace ColdOpen
 			GameState gGameState = GameState.SKYDIVING_SCREEN;
 			
 
-			float groundStart = 50000.0f;  
+			//float groundStart = 50000.0f;  
 
 			// pull these into a singular Roger
-			Vector2 rogerDirection = Vector2(0.0f, 0.0f);
+			//Vector2 rogerDirection = Vector2(0.0f, 0.0f);
 			Vector2 cameraPosition = Vector2(0.0f, 0.0f); // this will act as our offset
 			GameCamera gameCamera = new GameCamera(cameraPosition, screenWidth, screenHeight);
-			Vector2 rogerVelocity = Vector2(0.0f, 0.0f);
+			//Vector2 rogerVelocity = Vector2(0.0f, 0.0f);
 
 			
 
@@ -841,7 +841,7 @@ namespace ColdOpen
 				{
 					// BeginDrawing();
 					// ClearBackground(.(0, 0, 0, 255));
-					float dt = GetFrameTime();
+					//float dt = GetFrameTime();
 					switch (gGameState)
 					{
 					case (GameState.MGM_SCREEN):

@@ -407,7 +407,7 @@ namespace Entities
 
         public void SetExistingParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, float initialDelay)
 		{
-			int particleCount = waves * particlesPerWave;
+			//int particleCount = waves * particlesPerWave;
             ParticleTimer = 0.0f;						
 			int particlesUpdated = 0;
             InitialDelay = initialDelay;
@@ -492,7 +492,7 @@ namespace Entities
 					)
 				{
                     // probably want to parametrize the color, size, transparency
-                    float lerpValue = (1.0f - (ParticleTimer - particle.LifetimeStart) / (particle.LifetimeEnd - particle.LifetimeStart));
+                    //float lerpValue = (1.0f - (ParticleTimer - particle.LifetimeStart) / (particle.LifetimeEnd - particle.LifetimeStart));
                     float lerpInc = (ParticleTimer - particle.LifetimeStart) / (particle.LifetimeEnd - particle.LifetimeStart);
                     //float alphaToDraw = 255.0f*lerpValue; // (TODO): introduce an initial alpha value too, or just use
                     // base color too
