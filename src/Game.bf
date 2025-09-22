@@ -16,7 +16,14 @@ namespace Game
             PLANE_SCREEN,
             PLANE_INTERIOR_SCREEN,
             SKYDIVING_SCREEN,
-            SKELETAL_EDITOR,
+            SKELETAL_EDITOR,			
+            NUM_STATES
+        }
+
+	public enum PauseState
+        {
+            Paused,
+			Unpaused,
             NUM_STATES
         }
 

@@ -780,6 +780,7 @@ namespace ColdOpen
 			// GameState gGameState = GameState.GUNBARREL_SCREEN;
 			GameState gGameState = GameState.SKYDIVING_SCREEN;
 			
+			
 
 			//float groundStart = 50000.0f;  
 
@@ -796,7 +797,7 @@ namespace ColdOpen
 			SkydivingScene skydivingScene = new SkydivingScene(100, 100, screenWidth, screenHeight, cameraPosition);
 
 			
-
+			PauseState pauseState = PauseState.Unpaused;
 			
 			
 			MainWhileLoop:
@@ -808,7 +809,20 @@ namespace ColdOpen
 					float dt = GetFrameTime();
 
 					gameTimer += dt;
-					
+					if (IsKeyReleased(KeyboardKey.KEY_PAUSE))
+					{
+						pauseState = PauseState.Paused;
+					}
+					if (IsKeyReleased(KeyboardKey.KEY_P))
+					{
+						pauseState = PauseState.Unpaused;
+					}
+
+					if (pauseState == PauseState.Paused) 
+					{
+						EndDrawing();
+						continue;
+					}
 					
 					switch (gGameState)
 					{
@@ -816,8 +830,7 @@ namespace ColdOpen
 						UpdateMGMScreen();
 						break;
 					case (GameState.GUNBARREL_SCREEN):
-						gGameState = gunbarrelScene.Update(dt, gGameState);
-
+						gGameState = gunbarrelScene.Update(dt, gGameState);						
 						break;
 					case (GameState.PLANE_SCREEN):
 						bool switchScene = planeScene.Update(dt, (float)screenWidth);
@@ -833,6 +846,8 @@ namespace ColdOpen
 						gGameState = gunbarrelScene.Update(dt, gGameState);
 						break;
 					}
+					
+					
 
 
 				}
