@@ -1363,6 +1363,11 @@ namespace Game
 			// dumb thing to do here is to
 			// us just the x position since that's kind of the only thing we can modify
 
+			// get desired direction
+
+			// then get desired rotation to achieve said direction, I guess, apply it
+			// 
+
 
 			DrawText(scope $"the angle to the player is {angleToPlayer}", 30, 30, 30, Color.RED);
 
@@ -1665,6 +1670,12 @@ namespace Game
 			mountainHeight = 40.0f;
 			mountainCountOffset += 50.0f;
 			DrawTriangle(Vector2(30.0f + mountainCountOffset - mountainParallax, horizonStart - mountainHeight), Vector2(10.0f + mountainCountOffset - mountainParallax, horizonStart), Vector2(70.0f + mountainCountOffset - mountainParallax, horizonStart), Color.BROWN);
+
+			mountainCountOffset += 250.0f;			
+			DrawTriangle(Vector2(40.0f + mountainCountOffset - mountainParallax, horizonStart - mountainHeight), Vector2(10.0f + mountainCountOffset - mountainParallax, horizonStart), Vector2(65.0f + mountainCountOffset - mountainParallax, horizonStart), Color.BROWN);
+			mountainHeight = 15.0f;
+			mountainCountOffset += 250.0f;
+			DrawTriangle(Vector2(17.0f + mountainCountOffset - mountainParallax, horizonStart - mountainHeight), Vector2(10.0f + mountainCountOffset - mountainParallax, horizonStart), Vector2(32.0f + mountainCountOffset - mountainParallax, horizonStart), Color.BROWN);
 
 			
 
