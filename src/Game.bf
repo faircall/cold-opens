@@ -273,6 +273,8 @@ namespace Game
 		public Sound gunshotSound;
 		public Sound gunshotHitSound;
 
+		public Sound themeStrings;
+
 		// why not include shaders here?
 
 		public Shader gbShader;
@@ -297,6 +299,7 @@ namespace Game
 
 		public int screenWidth = 1280;
 		public int screenHeight = 720;
+
 
         
 
@@ -345,6 +348,10 @@ namespace Game
 			groundHitSound = LoadSound("sounds/ground_hit.wav");
 			gunshotSound = LoadSound("sounds/pistol_shot.wav");
 			gunshotHitSound = LoadSound("sounds/gun_hit.wav");
+
+			themeStrings = LoadSound("music/bond_theme.ogg");
+			//themeStrings.loopCount = 1;
+			//themeStrings.
 
 			gbShader = LoadShader("base.vs", "gunbarrel_transparent.fs");
 			slShader = LoadShader("base.vs", "spotlight.fs"); // spotlight shader
@@ -511,6 +518,7 @@ namespace Game
 		float dotTimeout = 0.7f;
 		float dotSpeed = 400.0f;
 		float dotRad = 40.0f; // 40
+		AudioManager m_audioManager;
 
 		bool dotStopped = false;
 		float dotGrowthTimerMax = 0.5f;
@@ -592,7 +600,7 @@ namespace Game
             }
             
             delete ParticleSystems;
-
+			delete m_audioManager;
 		}
 
         public void AddParticleSystem(Vector2 pos, int waves, int particlesPerWave, float totalDuration, float emissionSpeed, float initialSpeedBase, float randomScale, int32 randomBound, Color baseColor, Color endColor, float initialDelay)
@@ -627,6 +635,7 @@ namespace Game
 			screenWidth = _screenWidth;
 			maxDots = _maxDots;
 			m_Dots = new GunbarrelDot[maxDots];
+			m_audioManager = new AudioManager();
 			for (int i = 0; i < maxDots; i++)
 			{
 				m_Dots[i] = new GunbarrelDot(Vector2(i*(screenWidth - 100.0f)/maxDots, 520.0f), 0.0f, false);
@@ -720,6 +729,8 @@ namespace Game
 
 		public GameState Update(float _dt, GameState gameState)
 		{
+			
+
 			GameState result = gameState;
             //float dt = _dt / 5.0f; // for slowmo
             float dt = _dt;
@@ -810,6 +821,7 @@ namespace Game
                 AddParticleSystem(smokePos, 1, 50, 0.25f, 0.25f, 25.0f, 1.0f, 100, Color(50,50,50,200), Color(150,150,150,0), 0.1f);
 
 				enemyHealth -= 100; // or whatever
+				m_audioManager.SoundsToPlay.Add("gunshot");
                 // = false;
             }
 
@@ -1044,6 +1056,25 @@ namespace Game
 
 		public void Render(GameResources gameResources)
         {
+			// audio stuff here
+			if (!IsSoundPlaying(gameResources.themeStrings))
+			{
+				PlaySound(gameResources.themeStrings);
+			}
+
+			for (var sound in m_audioManager.SoundsToPlay)
+			{
+				if (sound == "gunshot") 
+				{
+					PlaySound(gameResources.gunshotSound);
+					m_audioManager.SoundsToPlay.Remove(sound);
+				}
+			}
+
+			
+
+			//UpdateMusicStream(gameResources.themeStrings);
+
             if (IsKeyPressed(KeyboardKey.KEY_F11))
 			{
 				ResetScene(gameResources);
@@ -1457,7 +1488,7 @@ namespace Game
 				Vector2 spawnPos = *m_roger.Position + Matrix2.Vector2Scale(spawnDirection, 100.0f);
 				// draw something at the spawn position to figure out why it's behaving weird
 				//DrawCircle((int32)(spawnPos.x - camera.Position.x), (int32)(spawnPos.y - camera.Position.y), 5.0f, Color.GOLD);
-				m_projectileManager.AddProjectile(spawnPos, spawnVel, 50, 50.0f);
+				m_projectileManager.AddProjectile(spawnPos, spawnVel, 25, 50.0f);
 			}
 			float rotationSpeed = 150.0f;
 			// this hsould have some acceleration to it too
@@ -1605,6 +1636,7 @@ namespace Game
 			m_camera.Velocity.x += cameraAccelX * dt;
 			m_camera.Position.x += m_camera.Velocity.x * dt;
 						
+
 
 			m_projectileManager.UpdateProjectiles(dt, m_henchman, m_audioManager.SoundsToPlay);
 

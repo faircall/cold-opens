@@ -46,6 +46,8 @@ namespace Entities
 			delete SoundsToPlay;
 		}
 
+		
+
 	}
 
 	class ProjectileManager
@@ -133,6 +135,7 @@ namespace Entities
 					if (Matrix2.Vector2Distance(Projectiles[i].Position, *(person).Position) < hitbox)
 					{
 							(person).Health -= Projectiles[i].Damage;
+							//(person).AddParticleSystem(1, 10, 1.0f, 10.0f);
 							soundsToPlay.Add("gun_hit");
 							// also add a gore effect to spawn, or mini particle system or whatever
 							shouldDespawn = true;
