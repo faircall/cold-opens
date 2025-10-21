@@ -274,6 +274,7 @@ namespace Game
 		public Sound gunshotHitSound;
 
 		public Sound themeStrings;
+		public Sound themeIntro;
 
 		// why not include shaders here?
 
@@ -349,8 +350,9 @@ namespace Game
 			gunshotSound = LoadSound("sounds/pistol_shot.wav");
 			gunshotHitSound = LoadSound("sounds/gun_hit.wav");
 
-			themeStrings = LoadSound("music/bond_theme.ogg");
-			//themeStrings.loopCount = 1;
+			themeStrings = LoadSound("music/theme_strings_gap.ogg");
+			themeIntro = LoadSound("music/theme_intro.ogg");
+				//themeStrings.loopCount = 1;
 			//themeStrings.
 
 			gbShader = LoadShader("base.vs", "gunbarrel_transparent.fs");
@@ -571,6 +573,8 @@ namespace Game
         float rogerVelocityX = 0.0f;
         float rogerAccelerationX = 0.0f;
         ParticleSystem[] ParticleSystems = null; // why not a list?
+
+		bool playedIntro = false;
         
         int maxParticleSystems = 16;
         float particleTimer = 0.0f; // having only one timer is an issue
@@ -1056,11 +1060,28 @@ namespace Game
 
 		public void Render(GameResources gameResources)
         {
-			// audio stuff here
-			if (!IsSoundPlaying(gameResources.themeStrings))
+			// audio stuff here...incredibly ugly atm
+			if (!playedIntro)
 			{
-				PlaySound(gameResources.themeStrings);
+				if (!IsSoundPlaying(gameResources.themeIntro))
+				{
+					PlaySound(gameResources.themeIntro);
+				}				
+				playedIntro = true;
+			} 
+			else 
+			{
+				if (!IsSoundPlaying(gameResources.themeIntro))
+				{
+					if (!IsSoundPlaying(gameResources.themeStrings))
+					{
+						PlaySound(gameResources.themeStrings);
+					}
+				}				
 			}
+			
+
+			
 
 			for (var sound in m_audioManager.SoundsToPlay)
 			{
