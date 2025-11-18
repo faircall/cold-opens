@@ -833,10 +833,14 @@ namespace ColdOpen
 						gGameState = gunbarrelScene.Update(dt, gGameState);						
 						break;
 					case (GameState.PLANE_SCREEN):
-						bool switchScene = planeScene.Update(dt, (float)screenWidth);
-						if (switchScene)
+						int switchScene = planeScene.Update(dt, (float)screenWidth);
+						if (switchScene == 1)
 						{
 							gGameState = GameState.SKYDIVING_SCREEN;
+						} else if (switchScene == -1)
+						{
+							gGameState = gGameState.MoveBack;
+							gunbarrelScene.ResetScene(gameResources);
 						}
 						break;
 					case (GameState.SKYDIVING_SCREEN):
@@ -876,7 +880,7 @@ namespace ColdOpen
 						break;
 					case (GameState.SKYDIVING_SCREEN):
 						{
-						skydivingScene.Render(gameResources);
+							skydivingScene.Render(gameResources);
 						}
 						break;
 					 	

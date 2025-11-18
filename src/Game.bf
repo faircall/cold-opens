@@ -11,13 +11,39 @@ namespace Game
 
 	public enum GameState
         {
-            MGM_SCREEN,
-            GUNBARREL_SCREEN,
-            PLANE_SCREEN,
-            PLANE_INTERIOR_SCREEN,
-            SKYDIVING_SCREEN,
-            SKELETAL_EDITOR,			
-            NUM_STATES
+            case MGM_SCREEN;
+            case GUNBARREL_SCREEN;
+            case PLANE_SCREEN;
+            case PLANE_INTERIOR_SCREEN;
+            case SKYDIVING_SCREEN;
+            case SKELETAL_EDITOR;			
+            case NUM_STATES;
+
+			public GameState MoveForward {
+				get {
+					switch (this)
+					{
+						case .MGM_SCREEN: return .GUNBARREL_SCREEN;
+						case .GUNBARREL_SCREEN: return .PLANE_SCREEN;
+						case .PLANE_INTERIOR_SCREEN: return .PLANE_SCREEN;
+						case .SKYDIVING_SCREEN: return .GUNBARREL_SCREEN;						
+						default: return GUNBARREL_SCREEN;
+					}
+				}
+			}
+
+			public GameState MoveBack {
+				get {
+					switch (this)
+					{
+						case .MGM_SCREEN: return .GUNBARREL_SCREEN;
+						case .GUNBARREL_SCREEN: return .PLANE_SCREEN;
+						case .PLANE_INTERIOR_SCREEN: return .GUNBARREL_SCREEN;
+						case .SKYDIVING_SCREEN: return .GUNBARREL_SCREEN;						
+						default: return GUNBARREL_SCREEN;
+					}
+				}
+			}
         }
 
 	public enum PauseState
@@ -36,6 +62,21 @@ namespace Game
             AIMING, 
             SHOOTING,            
         }
+
+	class StateTransition		
+	{
+		public static GameState Shift(GameState current, int move)
+		{
+			GameState result = current;
+			
+
+			return result;
+
+
+		}
+	}
+
+	
     
 	class GameUpdateAndRender
 	{
@@ -350,7 +391,7 @@ namespace Game
 			gunshotSound = LoadSound("sounds/pistol_shot.wav");
 			gunshotHitSound = LoadSound("sounds/gun_hit.wav");
 
-			themeStrings = LoadSound("music/theme_strings_gap.ogg");
+			themeStrings = LoadSound("music/theme_strings_bass_gap.ogg");
 			themeIntro = LoadSound("music/theme_intro.ogg");
 				//themeStrings.loopCount = 1;
 			//themeStrings.
@@ -424,7 +465,7 @@ namespace Game
 
 		public void Reload(GameResources gameResources, int32 screenWidth, int32 screenHeight)
 		{
-			m_planePos = Vector2((float)screenWidth, 50.0f);
+			m_planePos = Vector2((float)screenWidth, 400.0f);
 			int maxClouds = 64;
 			m_planeClouds = new Vector2[maxClouds];
 			m_planeCloudDistances = new float[maxClouds];
@@ -443,9 +484,9 @@ namespace Game
 
 		}	
 
-		public bool Update(float dt, float screenWidth)
+		public int Update(float dt, float screenWidth)
 		{
-			bool switchScene = false;
+			int switchScene = 0;
 			m_planeTimer += dt;
 
 			UpdateClouds(dt, screenWidth);
@@ -454,9 +495,19 @@ namespace Game
 			float planeSpeed = 130.0f;
 			m_planePos.x -= planeSpeed * dt;
 
+			if (IsKeyPressed(KeyboardKey.KEY_F2))
+			{
+				switchScene = 1;
+			}
+
+			if (IsKeyPressed(KeyboardKey.KEY_F1))
+			{
+				switchScene = -1;
+			}
+
 			if (m_planePos.x < 0.0f || IsKeyPressed(KeyboardKey.KEY_SPACE))
 			{
-				switchScene = true;
+				switchScene = 1;
 			}
 
 			return switchScene;
