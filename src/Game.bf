@@ -797,12 +797,19 @@ namespace Game
             float prevDirectionX = persistentDirection;
 			rogerDirection.x = 0.0f;
 			rogerDirection.y = 0.0f;
+
+			bool skipInput = false;
+
+			if (enemyHealth <= 0)
+			{
+				skipInput = true;
+			}
             
 
             fired = false;
             if (IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
             {
-                if (!gunHolstered)
+                if (!gunHolstered && !skipInput)
                 {
                     // play firing animation
                     fired = true;
@@ -848,7 +855,7 @@ namespace Game
                 // String holsterFrameText = scope  $"holster time is {holsteringTimer}";
                 //DrawText(holsterFrameText, 10, 10, 12, Color.WHITE);
             }
-            else
+            else if (!skipInput)
             {
                 
                 holsteringTimer -= dt;
@@ -864,6 +871,8 @@ namespace Game
                 // if they can't occur
                 
             }
+
+			
 
             
             
@@ -905,12 +914,12 @@ namespace Game
                 }
             }
 
-			if (IsKeyDown(KeyboardKey.KEY_A) && !holstering)
+			if (IsKeyDown(KeyboardKey.KEY_A) && !holstering && !skipInput)
 			{
 				rogerDirection.x = -1.0f;
 				persistentDirection = rogerDirection.x;
 			}
-			if (IsKeyDown(KeyboardKey.KEY_D) && !holstering)
+			if (IsKeyDown(KeyboardKey.KEY_D) && !holstering && !skipInput)
 			{
 				rogerDirection.x = 1.0f;
 				persistentDirection = rogerDirection.x;
@@ -920,7 +929,7 @@ namespace Game
             
 
 			
-			if (rogerDirection.x != 0.0f && holsteringTimer == 0.0f)
+			if (rogerDirection.x != 0.0f && holsteringTimer == 0.0f && !skipInput)
 			{
                 if (prevDirectionX != 0.0f && persistentDirection != prevDirectionX && rogerSpriteSheet.State != RogerAnimationState.TURNING)
                 {
@@ -985,7 +994,7 @@ namespace Game
 
             if (rogerDirection.x == 0.0f && (rogerVelocityX * rogerVelocityX) > 10.0f)
             {
-                rogerFrictionX = -1.0f*rogerVelocityX*3.0f*dt;
+                rogerFrictionX = -1.0f*rogerVelocityX*6.0f*dt;
                 if ((rogerVelocityX * rogerVelocityX) < 15.0f && (rogerSpriteSheet.CurrentFrameSection == rogerSpriteSheet.WalkingFrameEnd-1))
                 {
                     rogerVelocityX = 0.0f;
